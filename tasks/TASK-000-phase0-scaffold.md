@@ -59,5 +59,5 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | docker-compose.yml | DONE | — | postgres:15, redis:7, api with healthchecks |
 | Dockerfile multi-stage | DONE | — | base → development → builder → production targets |
 | .env.example | DONE | — | All 20 vars from PRD Section 11 documented |
-| CI workflow | TODO | — | lint, typecheck, test, build |
+| CI workflow | DONE | — | .github/workflows/ci.yml — validate + e2e jobs; eslint.config.js + .prettierrc added |
 | E2E smoke test | TODO | — | Health endpoint returns 200 |
