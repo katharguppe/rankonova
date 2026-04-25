@@ -62,3 +62,5 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | CI workflow | DONE | — | .github/workflows/ci.yml — validate + e2e jobs; eslint.config.js + .prettierrc added |
 | E2E smoke test | DONE | 448decaf | GET /health → 200, `npm run test:e2e` passes |
 | CI fix: jest globals | DONE | 53cb7f48 | ts-jest inline transform syntax, `types: ["jest","node"]` |
+| Task file cleanup | DONE | a3580cc0 | TASK-000 marked COMPLETE; TASK-001 scope paths src/→app/ |
+| .dockerignore | DONE | 755c016b | Exclude node_modules (575 MB) from build context — fixes docker compose up hang |
