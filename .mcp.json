@@ -1,0 +1,7 @@
+﻿{
+  "mcpServers": {
+    "filesystem": { "command": "node", "args": ["C:\nvm4w\nodejs\node_modules\\@modelcontextprotocol\\server-filesystem\\dist\\index.js", "D:\staging\aeo-suite"] },
+    "memory": { "command": "node", "args": ["C:\nvm4w\nodejs\node_modules\\@modelcontextprotocol\\server-memory\\dist\\index.js"] },
+    "sequential-thinking": { "command": "node", "args": ["C:\nvm4w\nodejs\node_modules\\@modelcontextprotocol\\server-sequential-thinking\\dist\\index.js"] }
+  }
+}

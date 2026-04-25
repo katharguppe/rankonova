@@ -1,0 +1,612 @@
+// prisma/schema/schema.prisma
+// AEO Suite -- Phase 0 Data Model
+// PRD v2.1 Section 8 -- Reviewed before migration
+//
+// Multi-file schema: prismaSchemaFolder preview feature (Prisma >= 5.15)
+// Run:  npx prisma generate --schema prisma/schema
+// Migrate: npx prisma migrate dev --schema prisma/schema --name <name>
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: url removed from datasource -- set in prisma.config.ts (project root)
+// See: https://pris.ly/d/config-datasource
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum PlanTier {
+  starter
+  growth
+  enterprise
+}
+
+enum UserRole {
+  super_admin
+  tenant_admin
+  client_manager
+  client_viewer
+}
+
+enum PromptRunStatus {
+  pending
+  running
+  completed
+  failed
+  dead_letter
+}
+
+enum ContentStatus {
+  draft
+  revision_requested
+  approved
+  published
+  rejected
+}
+
+enum Sentiment {
+  positive
+  negative
+  neutral
+  mixed
+}
+
+enum NotificationSeverity {
+  critical
+  high
+  medium
+  low
+}
+
+enum IntentType {
+  purchase_intent
+  comparison
+  feature_query
+  ownership
+  segment
+  local_discovery
+  trust_signal
+  price_query
+}
+
+enum BuyerStage {
+  awareness
+  consideration
+  decision
+  retention
+}
+
+enum ContentType {
+  faq_page
+  comparison_page
+  entity_authority_page
+  segment_article
+}
+
+enum AiEngine {
+  chatgpt
+  perplexity
+  gemini
+  claude
+  grok
+  google_ai_overviews
+}
+
+enum ResponseStatus {
+  pending
+  posted
+  skipped
+}
+
+enum BillingEventType {
+  subscription_created
+  subscription_renewed
+  payment_succeeded
+  payment_failed
+  plan_upgraded
+  plan_downgraded
+  trial_started
+  trial_ended
+  subscription_cancelled
+}
+
+enum AuthEventType {
+  login_success
+  login_failure
+  logout
+  password_reset_requested
+  password_reset_completed
+  mfa_enabled
+  mfa_disabled
+  mfa_challenge_success
+  mfa_challenge_failure
+  account_locked
+  account_unlocked
+  token_refreshed
+}
+
+// ─────────────────────────────────────────────
+// TENANTS
+// ─────────────────────────────────────────────
+
+model Tenant {
+  id                       String    @id @default(cuid())
+  name                     String
+  slug                     String    @unique
+  plan_tier                PlanTier  @default(starter)
+  billing_email            String
+  is_active                Boolean   @default(true)
+  prompt_quota_daily       Int       @default(500)
+  trial_ends_at            DateTime?
+  razorpay_subscription_id String?
+  billing_cycle_start      Int?      // day-of-month (1-28)
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+
+  users          User[]
+  clients        Client[]
+  competitors    Competitor[]
+  prompts        Prompt[]
+  notifications  Notification[]
+  billing_events BillingEvent[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────
+// USERS & AUTH
+// ─────────────────────────────────────────────
+
+model User {
+  id                 String    @id @default(cuid())
+  tenant_id          String
+  email              String    @unique
+  password_hash      String
+  role               UserRole  @default(client_viewer)
+  is_active          Boolean   @default(true)
+  mfa_secret         String?   // AES-256 encrypted at application layer
+  mfa_enabled        Boolean   @default(false)
+  last_login_at      DateTime?
+  failed_login_count Int       @default(0)
+  locked_until       DateTime?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  tenant          Tenant         @relation(fields: [tenant_id], references: [id])
+  refresh_tokens  RefreshToken[]
+  auth_events     AuthEvent[]
+  content_outputs ContentOutput[] @relation("ApprovedBy")
+
+  @@index([tenant_id])
+  @@index([tenant_id, is_active])
+  @@map("users")
+}
+
+// Stores hashed refresh tokens for rotation (F-01)
+model RefreshToken {
+  id           String    @id @default(cuid())
+  user_id      String
+  token_hash   String    @unique
+  expires_at   DateTime
+  is_revoked   Boolean   @default(false)
+  replaced_by  String?   // token_hash of the replacement token
+  created_at   DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([token_hash])
+  @@map("refresh_tokens")
+}
+
+// Append-only auth event log (F-01)
+model AuthEvent {
+  id         String        @id @default(cuid())
+  user_id    String
+  event_type AuthEventType
+  ip_address String?
+  user_agent String?
+  created_at DateTime      @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([user_id, created_at])
+  @@map("auth_events")
+}
+
+// ─────────────────────────────────────────────
+// VERTICALS
+// ─────────────────────────────────────────────
+
+model Vertical {
+  id                   String   @id @default(cuid())
+  name                 String
+  slug                 String   @unique
+  description          String?
+  prompt_templates     Json     // string[] with {city},{brand},{model} tokens
+  trusted_domains      Json     // string[]
+  aggregator_platforms Json     // { name, url_pattern, selectors, crawl_frequency }[]
+  schema_types         Json     // string[] of schema.org types
+  community_platforms  Json     // { platform, identifiers, keywords }[]
+  wikidata_entity_type String?
+  review_platforms     Json     // { name, api_config | scrape_config }[]
+  is_active            Boolean  @default(true)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  clients     Client[]
+  competitors Competitor[]
+  prompts     Prompt[]
+
+  @@map("verticals")
+}
+
+// ─────────────────────────────────────────────
+// CLIENTS
+// ─────────────────────────────────────────────
+
+model Client {
+  id          String    @id @default(cuid())
+  tenant_id   String
+  vertical_id String
+  name        String
+  brand_name  String
+  aliases     Json      // string[] -- e.g. ["Tata Nexon", "Nexon"]
+  city        String
+  state       String
+  website_url String
+  description String?
+  models      Json      // AI engine model config overrides per engine
+  is_active   Boolean   @default(true)
+  deleted_at  DateTime? // soft delete; purge after 90 days
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  tenant            Tenant            @relation(fields: [tenant_id], references: [id])
+  vertical          Vertical          @relation(fields: [vertical_id], references: [id])
+  prompt_runs       PromptRun[]
+  brand_mentions    BrandMention[]
+  gap_reports       GapReport[]
+  content_outputs   ContentOutput[]
+  review_audits     ReviewAudit[]
+  community_threads CommunityThread[]
+  weekly_briefs     WeeklyBrief[]
+  notifications     Notification[]
+
+  @@index([tenant_id])
+  @@index([vertical_id])
+  @@index([tenant_id, is_active])
+  @@map("clients")
+}
+
+// ─────────────────────────────────────────────
+// COMPETITORS
+// ─────────────────────────────────────────────
+
+model Competitor {
+  id          String   @id @default(cuid())
+  tenant_id   String
+  vertical_id String
+  name        String
+  aliases     Json     // string[]
+  website_url String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  tenant         Tenant         @relation(fields: [tenant_id], references: [id])
+  vertical       Vertical       @relation(fields: [vertical_id], references: [id])
+  brand_mentions BrandMention[]
+  gap_reports    GapReport[]    @relation("TopCitedCompetitor")
+
+  @@index([tenant_id])
+  @@index([tenant_id, vertical_id])
+  @@index([tenant_id, is_active])
+  @@map("competitors")
+}
+
+// ─────────────────────────────────────────────
+// PROMPTS
+// ─────────────────────────────────────────────
+
+// tenant_id NULL = platform prompt (super_admin owned)
+// tenant_id SET = custom tenant prompt
+model Prompt {
+  id          String     @id @default(cuid())
+  vertical_id String?
+  tenant_id   String?
+  text        String
+  category    String
+  intent_type IntentType
+  buyer_stage BuyerStage
+  is_active   Boolean    @default(true)
+  is_custom   Boolean    @default(false)
+  priority    Int        @default(0)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  vertical        Vertical?       @relation(fields: [vertical_id], references: [id])
+  tenant          Tenant?         @relation(fields: [tenant_id], references: [id])
+  prompt_runs     PromptRun[]
+  content_outputs ContentOutput[]
+
+  @@index([vertical_id])
+  @@index([tenant_id])
+  @@index([vertical_id, is_active])
+  @@map("prompts")
+}
+
+// ─────────────────────────────────────────────
+// PROMPT RUNS
+// ─────────────────────────────────────────────
+
+model PromptRun {
+  id            String          @id @default(cuid())
+  prompt_id     String
+  client_id     String
+  engine        AiEngine
+  raw_response  String?         @db.Text
+  ran_at        DateTime
+  tokens_used   Int?
+  duration_ms   Int?
+  status        PromptRunStatus @default(pending)
+  retry_count   Int             @default(0)
+  error_message String?
+  cost_usd      Decimal?        @db.Decimal(10, 6)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+
+  prompt         Prompt         @relation(fields: [prompt_id], references: [id])
+  client         Client         @relation(fields: [client_id], references: [id])
+  brand_mentions BrandMention[]
+
+  @@index([client_id])
+  @@index([prompt_id])
+  @@index([client_id, ran_at])
+  @@index([status])
+  @@index([engine, ran_at])
+  @@map("prompt_runs")
+}
+
+// ─────────────────────────────────────────────
+// BRAND MENTIONS
+// ─────────────────────────────────────────────
+
+model BrandMention {
+  id              String    @id @default(cuid())
+  run_id          String
+  client_id       String
+  competitor_id   String?
+  brand_name      String
+  position        Int       // 1-based rank in AI response
+  sentiment       Sentiment
+  cited_url       String?
+  context_snippet String?   // max 150 chars
+  is_client_brand Boolean
+  created_at      DateTime  @default(now())
+
+  prompt_run PromptRun   @relation(fields: [run_id], references: [id])
+  client     Client      @relation(fields: [client_id], references: [id])
+  competitor Competitor? @relation(fields: [competitor_id], references: [id])
+
+  @@index([run_id])
+  @@index([client_id])
+  @@index([competitor_id])
+  @@index([client_id, is_client_brand])
+  @@index([client_id, created_at])
+  @@map("brand_mentions")
+}
+
+// ─────────────────────────────────────────────
+// CITATION SOURCES
+// ─────────────────────────────────────────────
+
+model CitationSource {
+  id                     String    @id @default(cuid())
+  url                    String    @unique
+  domain                 String
+  domain_authority_score Int?
+  schema_types_found     Json      // string[] of schema.org types found
+  has_faq_schema         Boolean   @default(false)
+  word_count             Int?
+  last_crawled_at        DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  @@index([domain])
+  @@map("citation_sources")
+}
+
+// ─────────────────────────────────────────────
+// GAP REPORTS
+// ─────────────────────────────────────────────
+
+model GapReport {
+  id                      String   @id @default(cuid())
+  client_id               String
+  version                 Int
+  generated_at            DateTime
+  on_site_gaps            Json     // { missing_schema_types, faq_coverage_score, freshness_gap, entity_density_gap, internal_link_gap }
+  off_site_gaps           Json     // { aggregator_presence, review_volume_gap, community_presence, entity_recognition, pr_coverage }
+  top_cited_competitor_id String?
+  top_cited_domain        String?
+  plain_english_summary   String   @db.Text
+  recommended_actions     Json     // { action, estimated_impact, priority }[] ordered by citation impact
+  previous_report_id      String?  @unique
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  client               Client      @relation(fields: [client_id], references: [id])
+  top_cited_competitor Competitor? @relation("TopCitedCompetitor", fields: [top_cited_competitor_id], references: [id])
+  previous_report      GapReport?  @relation("ReportHistory", fields: [previous_report_id], references: [id])
+  next_report          GapReport?  @relation("ReportHistory")
+
+  @@unique([client_id, version])
+  @@index([client_id])
+  @@index([client_id, generated_at])
+  @@map("gap_reports")
+}
+
+// ─────────────────────────────────────────────
+// CONTENT OUTPUTS
+// ─────────────────────────────────────────────
+
+model ContentOutput {
+  id                   String        @id @default(cuid())
+  client_id            String
+  target_prompt_id     String?
+  type                 ContentType
+  title                String
+  html_content         String        @db.Text
+  schema_json          Json          // validated JSON-LD object
+  generation_prompt    String        @db.Text // stored for auditability
+  status               ContentStatus @default(draft)
+  review_notes         String?
+  approved_by          String?
+  approved_at          DateTime?
+  published_at         DateTime?
+  citation_rate_before Float?
+  citation_rate_after  Float?        // captured 60 days post-publish
+  created_at           DateTime      @default(now())
+  updated_at           DateTime      @updatedAt
+
+  client        Client   @relation(fields: [client_id], references: [id])
+  target_prompt Prompt?  @relation(fields: [target_prompt_id], references: [id])
+  approver      User?    @relation("ApprovedBy", fields: [approved_by], references: [id])
+
+  @@index([client_id])
+  @@index([client_id, status])
+  @@map("content_outputs")
+}
+
+// ─────────────────────────────────────────────
+// REVIEW AUDITS
+// ─────────────────────────────────────────────
+
+model ReviewAudit {
+  id                    String   @id @default(cuid())
+  client_id             String
+  platform              String   // "google" | "cardekho" | "justdial" | etc.
+  rating                Float?
+  review_count          Int?
+  response_rate         Float?
+  last_checked_at       DateTime
+  gap_vs_top_competitor Json?    // { rating_gap, review_count_gap, response_rate_gap }
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@index([client_id])
+  @@index([client_id, platform])
+  @@map("review_audits")
+}
+
+// ─────────────────────────────────────────────
+// COMMUNITY THREADS
+// ─────────────────────────────────────────────
+
+model CommunityThread {
+  id                  String         @id @default(cuid())
+  client_id           String
+  platform            String         // "reddit" | forum identifier
+  url                 String
+  thread_title        String
+  is_client_mentioned Boolean        @default(false)
+  ai_citation_count   Int            @default(0) // how often AI engines cite this URL
+  response_draft      String?        @db.Text
+  response_status     ResponseStatus @default(pending)
+  detected_at         DateTime
+  responded_at        DateTime?
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@index([client_id])
+  @@index([client_id, response_status])
+  @@index([ai_citation_count])
+  @@map("community_threads")
+}
+
+// ─────────────────────────────────────────────
+// WEEKLY BRIEFS
+// ─────────────────────────────────────────────
+
+model WeeklyBrief {
+  id                   String    @id @default(cuid())
+  client_id            String
+  week_of              DateTime  // Monday 00:00 IST
+  citation_score       Float
+  citation_delta       Float     // vs previous week
+  action_items         Json      // max 3: { type, priority, estimated_impact, draft_id, deep_link, time_estimate }[]
+  platform_actions_log Json      // automated actions taken this week
+  email_sent_at        DateTime?
+  actions_completed    Int       @default(0)
+  generated_at         DateTime
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, week_of])
+  @@index([client_id])
+  @@map("weekly_briefs")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id         String               @id @default(cuid())
+  tenant_id  String
+  client_id  String?
+  type       String               // e.g. "citation_drop", "competitor_spike", "payment_failed"
+  severity   NotificationSeverity
+  title      String
+  body       String
+  deep_link  String?
+  is_read    Boolean              @default(false)
+  email_sent Boolean              @default(false)
+  created_at DateTime             @default(now())
+  updated_at DateTime             @updatedAt
+
+  tenant Tenant  @relation(fields: [tenant_id], references: [id])
+  client Client? @relation(fields: [client_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([client_id])
+  @@index([tenant_id, is_read])
+  @@index([client_id, created_at])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// BILLING EVENTS
+// ─────────────────────────────────────────────
+
+model BillingEvent {
+  id                  String           @id @default(cuid())
+  tenant_id           String
+  event_type          BillingEventType
+  amount_inr          Decimal?         @db.Decimal(12, 2)
+  razorpay_payment_id String?
+  plan_from           PlanTier?
+  plan_to             PlanTier?
+  metadata            Json?            // raw Razorpay webhook payload excerpt
+  created_at          DateTime         @default(now())
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, created_at])
+  @@index([tenant_id, event_type])
+  @@map("billing_events")
+}
