@@ -56,8 +56,8 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | git init and remote setup | DONE | 2db156e | main + feature/TASK-000 pushed to GitHub |
 | `npm run build` clean | DONE | — | `nest build` passes, `tsc --noEmit` zero errors |
 | Module stubs (all 16) | DONE | — | 16 modules + offsite sub-modules + common, all wired into AppModule, tsc clean |
-| docker-compose.yml | TODO | — | pg15 + redis7 + api |
-| Dockerfile multi-stage | TODO | — | build + prod stages |
-| .env.example | TODO | — | All vars from PRD Section 11 |
+| docker-compose.yml | DONE | — | postgres:15, redis:7, api with healthchecks |
+| Dockerfile multi-stage | DONE | — | base → development → builder → production targets |
+| .env.example | DONE | — | All 20 vars from PRD Section 11 documented |
 | CI workflow | TODO | — | lint, typecheck, test, build |
 | E2E smoke test | TODO | — | Health endpoint returns 200 |
