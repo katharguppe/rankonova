@@ -50,11 +50,12 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Prisma schema written | DONE | — | `prisma/schema/schema.prisma`, validates clean |
-| Prisma schema approved | PENDING | — | Awaiting Srinivas review |
-| prisma.config.ts created | TODO | — | Prisma 7 requires adapter config at project root |
-| NestJS CLI scaffold | TODO | — | `nest new aeo-suite --strict` |
-| Module stubs (all 16) | TODO | — | Empty modules, no logic |
+| Prisma schema written | DONE | 2db156e | `prisma/schema/schema.prisma`, validates clean |
+| prisma.config.ts created | DONE | 2db156e | Prisma 7: datasource url via process.env, schema path set |
+| NestJS CLI scaffold | DONE | 2db156e | package.json, tsconfig, nest-cli.json, main.ts, app.module.ts, prisma.service.ts, health module |
+| git init and remote setup | DONE | 2db156e | main + feature/TASK-000 pushed to GitHub |
+| `npm run build` clean | DONE | — | `nest build` passes, `tsc --noEmit` zero errors |
+| Module stubs (all 16) | DONE | — | 16 modules + offsite sub-modules + common, all wired into AppModule, tsc clean |
 | docker-compose.yml | TODO | — | pg15 + redis7 + api |
 | Dockerfile multi-stage | TODO | — | build + prod stages |
 | .env.example | TODO | — | All vars from PRD Section 11 |
