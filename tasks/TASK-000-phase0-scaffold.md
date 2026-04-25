@@ -1,6 +1,6 @@
 # TASK-000: Phase 0 — Foundation Scaffold
 
-## Status: IN PROGRESS
+## Status: COMPLETE — pending CI green (last exit criterion)
 ## Phase: 0
 ## Branch: feature/TASK-000
 
@@ -18,10 +18,10 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 - `CLAUDE.md` — project session context
 
 ## Exit Criteria
-- [ ] `npm run build` passes with zero TypeScript errors
-- [ ] `docker compose up` starts cleanly (postgres, redis, api all healthy)
-- [ ] `npx prisma migrate dev` applies schema with zero errors
-- [ ] `npm run test:e2e` passes (scaffold smoke test)
+- [x] `npm run build` passes with zero TypeScript errors
+- [x] `docker compose up` starts cleanly (postgres, redis, api all healthy)
+- [x] `npx prisma migrate dev` applies schema with zero errors
+- [x] `npm run test:e2e` passes (scaffold smoke test) — GET /health 200 confirmed
 - [ ] CI pipeline green on push to feature/TASK-000
 
 ## PDCA Log
@@ -60,4 +60,4 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | Dockerfile multi-stage | DONE | — | base → development → builder → production targets |
 | .env.example | DONE | — | All 20 vars from PRD Section 11 documented |
 | CI workflow | DONE | — | .github/workflows/ci.yml — validate + e2e jobs; eslint.config.js + .prettierrc added |
-| E2E smoke test | TODO | — | Health endpoint returns 200 |
+| E2E smoke test | DONE | — | GET /health → 200, `npm run test:e2e` passes |
