@@ -1,6 +1,6 @@
 # TASK-000: Phase 0 — Foundation Scaffold
 
-## Status: COMPLETE — pending CI green (last exit criterion)
+## Status: COMPLETE
 ## Phase: 0
 ## Branch: feature/TASK-000
 
@@ -22,7 +22,7 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 - [x] `docker compose up` starts cleanly (postgres, redis, api all healthy)
 - [x] `npx prisma migrate dev` applies schema with zero errors
 - [x] `npm run test:e2e` passes (scaffold smoke test) — GET /health 200 confirmed
-- [ ] CI pipeline green on push to feature/TASK-000
+- [x] CI pipeline green on push to feature/TASK-000 (fix: 53cb7f48)
 
 ## PDCA Log
 
@@ -60,4 +60,5 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | Dockerfile multi-stage | DONE | — | base → development → builder → production targets |
 | .env.example | DONE | — | All 20 vars from PRD Section 11 documented |
 | CI workflow | DONE | — | .github/workflows/ci.yml — validate + e2e jobs; eslint.config.js + .prettierrc added |
-| E2E smoke test | DONE | — | GET /health → 200, `npm run test:e2e` passes |
+| E2E smoke test | DONE | 448decaf | GET /health → 200, `npm run test:e2e` passes |
+| CI fix: jest globals | DONE | 53cb7f48 | ts-jest inline transform syntax, `types: ["jest","node"]` |

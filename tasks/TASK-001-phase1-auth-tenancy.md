@@ -8,10 +8,10 @@
 Production-grade authentication and multi-tenant isolation. JWT RS256 with refresh rotation, TOTP MFA, account lockout, and full RBAC. Every query scoped by tenant_id via TypeScript wrapper — not application logic.
 
 ## Scope
-- `src/auth/` — JWT guards, RS256 signing, refresh rotation, TOTP MFA, lockout, rate limiting
-- `src/tenants/` — tenant CRUD, plan enforcement stub, slug management
-- `src/users/` — user CRUD, invite flow, role assignment
-- `src/common/` — TenantScopedPrisma wrapper type, RBAC guards, interceptors
+- `app/auth/` — JWT guards, RS256 signing, refresh rotation, TOTP MFA, lockout, rate limiting
+- `app/tenants/` — tenant CRUD, plan enforcement stub, slug management
+- `app/users/` — user CRUD, invite flow, role assignment
+- `app/common/` — TenantScopedPrisma wrapper type, RBAC guards, interceptors
 
 ## Exit Criteria
 - [ ] Registration + email verification flow passes E2E
