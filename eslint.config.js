@@ -23,6 +23,12 @@ module.exports = [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
+  {
+    files: ['test/**/*.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.jest },
+    },
+  },
   prettier,
   {
     ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'eslint.config.js'],
