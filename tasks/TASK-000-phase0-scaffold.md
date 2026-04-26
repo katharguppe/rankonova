@@ -64,3 +64,5 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | CI fix: jest globals | DONE | 53cb7f48 | ts-jest inline transform syntax, `types: ["jest","node"]` |
 | Task file cleanup | DONE | a3580cc0 | TASK-000 marked COMPLETE; TASK-001 scope paths src/→app/ |
 | .dockerignore | DONE | 755c016b | Exclude node_modules (575 MB) from build context — fixes docker compose up hang |
+| Checkpoint table update | DONE | f9d8ac60 | .dockerignore + task file cleanup rows added |
+| ESLint jest globals | DONE | cca266fc | globals.jest added for test/**/*.ts — fixes CI lint no-undef on describe/it/expect |
