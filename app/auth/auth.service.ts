@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthEventType } from '@prisma/client';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
