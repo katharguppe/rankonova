@@ -79,9 +79,11 @@ describe('Tenants E2E', () => {
     app = await buildApp();
     prisma = app.get(PrismaService);
 
-    // Seed a test vertical
-    const vertical = await prisma.vertical.create({
-      data: {
+    // Seed a test vertical (upsert so a crashed prior run's leftover slug doesn't block)
+    const vertical = await prisma.vertical.upsert({
+      where: { slug: 'e2e-test-vertical' },
+      update: {},
+      create: {
         name: 'E2E Test Vertical',
         slug: 'e2e-test-vertical',
         prompt_templates: [],
@@ -121,10 +123,12 @@ describe('Tenants E2E', () => {
   });
 
   afterAll(async () => {
+    // Filter out any IDs that were never assigned (beforeAll partial failure)
+    const tenantIds = [tenantAId, tenantBId].filter((id): id is string => !!id);
     // Clean up in FK order
-    await prisma.client.deleteMany({
-      where: { tenant_id: { in: [tenantAId, tenantBId] } },
-    });
+    if (tenantIds.length) {
+      await prisma.client.deleteMany({ where: { tenant_id: { in: tenantIds } } });
+    }
     await prisma.authEvent.deleteMany({
       where: { user: { email: { in: [A.email, B.email] } } },
     });
@@ -132,8 +136,10 @@ describe('Tenants E2E', () => {
       where: { user: { email: { in: [A.email, B.email] } } },
     });
     await prisma.user.deleteMany({ where: { email: { in: [A.email, B.email] } } });
-    await prisma.tenant.deleteMany({ where: { id: { in: [tenantAId, tenantBId] } } });
-    await prisma.vertical.delete({ where: { id: verticalId } });
+    if (tenantIds.length) {
+      await prisma.tenant.deleteMany({ where: { id: { in: tenantIds } } });
+    }
+    if (verticalId) await prisma.vertical.delete({ where: { id: verticalId } });
     await app.close();
   });
 
