@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { generateKeyPairSync } from 'crypto';
 import { authenticator } from 'otplib';
 import * as cookieParser from 'cookie-parser';
@@ -41,10 +42,13 @@ describe('Auth (e2e)', () => {
   const cleanupUserIds: string[] = [];
   const cleanupTenantIds: string[] = [];
 
-  async function buildApp(): Promise<INestApplication> {
-    const fixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+  async function buildApp(bypassThrottler = true): Promise<INestApplication> {
+    let builder = Test.createTestingModule({ imports: [AppModule] });
+    if (bypassThrottler) {
+      // Bypass rate limiting for the main suite — the rate-limit test uses its own app
+      builder = builder.overrideGuard(ThrottlerGuard).useValue({ canActivate: () => true });
+    }
+    const fixture: TestingModule = await builder.compile();
     const a = fixture.createNestApplication();
     a.use(cookieParser());
     a.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
@@ -53,7 +57,7 @@ describe('Auth (e2e)', () => {
   }
 
   beforeAll(async () => {
-    app = await buildApp();
+    app = await buildApp(true);
     prisma = app.get<PrismaService>(PrismaService);
   });
 
@@ -457,8 +461,8 @@ describe('Auth (e2e)', () => {
 
   describe('Rate limiting', () => {
     it('11th request within 60s window returns 429', async () => {
-      // Use a fresh isolated app instance so prior tests do not exhaust the quota
-      const isolatedApp = await buildApp();
+      // Use a fresh isolated app with real throttling (bypassThrottler = false)
+      const isolatedApp = await buildApp(false);
       const http = isolatedApp.getHttpServer();
 
       try {
