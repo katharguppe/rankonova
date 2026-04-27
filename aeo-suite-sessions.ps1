@@ -113,12 +113,12 @@ PDCA: present plan before touching any file.
 
     users = @{
         model = $HAIKU
-        task  = "TASK-003"
-        label = "Phase 1 . User CRUD & RBAC"
+        task  = "TASK-001"
+        label = "Phase 1 . User CRUD & RBAC (DONE 2026-04-27)"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma
-Task file: tasks/TASK-003-users.md
-Module scope: src/users/ ONLY.
+Task file: tasks/TASK-001-phase1-auth-tenancy.md (DONE -- see Cycle 6 checkpoints)
+Module scope: app/users/ ONLY. (DONE 2026-04-27 -- users, invite, role management, deactivate)
 
 Objective: User CRUD + role-based access control per PRD F-01 / F-04.
   Roles: tenant_admin, client_manager, client_viewer, super_admin
@@ -139,12 +139,14 @@ PDCA: present plan before touching any file.
     # -- Phase 2 ---------------------------------------------------------------
     verticals = @{
         model = $SONNET
-        task  = "TASK-004"
+        task  = "TASK-002"
         label = "Phase 2 . Vertical Config Engine"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, PostgreSQL 15
-Task file: tasks/TASK-004-verticals.md
-Module scope: src/verticals/ ONLY.
+Task file: tasks/TASK-002-phase2-verticals-prompts.md
+Module scope: app/verticals/ ONLY.
+Branch: feature/phase2-verticals (create from feature/phase1-users if not yet created)
+OPEN QUESTION #2: confirm Indian aggregator URLs per vertical with Srinivas before writing seed data.
 
 Objective: Vertical configuration engine per PRD F-03.
 Zero code deployment to add a new vertical -- everything is DB config.
@@ -168,12 +170,12 @@ PDCA: present plan, get approval, then seed data.
 
     prompts = @{
         model = $SONNET
-        task  = "TASK-005"
+        task  = "TASK-002"
         label = "Phase 2 . Prompt Library & Quota"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Redis 7
-Task file: tasks/TASK-005-prompts.md
-Module scope: src/prompts/ ONLY.
+Task file: tasks/TASK-002-phase2-verticals-prompts.md
+Module scope: app/prompts/ ONLY.
 
 Objective: Prompt library + quota enforcement per PRD F-04.
 
@@ -201,12 +203,12 @@ PDCA: present plan before touching any file.
     # -- Phase 3 ---------------------------------------------------------------
     "prompt-engine" = @{
         model = $SONNET
-        task  = "TASK-006"
+        task  = "TASK-003"
         label = "Phase 3 . Prompt Execution Engine"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Bull + BullBoard, Redis 7, Playwright
-Task file: tasks/TASK-006-prompt-engine.md
-Module scope: src/prompt-engine/ ONLY.
+Task file: tasks/TASK-003-phase3-execution-engine.md
+Module scope: app/prompt-engine/ ONLY.
 
 Objective: Multi-engine execution pipeline per PRD F-05.
 
@@ -241,12 +243,12 @@ PDCA: present plan before touching any file.
     # -- Phase 4 ---------------------------------------------------------------
     extraction = @{
         model = $HAIKU
-        task  = "TASK-007"
+        task  = "TASK-004"
         label = "Phase 4 . Brand Mention Extraction"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Redis 7
-Task file: tasks/TASK-007-extraction.md
-Module scope: src/extraction/ ONLY.
+Task file: tasks/TASK-004-phase4-extraction-analytics.md
+Module scope: app/extraction/ ONLY.
 
 Objective: Async extraction pipeline per PRD F-06.
 Must complete under 3 seconds per run. Idempotent.
@@ -275,12 +277,12 @@ PDCA: present plan before touching any file.
 
     analytics = @{
         model = $SONNET
-        task  = "TASK-008"
+        task  = "TASK-004"
         label = "Phase 4 . Analytics & Share of Voice"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Redis 7
-Task file: tasks/TASK-008-analytics.md
-Module scope: src/analytics/ ONLY.
+Task file: tasks/TASK-004-phase4-extraction-analytics.md
+Module scope: app/analytics/ ONLY.
 
 Objective: Citation scoring + share of voice + anomaly detection per PRD F-06/F-07.
 
@@ -305,12 +307,12 @@ PDCA: present plan before touching any file.
     # -- Phase 6 ---------------------------------------------------------------
     diagnostics = @{
         model = $SONNET
-        task  = "TASK-009"
+        task  = "TASK-006"
         label = "Phase 6 . Gap Report & Diagnostics"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Playwright, Cheerio
-Task file: tasks/TASK-009-diagnostics.md
-Module scope: src/diagnostics/ ONLY.
+Task file: tasks/TASK-006-phase6-diagnostics.md
+Module scope: app/diagnostics/ ONLY.
 
 Objective: Competitor gap analysis pipeline per PRD F-08.
 
@@ -338,12 +340,12 @@ PDCA: present plan before touching any file.
     # -- Phase 7 ---------------------------------------------------------------
     "content-agent" = @{
         model = $SONNET
-        task  = "TASK-010"
+        task  = "TASK-007"
         label = "Phase 7 . Content Agent"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Claude Sonnet
-Task file: tasks/TASK-010-content-agent.md
-Module scope: src/content-agent/ ONLY.
+Task file: tasks/TASK-007-phase7-content-agent.md
+Module scope: app/content-agent/ ONLY.
 
 Objective: AEO content generation + approval workflow per PRD F-09.
 
@@ -379,12 +381,12 @@ PDCA: present plan before touching any file.
     # -- Phase 8 ---------------------------------------------------------------
     offsite = @{
         model = $SONNET
-        task  = "TASK-011"
+        task  = "TASK-008"
         label = "Phase 8 . Off-Site Authority Builder"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Playwright, Cheerio
-Task file: tasks/TASK-011-offsite.md
-Module scope: src/offsite/ ONLY (all 5 sub-modules).
+Task file: tasks/TASK-008-phase8-offsite-builder.md
+Module scope: app/offsite/ ONLY (all 5 sub-modules).
 
 Objective: Off-site authority builder per PRD F-10.
 5 modules -- implement one at a time, report before proceeding to next.
@@ -423,12 +425,12 @@ PDCA: present plan for each sub-module before implementing.
     # -- Phase 9 ---------------------------------------------------------------
     "weekly-brief" = @{
         model = $HAIKU
-        task  = "TASK-012"
+        task  = "TASK-009"
         label = "Phase 9 . Weekly Brief"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Redis 7, SendGrid, Claude Haiku
-Task file: tasks/TASK-012-weekly-brief.md
-Module scope: src/weekly-brief/ ONLY.
+Task file: tasks/TASK-009-phase9-weekly-brief.md
+Module scope: app/weekly-brief/ ONLY.
 
 Objective: Monday 6AM IST weekly action digest per PRD F-11.
 
@@ -460,12 +462,12 @@ PDCA: present plan before touching any file.
     # -- Phase 10 --------------------------------------------------------------
     billing = @{
         model = $SONNET
-        task  = "TASK-013"
+        task  = "TASK-010"
         label = "Phase 10 . Billing & Plan Management"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Razorpay
-Task file: tasks/TASK-013-billing.md
-Module scope: src/billing/ ONLY.
+Task file: tasks/TASK-010-phase10-billing.md
+Module scope: app/billing/ ONLY.
 
 Objective: Fully automated billing per PRD F-12. Zero manual invoicing.
 
@@ -497,12 +499,12 @@ PDCA: present plan before touching any file.
     # -- Phase 11 --------------------------------------------------------------
     notifications = @{
         model = $HAIKU
-        task  = "TASK-014"
+        task  = "TASK-011"
         label = "Phase 11 . Notifications"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, SendGrid, Redis 7
-Task file: tasks/TASK-014-notifications.md
-Module scope: src/notifications/ ONLY.
+Task file: tasks/TASK-011-phase11-notifications.md
+Module scope: app/notifications/ ONLY.
 
 Objective: Notification and alert system per PRD F-13.
 
@@ -536,12 +538,12 @@ PDCA: present plan before touching any file.
     # -- Phase 12 --------------------------------------------------------------
     admin = @{
         model = $SONNET
-        task  = "TASK-015"
+        task  = "TASK-012"
         label = "Phase 12 . Super Admin Platform"
         prompt = @'
 Stack: NestJS, TypeScript 5.x, Prisma, Next.js 14 App Router
-Task file: tasks/TASK-015-admin.md
-Module scope: src/admin/ + frontend/app/admin/ ONLY.
+Task file: tasks/TASK-012-phase12-super-admin.md
+Module scope: app/admin/ + frontend/app/admin/ ONLY.
 
 Objective: Super admin operational dashboard per PRD F-14.
 Access: super_admin role only. Not client-facing.
@@ -568,11 +570,11 @@ PDCA: present plan before touching any file.
     # -- Phase 5 ---------------------------------------------------------------
     frontend = @{
         model = $SONNET
-        task  = "TASK-016"
+        task  = "TASK-005"
         label = "Phase 5 . Analytics Dashboard (Next.js)"
         prompt = @'
 Stack: Next.js 14 App Router, TypeScript, shadcn/ui, Tailwind, Recharts
-Task file: tasks/TASK-016-frontend.md
+Task file: tasks/TASK-005-phase5-dashboard.md
 Module scope: frontend/ ONLY.
 
 Objective: Client analytics dashboard per PRD F-07.
