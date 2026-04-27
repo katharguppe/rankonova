@@ -41,6 +41,13 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 **Check:** CI green — all auth E2E (27 cases) and health E2E pass
 **Act:** Marked DONE
 
+### Cycle 2 (post-DONE Docker fixes)
+**Plan:** Fix two Docker runtime failures: bcrypt native binary crash, JWT_PUBLIC_KEY empty crash.
+**Approved:** 2026-04-27
+**Do:** 2 commits on feature/TASK-001
+**Check:** Build clean, no TypeScript errors
+**Act:** Committed and pushed
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -53,3 +60,5 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 | Auth E2E suite | DONE | 10db646b | 27 cases — all auth flows |
 | ThrottlerGuard bypass fix | DONE | 365bebc5 | Override in main test app; isolated app for rate-limit test |
 | Health E2E JWT env fix | DONE | 92435439 | generateKeyPairSync at file top, sets all 5 required env vars |
+| bcrypt → bcryptjs (Docker fix) | DONE | 46a4fc9c | Pure JS, no native binary; API identical |
+| JWT fallback key in main.ts (Docker fix) | DONE | 2852a84d | seedDevKeys() before NestFactory.create(); ephemeral pair when JWT_PUBLIC_KEY unset |
