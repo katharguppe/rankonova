@@ -48,6 +48,13 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 **Check:** Build clean, no TypeScript errors
 **Act:** Committed and pushed
 
+### Cycle 3 (bcryptjs E2E regression — IN PROGRESS)
+**Plan:** POST /auth/register returns 500 in E2E after bcryptjs swap. Diagnosing root cause.
+**Approved:** PENDING
+**Do:** —
+**Check:** —
+**Act:** —
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -62,3 +69,4 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 | Health E2E JWT env fix | DONE | 92435439 | generateKeyPairSync at file top, sets all 5 required env vars |
 | bcrypt → bcryptjs (Docker fix) | DONE | 46a4fc9c | Pure JS, no native binary; API identical |
 | JWT fallback key in main.ts (Docker fix) | DONE | 2852a84d | seedDevKeys() before NestFactory.create(); ephemeral pair when JWT_PUBLIC_KEY unset |
+| bcryptjs E2E regression fix | BLOCKED | — | POST /auth/register → 500; diagnosis in progress (see debug memory) |
