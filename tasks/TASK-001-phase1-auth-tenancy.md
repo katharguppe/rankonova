@@ -71,6 +71,13 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 **Check:** Build clean (0 TS errors); 13-case E2E suite written; isolation pen tests included
 **Act:** Phase 1 fully closed. TASK-002-tenants.md deleted (work folds here per PRD phase mapping).
 
+### Cycle 6 (Phase 1 users -- delivered on feature/phase1-users)
+**Plan:** User profile, invite flow, role management, deactivate. 7 endpoints, 12-case E2E.
+**Approved:** 2026-04-27
+**Do:** 1 commit on feature/phase1-users (08d7df0c)
+**Check:** Build clean (0 TS errors); 12-case E2E suite written; 2 isolation + 3 edge cases
+**Act:** DONE. TASK-001-phase1-users.md deleted (folds here).
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -95,3 +102,7 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 | Tenant CRUD (5 endpoints) | DONE | d2158eeb | /me routes declared before /:id to avoid NestJS routing conflict |
 | Client CRUD (5 endpoints) | DONE | d2158eeb | Plan limit enforced on create; soft delete retains row |
 | Tenant isolation E2E (13 cases) | DONE | d2158eeb | 3 cross-tenant pen tests -> 404; plan limit -> 403; soft delete verified |
+| User profile + list endpoints | DONE | 08d7df0c | GET /users/me (all roles), GET /users + /:id (tenant_admin) |
+| Invite flow | DONE | 08d7df0c | POST /users/invite (inactive user + Redis token), POST /users/accept-invite (public) |
+| Role management + deactivate | DONE | 08d7df0c | PATCH /:id/role and DELETE /:id; no self, no super_admin, scoped to tenant |
+| Users E2E suite (12 cases) | DONE | 08d7df0c | 2 isolation pen tests, 3 super_admin guard edges |
