@@ -7,9 +7,15 @@ export class HealthController {
 
   @Get()
   async check() {
-    await this.prisma.$queryRaw`SELECT 1`;
+    let db = 'ok';
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+    } catch {
+      db = 'unreachable';
+    }
     return {
       status: 'ok',
+      db,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     };
