@@ -1,0 +1,147 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "AEO Suite — Auth",
+  "dateExported": "2026-04-27",
+  "version": "1.2",
+  "folders": [
+    { "_id": "folder_public",    "name": "Public",            "containerId": "" },
+    { "_id": "folder_protected", "name": "Protected (Bearer)", "containerId": "" }
+  ],
+  "requests": [
+    {
+      "_id": "req_register",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Register",
+      "url": "{{baseUrl}}/auth/register",
+      "method": "POST",
+      "sortNum": 1,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"owner@acme.com\",\n  \"password\": \"Secret1234!\",\n  \"tenantName\": \"Acme Corp\",\n  \"tenantSlug\": \"acme\",\n  \"billingEmail\": \"billing@acme.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_verify_email",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Verify Email",
+      "url": "{{baseUrl}}/auth/verify-email",
+      "method": "GET",
+      "sortNum": 2,
+      "headers": [],
+      "params": [{ "name": "token", "value": "{{verificationToken}}" }],
+      "body": { "type": "none", "raw": "" }
+    },
+    {
+      "_id": "req_login",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Login",
+      "url": "{{baseUrl}}/auth/login",
+      "method": "POST",
+      "sortNum": 3,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"owner@acme.com\",\n  \"password\": \"Secret1234!\"\n}"
+      }
+    },
+    {
+      "_id": "req_mfa_verify",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "MFA — Verify Challenge",
+      "url": "{{baseUrl}}/auth/mfa/verify",
+      "method": "POST",
+      "sortNum": 4,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"token\": \"123456\",\n  \"mfaSession\": \"{{mfaSession}}\"\n}"
+      }
+    },
+    {
+      "_id": "req_refresh",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Refresh Token",
+      "url": "{{baseUrl}}/auth/refresh",
+      "method": "POST",
+      "sortNum": 5,
+      "headers": [],
+      "body": { "type": "none", "raw": "" },
+      "docs": "Reads refresh_token from httpOnly cookie — set automatically after Login."
+    },
+    {
+      "_id": "req_pwd_reset_request",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Password Reset — Request",
+      "url": "{{baseUrl}}/auth/password-reset/request",
+      "method": "POST",
+      "sortNum": 6,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"owner@acme.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_pwd_reset_confirm",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_public",
+      "name": "Password Reset — Confirm",
+      "url": "{{baseUrl}}/auth/password-reset/confirm",
+      "method": "POST",
+      "sortNum": 7,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"NewSecret5678!\"\n}"
+      }
+    },
+    {
+      "_id": "req_logout",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_protected",
+      "name": "Logout",
+      "url": "{{baseUrl}}/auth/logout",
+      "method": "POST",
+      "sortNum": 8,
+      "headers": [],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": { "type": "none", "raw": "" }
+    },
+    {
+      "_id": "req_mfa_enroll",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_protected",
+      "name": "MFA — Enroll",
+      "url": "{{baseUrl}}/auth/mfa/enroll",
+      "method": "POST",
+      "sortNum": 9,
+      "headers": [],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": { "type": "none", "raw": "" },
+      "docs": "Returns { secret, qrDataUrl, otpauthUrl }. Scan QR in Google Authenticator, then call MFA Enable."
+    },
+    {
+      "_id": "req_mfa_enable",
+      "colId": "col_aeo_auth",
+      "containerId": "folder_protected",
+      "name": "MFA — Enable",
+      "url": "{{baseUrl}}/auth/mfa/enable",
+      "method": "POST",
+      "sortNum": 10,
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"token\": \"123456\"\n}"
+      },
+      "docs": "Pass the 6-digit TOTP code from Google Authenticator. Activates MFA on the account."
+    }
+  ]
+}

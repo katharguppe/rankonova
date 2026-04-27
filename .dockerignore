@@ -12,4 +12,7 @@ coverage
 tasks
 docs
 test
+thunder-tests
 *.md
+*.ps1
+prisma/migrations

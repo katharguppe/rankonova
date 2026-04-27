@@ -1,0 +1,13 @@
+{
+  "client": "Thunder Client",
+  "environmentName": "Local Dev",
+  "dateExported": "2026-04-27",
+  "version": "1.2",
+  "variables": [
+    { "name": "baseUrl",             "value": "http://localhost:3000", "isSecret": false },
+    { "name": "accessToken",         "value": "",                      "isSecret": false },
+    { "name": "verificationToken",   "value": "",                      "isSecret": false },
+    { "name": "resetToken",          "value": "",                      "isSecret": false },
+    { "name": "mfaSession",          "value": "",                      "isSecret": false }
+  ]
+}
