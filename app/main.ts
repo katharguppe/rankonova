@@ -1,9 +1,24 @@
+import { generateKeyPairSync } from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+
+function seedDevKeys(): void {
+  if (process.env['JWT_PUBLIC_KEY']) return;
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  process.env['JWT_PRIVATE_KEY'] = Buffer.from(
+    privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
+  ).toString('base64');
+  process.env['JWT_PUBLIC_KEY'] = Buffer.from(
+    publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+  ).toString('base64');
+  console.warn('[auth] JWT_PUBLIC_KEY not set — ephemeral dev key pair in use (tokens reset on restart)');
+}
+
+seedDevKeys();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
