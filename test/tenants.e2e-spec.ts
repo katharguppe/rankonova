@@ -48,7 +48,7 @@ async function registerAndLogin(
   dto: typeof A,
   prisma: PrismaService,
 ): Promise<{ token: string; tenantId: string; userId: string }> {
-  const reg = await request(app.getHttpServer()).post('/auth/register').send(dto);
+  const reg = await request(app.getHttpServer()).post('/auth/register').type('application/json').send(dto);
   expect(reg.status).toBe(201);
   const { verificationToken } = reg.body as { verificationToken: string };
   await request(app.getHttpServer())
@@ -56,6 +56,7 @@ async function registerAndLogin(
     .query({ token: verificationToken });
   const login = await request(app.getHttpServer())
     .post('/auth/login')
+    .type('application/json')
     .send({ email: dto.email, password: dto.password });
   expect(login.status).toBe(200);
   const { accessToken } = login.body as { accessToken: string };
@@ -105,6 +106,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .post('/tenants/me/clients')
       .set('Authorization', `Bearer ${tokenB}`)
+      .type('application/json')
       .send({
         verticalId,
         name: 'B Client',
@@ -149,6 +151,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .patch('/tenants/me')
       .set('Authorization', `Bearer ${tokenA}`)
+      .type('application/json')
       .send({ name: 'Tenant A Updated' });
     expect(res.status).toBe(200);
     expect((res.body as { name: string }).name).toBe('Tenant A Updated');
@@ -165,6 +168,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .post('/tenants/me/clients')
       .set('Authorization', `Bearer ${tokenA}`)
+      .type('application/json')
       .send({
         verticalId,
         name: 'A Client',
@@ -184,6 +188,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .post('/tenants/me/clients')
       .set('Authorization', `Bearer ${tokenA}`)
+      .type('application/json')
       .send({
         verticalId,
         name: 'A Client 2',
@@ -219,6 +224,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .patch(`/tenants/me/clients/${clientAId}`)
       .set('Authorization', `Bearer ${tokenA}`)
+      .type('application/json')
       .send({ name: 'A Client Updated', city: 'Hyderabad' });
     expect(res.status).toBe(200);
     expect((res.body as { name: string }).name).toBe('A Client Updated');
@@ -237,6 +243,7 @@ describe('Tenants E2E', () => {
     const res = await request(app.getHttpServer())
       .patch(`/tenants/me/clients/${clientBId}`)
       .set('Authorization', `Bearer ${tokenA}`)
+      .type('application/json')
       .send({ name: 'Hijacked' });
     expect(res.status).toBe(404);
   });
