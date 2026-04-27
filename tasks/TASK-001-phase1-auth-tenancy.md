@@ -55,6 +55,13 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 **Check:** 32 tests passing (31 auth E2E + 1 health E2E) with Docker up.
 **Act:** No fix commit required. TASK-001 fully closed.
 
+### Cycle 4 (dev environment hardening)
+**Plan:** Fix Docker Desktop WSL2 disk corruption, Thunder Client Invalid URL, tighten .dockerignore, add prod compose file.
+**Approved:** 2026-04-27
+**Do:** 3 commits — infra files only, no app code changes
+**Check:** Scripts parse cleanly (ASCII-only), files committed and pushed
+**Act:** DONE
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -64,9 +71,13 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 | TOTP MFA enroll/challenge | DONE | 1ea85434 | otplib + AES-256-GCM encrypted secret at rest |
 | Account lockout | DONE | 1ea85434 | 5 failures → 15 min lockout, DB-backed |
 | Auth rate limiter | DONE | 1ea85434 | ThrottlerModule 10 req/60s on AuthController |
-| Auth E2E suite | DONE | 10db646b | 27 cases — all auth flows |
+| Auth E2E suite | DONE | 10db646b | 27 cases -- all auth flows |
 | ThrottlerGuard bypass fix | DONE | 365bebc5 | Override in main test app; isolated app for rate-limit test |
 | Health E2E JWT env fix | DONE | 92435439 | generateKeyPairSync at file top, sets all 5 required env vars |
-| bcrypt → bcryptjs (Docker fix) | DONE | 46a4fc9c | Pure JS, no native binary; API identical |
+| bcrypt -> bcryptjs (Docker fix) | DONE | 46a4fc9c | Pure JS, no native binary; API identical |
 | JWT fallback key in main.ts (Docker fix) | DONE | 2852a84d | seedDevKeys() before NestFactory.create(); ephemeral pair when JWT_PUBLIC_KEY unset |
-| bcryptjs E2E regression | DONE | — | Root cause: DB/Redis not running during test run. No code fix needed. 32/32 pass with Docker up. |
+| bcryptjs E2E regression | DONE | -- | Root cause: DB/Redis not running during test run. No code fix needed. 32/32 pass with Docker up. |
+| docker-compose.prod.yml + dockerignore | DONE | 5683a02c | api service (prod target) in separate file; dockerignore tightened |
+| Thunder Client collection | DONE | 5683a02c | thunder-tests/: environment.json + collection.json (10 auth endpoints) |
+| WSL2 repair script + .wslconfig | DONE | dcdba240 | scripts/wsl-repair.ps1; .wslconfig: sparse, autoMemoryReclaim, kernelCommandLine |
+| wsl-repair.ps1 ASCII fix | DONE | e9db0eb4 | Replaced all Unicode (em dash, arrows, box chars) with ASCII equivalents |
