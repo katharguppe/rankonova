@@ -48,12 +48,12 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 **Check:** Build clean, no TypeScript errors
 **Act:** Committed and pushed
 
-### Cycle 3 (bcryptjs E2E regression — IN PROGRESS)
-**Plan:** POST /auth/register returns 500 in E2E after bcryptjs swap. Diagnosing root cause.
-**Approved:** PENDING
-**Do:** —
-**Check:** —
-**Act:** —
+### Cycle 3 (bcryptjs E2E regression — RESOLVED)
+**Plan:** POST /auth/register returns 500 in E2E after bcryptjs swap. Diagnose root cause.
+**Approved:** 2026-04-27
+**Do:** Diagnosis — no code change needed. Root cause was environmental: DB/Redis not running when tests were first executed after the swap.
+**Check:** 32 tests passing (31 auth E2E + 1 health E2E) with Docker up.
+**Act:** No fix commit required. TASK-001 fully closed.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
@@ -69,4 +69,4 @@ Production-grade authentication and multi-tenant isolation. JWT RS256 with refre
 | Health E2E JWT env fix | DONE | 92435439 | generateKeyPairSync at file top, sets all 5 required env vars |
 | bcrypt → bcryptjs (Docker fix) | DONE | 46a4fc9c | Pure JS, no native binary; API identical |
 | JWT fallback key in main.ts (Docker fix) | DONE | 2852a84d | seedDevKeys() before NestFactory.create(); ephemeral pair when JWT_PUBLIC_KEY unset |
-| bcryptjs E2E regression fix | BLOCKED | — | POST /auth/register → 500; diagnosis in progress (see debug memory) |
+| bcryptjs E2E regression | DONE | — | Root cause: DB/Redis not running during test run. No code fix needed. 32/32 pass with Docker up. |
