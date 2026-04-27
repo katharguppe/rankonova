@@ -66,3 +66,5 @@ Establish the complete project foundation: NestJS monorepo scaffold, validated P
 | .dockerignore | DONE | 755c016b | Exclude node_modules (575 MB) from build context — fixes docker compose up hang |
 | Checkpoint table update | DONE | f9d8ac60 | .dockerignore + task file cleanup rows added |
 | ESLint jest globals | DONE | cca266fc | globals.jest added for test/**/*.ts — fixes CI lint no-undef on describe/it/expect |
+| Checkpoint table update | DONE | f3ed7cd3 | eslint jest globals fix row added |
+| Health check graceful DB | DONE | 36a760a8 | GET /health returns 200 + db:unreachable when Postgres down — E2E fix complete |
