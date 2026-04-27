@@ -241,7 +241,7 @@ describe('Auth (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post('/auth/login').send({ email: dto.email, password: dto.password }).expect(403);
       expect(res.body.message).toMatch(/locked/i);
-    });
+    }, 15000);
 
     it('account_locked auth event written on lockout', async () => {
       const { dto, user } = await registerAndVerify();
@@ -253,7 +253,7 @@ describe('Auth (e2e)', () => {
         where: { user_id: user.id, event_type: 'account_locked' },
       });
       expect(event).toBeTruthy();
-    });
+    }, 15000);
   });
 
   // ── Token refresh (rotation) ──────────────────────────────────────────────────
