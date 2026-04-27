@@ -1,7 +1,19 @@
+import { generateKeyPairSync } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../app/app.module';
+
+const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+process.env['JWT_PRIVATE_KEY'] = Buffer.from(
+  privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
+).toString('base64');
+process.env['JWT_PUBLIC_KEY'] = Buffer.from(
+  publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+).toString('base64');
+process.env['JWT_EXPIRES_IN'] = '86400';
+process.env['REFRESH_TOKEN_EXPIRES_IN'] = '2592000';
+process.env['ENCRYPTION_KEY'] = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
 describe('Health (e2e)', () => {
   let app: INestApplication;
