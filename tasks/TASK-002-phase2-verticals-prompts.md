@@ -57,4 +57,4 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 | Redis quota counter | DONE | 6acefcb5 | quota:{tenantId}:{YYYY-MM-DD} TTL 48h |
 | Quota enforcement guard | DONE | 6acefcb5 | 429 + X-RateLimit-Reset header |
 | Prompt seeds (300+) | DONE | 6acefcb5 | 320 prompts (64/vertical), all intent/stage types |
-| Quota E2E test | TODO | — | Test at limit and over limit — next session |
+| Quota E2E test | DONE | 6dc05445 | GET /prompts/quota + 15 E2E cases in test/prompts.e2e-spec.ts |
