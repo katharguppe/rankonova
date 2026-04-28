@@ -79,6 +79,24 @@ describe('Tenants E2E', () => {
     app = await buildApp();
     prisma = app.get(PrismaService);
 
+    // Pre-cleanup: anchor on tenant slug so orphaned tenants (user deleted, tenant survived) are caught
+    const _pcTenants = await prisma.tenant.findMany({
+      where: { slug: { in: [A.tenantSlug, B.tenantSlug] } },
+      select: { id: true },
+    });
+    const _pcTids = _pcTenants.map(t => t.id);
+    if (_pcTids.length) {
+      const _pcUsers = await prisma.user.findMany({ where: { tenant_id: { in: _pcTids } }, select: { id: true } });
+      const _pcUids = _pcUsers.map(u => u.id);
+      if (_pcUids.length) {
+        await prisma.authEvent.deleteMany({ where: { user_id: { in: _pcUids } } });
+        await prisma.refreshToken.deleteMany({ where: { user_id: { in: _pcUids } } });
+      }
+      await prisma.client.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      await prisma.user.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
+    }
+
     // Seed a test vertical (upsert so a crashed prior run's leftover slug doesn't block)
     const vertical = await prisma.vertical.upsert({
       where: { slug: 'e2e-test-vertical' },
@@ -121,7 +139,7 @@ describe('Tenants E2E', () => {
       });
     expect(res.status).toBe(201);
     clientBId = (res.body as { id: string }).id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     // Filter out any IDs that were never assigned (beforeAll partial failure)
@@ -140,7 +158,7 @@ describe('Tenants E2E', () => {
     if (tenantIds.length) {
       await prisma.tenant.deleteMany({ where: { id: { in: tenantIds } } });
     }
-    if (verticalId) await prisma.vertical.delete({ where: { id: verticalId } });
+    if (verticalId) await prisma.vertical.deleteMany({ where: { id: verticalId } });
     await app.close();
   });
 

@@ -33,7 +33,7 @@ export class LockoutService {
   }
 
   async clearFailures(userId: string): Promise<void> {
-    await this.prisma.user.update({
+    await this.prisma.user.updateMany({
       where: { id: userId },
       data: { failed_login_count: 0, locked_until: null },
     });

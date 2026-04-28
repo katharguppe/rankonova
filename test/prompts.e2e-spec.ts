@@ -103,6 +103,29 @@ describe('Prompts E2E', () => {
     app = await buildApp();
     prisma = app.get(PrismaService);
 
+    // Pre-cleanup: anchor on tenant slug so orphaned tenants are caught
+    const _pcTenants = await prisma.tenant.findMany({
+      where: { slug: { in: [SUPER_ADMIN.tenantSlug, TENANT_USER.tenantSlug, OTHER_TENANT_USER.tenantSlug] } },
+      select: { id: true },
+    });
+    const _pcTids = _pcTenants.map(t => t.id);
+    if (_pcTids.length) {
+      await prisma.prompt.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      const _pcUsers = await prisma.user.findMany({ where: { tenant_id: { in: _pcTids } }, select: { id: true } });
+      const _pcUids = _pcUsers.map(u => u.id);
+      if (_pcUids.length) {
+        await prisma.authEvent.deleteMany({ where: { user_id: { in: _pcUids } } });
+        await prisma.refreshToken.deleteMany({ where: { user_id: { in: _pcUids } } });
+      }
+      await prisma.user.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
+    }
+    const _leftoverVert = await prisma.vertical.findFirst({ where: { slug: 'e2e-prompts-vertical' } });
+    if (_leftoverVert) {
+      await prisma.prompt.deleteMany({ where: { vertical_id: _leftoverVert.id } });
+      await prisma.vertical.deleteMany({ where: { id: _leftoverVert.id } });
+    }
+
     // --- super_admin ---
     const sa = await registerAndLogin(app, SUPER_ADMIN, prisma);
     superToken = sa.token;
@@ -157,7 +180,7 @@ describe('Prompts E2E', () => {
       },
     });
     testVerticalId = vertical.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     // Delete prompts under the test vertical and both test tenants

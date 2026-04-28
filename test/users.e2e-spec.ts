@@ -83,6 +83,23 @@ describe('Users E2E', () => {
     app = await buildApp();
     prisma = app.get(PrismaService);
 
+    // Pre-cleanup: anchor on tenant slug so orphaned tenants are caught
+    const _pcTenants = await prisma.tenant.findMany({
+      where: { slug: { in: [A.tenantSlug, B.tenantSlug] } },
+      select: { id: true },
+    });
+    const _pcTids = _pcTenants.map(t => t.id);
+    if (_pcTids.length) {
+      const _pcUsers = await prisma.user.findMany({ where: { tenant_id: { in: _pcTids } }, select: { id: true } });
+      const _pcUids = _pcUsers.map(u => u.id);
+      if (_pcUids.length) {
+        await prisma.authEvent.deleteMany({ where: { user_id: { in: _pcUids } } });
+        await prisma.refreshToken.deleteMany({ where: { user_id: { in: _pcUids } } });
+      }
+      await prisma.user.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
+    }
+
     const a = await registerAndLogin(app, A, prisma);
     tokenA = a.token;
     tenantAId = a.tenantId;
@@ -92,7 +109,7 @@ describe('Users E2E', () => {
     _tokenB = b.token;
     tenantBId = b.tenantId;
     userBId = b.userId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     const tenantIds = [tenantAId, tenantBId].filter((id): id is string => !!id);

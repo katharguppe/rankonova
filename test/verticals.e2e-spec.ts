@@ -92,6 +92,32 @@ describe('Verticals E2E', () => {
     app = await buildApp();
     prisma = app.get(PrismaService);
 
+    // Pre-cleanup: anchor on tenant slug so orphaned tenants are caught
+    const _pcTenants = await prisma.tenant.findMany({
+      where: { slug: { in: [SUPER_ADMIN.tenantSlug, TENANT_USER.tenantSlug] } },
+      select: { id: true },
+    });
+    const _pcTids = _pcTenants.map(t => t.id);
+    if (_pcTids.length) {
+      const _pcUsers = await prisma.user.findMany({ where: { tenant_id: { in: _pcTids } }, select: { id: true } });
+      const _pcUids = _pcUsers.map(u => u.id);
+      if (_pcUids.length) {
+        await prisma.authEvent.deleteMany({ where: { user_id: { in: _pcUids } } });
+        await prisma.refreshToken.deleteMany({ where: { user_id: { in: _pcUids } } });
+      }
+      await prisma.user.deleteMany({ where: { tenant_id: { in: _pcTids } } });
+      await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
+    }
+    const _leftoverVerts = await prisma.vertical.findMany({
+      where: { slug: { startsWith: 'e2e-test-vert' } },
+      select: { id: true },
+    });
+    const _leftoverVertIds = _leftoverVerts.map(v => v.id);
+    if (_leftoverVertIds.length) {
+      await prisma.verticalConfigAudit.deleteMany({ where: { vertical_id: { in: _leftoverVertIds } } });
+      await prisma.vertical.deleteMany({ where: { id: { in: _leftoverVertIds } } });
+    }
+
     const sa = await registerAndLogin(app, SUPER_ADMIN, prisma);
     superToken = sa.token;
     superUserId = sa.userId;
@@ -112,7 +138,7 @@ describe('Verticals E2E', () => {
     tenantToken = tu.token;
     const tuUser = await prisma.user.findUnique({ where: { email: TENANT_USER.email } });
     tenantId = tuUser!.tenant_id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     const ids = [verticalId, clonedVerticalId].filter((id): id is string => !!id);
