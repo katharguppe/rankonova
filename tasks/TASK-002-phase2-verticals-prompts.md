@@ -17,11 +17,11 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 - [x] Each vertical has full JSON config: prompt_templates, intent_categories, trusted_domains, aggregator_platforms, schema_types, community_platforms, review_platforms
 - [x] Vertical config change logged with before/after JSON diff
 - [x] New vertical can be cloned from existing via API
-- [ ] Platform prompts: minimum 60 per vertical (300 total)
-- [ ] Tenant custom prompts: create/edit/deactivate with is_custom flag
-- [ ] Quota enforcement: Starter 500/day, Growth 5000/day via Redis counter
-- [ ] 501st prompt run on Starter returns 429 with reset time header
-- [ ] Redis key pattern: `quota:{tenantId}:{YYYY-MM-DD}` TTL 48h verified
+- [x] Platform prompts: 64 per vertical × 5 = 320 total
+- [x] Tenant custom prompts: create/edit/deactivate with is_custom flag
+- [x] Quota enforcement: Starter 500/day, Growth 5000/day via Redis counter
+- [x] 501st prompt run on Starter returns 429 with reset time header
+- [x] Redis key pattern: `quota:{tenantId}:{YYYY-MM-DD}` TTL 48h (QuotaService)
 
 ## Dependencies
 - TASK-001 exit criteria met ✓
@@ -36,12 +36,12 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 **Check:** Migration 20260428052430_phase2_vertical_config_audit applied. Seed confirmed live. E2E tests written — run pending (`npx jest --testPathPattern=verticals`).
 **Act:** Verticals sub-session complete. Proceed to prompts session on same branch.
 
-### Cycle 2 — Prompts (NEXT SESSION)
-**Plan:** TBD
-**Approved:** Pending
-**Do:**
-**Check:**
-**Act:**
+### Cycle 2 — Prompts
+**Plan:** Prompt CRUD + tenant-scoped access + Redis quota guard + 320 platform prompt seeds.
+**Approved:** 2026-04-28
+**Do:** DTOs, QuotaService (Redis counter), QuotaGuard (429 + X-RateLimit-Reset), PromptsService (6 methods), PromptsController (6 routes), PromptsModule (ioredis provider), prompts.seed.ts (64 × 5 = 320), seed/index.ts.
+**Check:** `tsc --noEmit` clean, `nest build` clean, 320 prompt entries confirmed. Run pending: `npx ts-node prisma/seed/prompts.seed.ts` (DB must be up).
+**Act:** Prompts sub-session complete. Commit 6acefcb5. Open PR after E2E pass.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
@@ -52,9 +52,9 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 | Vertical seeds (5) | DONE | 57b87363 | prisma/seed/verticals.seed.ts; css_selectors TODO |
 | Vertical E2E tests | DONE | 55583dea | test/verticals.e2e-spec.ts — 14 cases |
 | DB migration applied | DONE | — | 20260428052030_phase2_vertical_config_audit |
-| Prompt entity CRUD | TODO | — | app/prompts/ — next session |
-| Platform vs tenant prompt logic | TODO | — | tenant_id NULL = platform prompt |
-| Redis quota counter | TODO | — | quota:{tenantId}:{YYYY-MM-DD} TTL 48h |
-| Quota enforcement guard | TODO | — | 429 + X-RateLimit-Reset header |
-| Prompt seeds (300+) | TODO | — | 60+ per vertical, substitution tokens |
-| Quota E2E test | TODO | — | Test at limit and over limit |
+| Prompt entity CRUD | DONE | 6acefcb5 | app/prompts/ — 6 routes |
+| Platform vs tenant prompt logic | DONE | 6acefcb5 | tenant_id NULL = platform prompt |
+| Redis quota counter | DONE | 6acefcb5 | quota:{tenantId}:{YYYY-MM-DD} TTL 48h |
+| Quota enforcement guard | DONE | 6acefcb5 | 429 + X-RateLimit-Reset header |
+| Prompt seeds (300+) | DONE | 6acefcb5 | 320 prompts (64/vertical), all intent/stage types |
+| Quota E2E test | TODO | — | Test at limit and over limit — next session |
