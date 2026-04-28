@@ -2,7 +2,7 @@
 
 ## Status: PLANNING
 ## Phase: 3
-## Branch: feature/TASK-003 (create when TASK-002 exits)
+## Branch: feature/phase3-prompt-engine (create from main — all Phase 2 work is on main as of 2026-04-28)
 
 ## Objective
 Reliable, observable prompt execution across 6 AI engines via Bull queue. Scheduled daily at 2AM IST, on-demand available. 10 concurrent workers with per-engine rate limits, 3-attempt retry with exponential backoff, dead letter queue, and per-token cost tracking.
