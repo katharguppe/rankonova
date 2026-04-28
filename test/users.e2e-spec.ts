@@ -71,7 +71,7 @@ describe('Users E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokenA: string;
-  let tokenB: string;
+  let _tokenB: string;
   let tenantAId: string;
   let tenantBId: string;
   let userAId: string;
@@ -89,7 +89,7 @@ describe('Users E2E', () => {
     userAId = a.userId;
 
     const b = await registerAndLogin(app, B, prisma);
-    tokenB = b.token;
+    _tokenB = b.token;
     tenantBId = b.tenantId;
     userBId = b.userId;
   });
