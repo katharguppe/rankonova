@@ -9,10 +9,14 @@ import { RequestUser } from '../auth/jwt.strategy';
 import { CreatePromptDto } from './dto/create-prompt.dto';
 import { UpdatePromptDto } from './dto/update-prompt.dto';
 import { QueryPromptsDto } from './dto/query-prompts.dto';
+import { QuotaService, QuotaStatus } from './quota.service';
 
 @Injectable()
 export class PromptsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly quotaService: QuotaService,
+  ) {}
 
   findAll(query: QueryPromptsDto, user: RequestUser) {
     const isSuperAdmin = user.role === UserRole.super_admin;
@@ -98,6 +102,15 @@ export class PromptsService {
         ...(dto.isActive !== undefined && { is_active: dto.isActive }),
       },
     });
+  }
+
+  async getQuota(user: RequestUser): Promise<QuotaStatus> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+      select: { plan_tier: true },
+    });
+    if (!tenant) throw new NotFoundException('Tenant not found');
+    return this.quotaService.check(user.tenantId, tenant.plan_tier);
   }
 
   async deactivate(id: string, user: RequestUser) {

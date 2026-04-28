@@ -34,11 +34,17 @@ export class PromptsController {
     return this.promptsService.findAll(query, req.user as RequestUser);
   }
 
-  // static route must be before :id to avoid param capture
+  // static routes must be before :id to avoid param capture
   @Get('platform')
   @Roles(UserRole.super_admin, UserRole.tenant_admin, UserRole.client_manager, UserRole.client_viewer)
   findPlatform(@Query() query: QueryPromptsDto) {
     return this.promptsService.findPlatform(query);
+  }
+
+  @Get('quota')
+  @Roles(UserRole.super_admin, UserRole.tenant_admin, UserRole.client_manager, UserRole.client_viewer)
+  getQuota(@Req() req: Request) {
+    return this.promptsService.getQuota(req.user as RequestUser);
   }
 
   @Get(':id')
