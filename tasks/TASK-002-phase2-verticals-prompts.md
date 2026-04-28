@@ -50,6 +50,13 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 **Check:** tsc --noEmit clean. Run pending: `npx jest --testPathPattern=prompts --config test/jest-e2e.json` (DB + Redis required).
 **Act:** TASK-002 fully code-complete. HEAD: 58d20d42. Next: feature/phase3-prompt-engine.
 
+### Cycle 4 — E2E Reliability Fixes
+**Plan:** Fix 3 E2E failures: (1) lockout.service clearFailures throws on missing user, (2) tenants afterAll vertical.delete throws on missing vertical, (3) beforeAll timeout 5000ms exceeded across all 4 suites + stale data 409s from crashed prior runs.
+**Approved:** 2026-04-28
+**Do:** (1) lockout.service.ts: update -> updateMany in clearFailures. (2) tenants.e2e-spec.ts: delete -> deleteMany for vertical in afterAll. (3) All 4 E2E files: 30s beforeAll timeout; slug-anchored pre-cleanup that walks tenant->users->authEvents/refreshTokens->clients and deletes by known slug, catching orphaned tenants whose users were already cleaned by a prior partial afterAll.
+**Check:** `npm run test:e2e` -- 89/89 passed. Committed 3107acac, pushed to main.
+**Act:** All E2E tests green. TASK-002 runtime-verified. main HEAD: 3107acac.
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -65,3 +72,4 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 | Quota enforcement guard | DONE | 6acefcb5 | 429 + X-RateLimit-Reset header |
 | Prompt seeds (300+) | DONE | 6acefcb5 | 320 prompts (64/vertical), all intent/stage types |
 | Quota E2E test | DONE | 6dc05445 | GET /prompts/quota + 15 E2E cases in test/prompts.e2e-spec.ts |
+| E2E suite green (89/89) | DONE | 3107acac | lockout fix, 30s timeout, slug-anchored pre-cleanup all 4 files |
