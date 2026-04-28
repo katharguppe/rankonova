@@ -230,21 +230,38 @@ model Vertical {
   slug                 String   @unique
   description          String?
   prompt_templates     Json     // string[] with {city},{brand},{model} tokens
+  intent_categories    Json     // string[] e.g. ["dealer","price_comparison"]
   trusted_domains      Json     // string[]
-  aggregator_platforms Json     // { name, url_pattern, selectors, crawl_frequency }[]
+  aggregator_platforms Json     // { name, url_pattern, css_selectors, crawl_frequency }[]
   schema_types         Json     // string[] of schema.org types
   community_platforms  Json     // { platform, identifiers, keywords }[]
   wikidata_entity_type String?
-  review_platforms     Json     // { name, api_config | scrape_config }[]
+  review_platforms     Json     // { name, type: "api"|"scrape", config }[]
   is_active            Boolean  @default(true)
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
 
-  clients     Client[]
-  competitors Competitor[]
-  prompts     Prompt[]
+  clients       Client[]
+  competitors   Competitor[]
+  prompts       Prompt[]
+  config_audits VerticalConfigAudit[]
 
   @@map("verticals")
+}
+
+model VerticalConfigAudit {
+  id                 String   @id @default(cuid())
+  vertical_id        String
+  changed_by_user_id String
+  before_config      Json
+  after_config       Json
+  created_at         DateTime @default(now())
+
+  vertical Vertical @relation(fields: [vertical_id], references: [id])
+
+  @@index([vertical_id])
+  @@index([vertical_id, created_at])
+  @@map("vertical_config_audits")
 }
 
 // ─────────────────────────────────────────────

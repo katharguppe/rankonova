@@ -1,8 +1,8 @@
 # TASK-002: Phase 2 — Verticals and Prompts
 
-## Status: PLANNING
+## Status: IN PROGRESS
 ## Phase: 2
-## Branch: feature/TASK-002 (create when TASK-001 exits)
+## Branch: feature/phase2-verticals (from feature/phase1-users)
 
 ## Objective
 Vertical configuration engine (zero-code new vertical) and prompt library with daily quota enforcement via Redis. All 5 launch verticals seeded with full config. Minimum 60 prompts per vertical.
@@ -30,25 +30,23 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
-**Do:**
-**Check:**
+**Plan:** Vertical CRUD + config versioning (VerticalConfigAudit) + clone endpoint + 5 vertical seeds. Prompts deferred to separate session.
+**Approved:** 2026-04-28 (aggregator URLs confirmed: CarDekho/ZigWheels, 99acres/MagicBricks, Naukri/AmbitionBox, NASSCOM/LinkedIn, Practo/JustDial; css_selectors left as TODO placeholders)
+**Do:** Schema updated (intent_categories + VerticalConfigAudit model), DTOs, service, controller, module, seed file, E2E tests. Prisma client regenerated — 0 type errors, 0 lint errors.
+**Check:** Pending migration + E2E run (DB must be up)
 **Act:**
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Vertical entity CRUD | TODO | — | |
-| Vertical config versioning | TODO | — | Before/after diff in audit log |
-| Vertical clone endpoint | TODO | — | |
-| Prompt entity CRUD | TODO | — | |
+| Vertical entity CRUD | DONE | pending commit | app/verticals/ |
+| Vertical config versioning | DONE | pending commit | VerticalConfigAudit, before/after JSON diff |
+| Vertical clone endpoint | DONE | pending commit | POST /verticals/:id/clone |
+| Vertical seeds (5) | DONE | pending commit | prisma/seed/verticals.seed.ts; css_selectors TODO |
+| Vertical E2E tests | DONE | pending commit | test/verticals.e2e-spec.ts |
+| Prompt entity CRUD | TODO | — | app/prompts/ session |
 | Platform vs tenant prompt logic | TODO | — | tenant_id NULL = platform |
 | Redis quota counter | TODO | — | TTL 48h |
 | Quota enforcement guard | TODO | — | 429 + X-Quota-Reset header |
-| Automotive seed | TODO | — | 60+ prompts, full vertical config |
-| Real Estate seed | TODO | — | 60+ prompts, full vertical config |
-| HR Services seed | TODO | — | 60+ prompts, full vertical config |
-| GCC Advisory seed | TODO | — | 60+ prompts, full vertical config |
-| Healthcare seed | TODO | — | 60+ prompts, full vertical config |
+| Prompt seeds (300+) | TODO | — | 60+ per vertical |
 | Quota E2E test | TODO | — | Test at limit and over limit |

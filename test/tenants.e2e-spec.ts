@@ -87,6 +87,7 @@ describe('Tenants E2E', () => {
         name: 'E2E Test Vertical',
         slug: 'e2e-test-vertical',
         prompt_templates: [],
+        intent_categories: [],
         trusted_domains: [],
         aggregator_platforms: [],
         schema_types: [],
