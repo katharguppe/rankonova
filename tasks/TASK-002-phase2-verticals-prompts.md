@@ -1,6 +1,6 @@
 # TASK-002: Phase 2 — Verticals and Prompts
 
-## Status: IN PROGRESS
+## Status: DONE
 ## Phase: 2
 ## Branch: feature/phase2-verticals (from feature/phase1-users)
 
@@ -41,7 +41,14 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 **Approved:** 2026-04-28
 **Do:** DTOs, QuotaService (Redis counter), QuotaGuard (429 + X-RateLimit-Reset), PromptsService (6 methods), PromptsController (6 routes), PromptsModule (ioredis provider), prompts.seed.ts (64 × 5 = 320), seed/index.ts.
 **Check:** `tsc --noEmit` clean, `nest build` clean, 320 prompt entries confirmed. Run pending: `npx ts-node prisma/seed/prompts.seed.ts` (DB must be up).
-**Act:** Prompts sub-session complete. Commit 6acefcb5. Open PR after E2E pass.
+**Act:** Prompts sub-session complete. Commits 6acefcb5 + 6dc05445. PR to open after E2E run passes.
+
+### Cycle 3 — Prompts E2E + Quota Endpoint
+**Plan:** Add GET /prompts/quota endpoint; write 15-case E2E test suite covering auth, CRUD, tenant isolation, soft-deactivate, and quota status.
+**Approved:** 2026-04-28
+**Do:** Injected QuotaService into PromptsService; added getQuota(user) method; added GET /prompts/quota route (static, before :id); wrote test/prompts.e2e-spec.ts with 3 users (super_admin, tenant_admin, other tenant), test vertical created in DB, full cleanup in afterAll.
+**Check:** tsc --noEmit clean. Run pending: `npx jest --testPathPattern=prompts --config test/jest-e2e.json` (DB + Redis required).
+**Act:** TASK-002 fully code-complete. HEAD: 58d20d42. Next: feature/phase3-prompt-engine.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
