@@ -1,4 +1,8 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export async function seedVerticals(prisma: PrismaClient) {
   const verticals = [
@@ -319,3 +323,9 @@ export async function seedVerticals(prisma: PrismaClient) {
     console.log(`Seeded vertical: ${v.name}`);
   }
 }
+
+const pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+seedVerticals(prisma)
+  .then(() => prisma.$disconnect())
+  .catch((e) => { console.error(e); prisma.$disconnect(); process.exit(1); });
