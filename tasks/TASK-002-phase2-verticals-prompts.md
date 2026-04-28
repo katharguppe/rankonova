@@ -73,3 +73,4 @@ Vertical configuration engine (zero-code new vertical) and prompt library with d
 | Prompt seeds (300+) | DONE | 6acefcb5 | 320 prompts (64/vertical), all intent/stage types |
 | Quota E2E test | DONE | 6dc05445 | GET /prompts/quota + 15 E2E cases in test/prompts.e2e-spec.ts |
 | E2E suite green (89/89) | DONE | 3107acac | lockout fix, 30s timeout, slug-anchored pre-cleanup all 4 files |
+| CI lint clean | DONE | dd90cfff | remove unused _tokenB declaration + assignment from users.e2e-spec.ts |
