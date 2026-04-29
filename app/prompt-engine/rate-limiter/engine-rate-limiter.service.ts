@@ -7,7 +7,7 @@ const RATE_LIMITS: Partial<Record<AiEngine, number>> = {
   [AiEngine.chatgpt]: 5,
   [AiEngine.perplexity]: 3,
   [AiEngine.gemini]: 2,
-  [AiEngine.claude]: 2,
+  [AiEngine.claude]: 10, // raised from 2 for dev; production cap via OpenRouter account limits
   [AiEngine.grok]: 2,
   [AiEngine.google_ai_overviews]: 2,
 };
