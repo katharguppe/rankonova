@@ -109,7 +109,7 @@ describe('Verticals E2E', () => {
       await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
     }
     const _leftoverVerts = await prisma.vertical.findMany({
-      where: { slug: { startsWith: 'e2e-test-vert' } },
+      where: { slug: { in: ['e2e-test-vert', 'e2e-clone-vert'] } },
       select: { id: true },
     });
     const _leftoverVertIds = _leftoverVerts.map(v => v.id);

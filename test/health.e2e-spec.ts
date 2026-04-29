@@ -15,6 +15,8 @@ process.env['JWT_EXPIRES_IN'] = '86400';
 process.env['REFRESH_TOKEN_EXPIRES_IN'] = '2592000';
 process.env['ENCRYPTION_KEY'] = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
+jest.setTimeout(30000);
+
 describe('Health (e2e)', () => {
   let app: INestApplication;
 

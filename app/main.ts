@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config({ override: true }); // .env wins over stale Windows user-level env vars in dev
 import { generateKeyPairSync } from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
