@@ -9,7 +9,8 @@ import { PromptRunJobPayload } from '../prompt-engine.types';
 const JOB_NAME = 'run-prompt';
 const RETRY_OPTIONS = {
   attempts: 3,
-  backoff: { type: 'exponential' as const, delay: 1000 },
+  backoff: { type: 'fixed' as const, delay: 65_000 }, // 65s > 60s window so retries land in the next rate-limit window
+
   removeOnComplete: 100, // keep last 100 completed jobs for BullBoard
   removeOnFail: 500,
 };
