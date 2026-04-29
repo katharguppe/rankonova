@@ -197,11 +197,11 @@ async function main() {
     });
     console.log(`    client.id=${client.id}`);
 
-    // ── Steps 6–7: ChatGPT run ───────────────────────────────────────────────
-    await runEngine(prisma, token, client.id, prompt.id, 'chatgpt', '6-7');
+    // ── Steps 6–7: Perplexity run (via OpenRouter) ──────────────────────────
+    await runEngine(prisma, token, client.id, prompt.id, 'perplexity', '6-7');
 
-    // ── Steps 8–9: Gemini run ────────────────────────────────────────────────
-    await runEngine(prisma, token, client.id, prompt.id, 'gemini', '8-9');
+    // ── Steps 8–9: Claude run (via OpenRouter) ───────────────────────────────
+    await runEngine(prisma, token, client.id, prompt.id, 'claude', '8-9');
 
     // ── Final summary ────────────────────────────────────────────────────────
     console.log('\n── Final prompt_runs for smoke client ──');

@@ -21,7 +21,7 @@ export class ClaudeAdapter implements IEngineAdapter {
   async execute(promptText: string): Promise<EngineResult> {
     const response = await this.client.chat.completions.create({
       model: 'anthropic/claude-sonnet-4-5',
-      max_tokens: 1500,
+      max_tokens: 1000,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: promptText },

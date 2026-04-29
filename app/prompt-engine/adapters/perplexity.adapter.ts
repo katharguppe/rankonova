@@ -19,8 +19,8 @@ export class PerplexityAdapter implements IEngineAdapter {
 
   async execute(promptText: string): Promise<EngineResult> {
     const response = await this.client.chat.completions.create({
-      model: 'perplexity/llama-3.1-sonar-large-128k-online',
-      max_tokens: 1500,
+      model: 'perplexity/sonar',
+      max_tokens: 1000,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: promptText },
