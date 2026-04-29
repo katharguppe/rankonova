@@ -23,7 +23,13 @@ import { PromptRunWorker } from './workers/prompt-run.worker';
   imports: [
     PrismaModule,
     PromptsModule,
-    BullModule.registerQueue({ name: PROMPT_RUNS_QUEUE }),
+    BullModule.registerQueue({
+      name: PROMPT_RUNS_QUEUE,
+      settings: {
+        lockDuration: 300_000,  // 5 min — covers worst-case API call + 3 retries with backoff
+        lockRenewTime: 30_000,  // renew every 30s (10× per lock window)
+      },
+    }),
   ],
   controllers: [PromptEngineController],
   providers: [
