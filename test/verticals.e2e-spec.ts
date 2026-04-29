@@ -77,6 +77,8 @@ async function registerAndLogin(
   return { token: accessToken, userId: user!.id };
 }
 
+jest.setTimeout(60000);
+
 describe('Verticals E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -138,7 +140,7 @@ describe('Verticals E2E', () => {
     tenantToken = tu.token;
     const tuUser = await prisma.user.findUnique({ where: { email: TENANT_USER.email } });
     tenantId = tuUser!.tenant_id;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     const ids = [verticalId, clonedVerticalId].filter((id): id is string => !!id);

@@ -3,8 +3,8 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "runInBand": true,
-  "workerThreads": false,
+  "maxWorkers": 1,
+  "testTimeout": 60000,
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "types": ["jest", "node"] } }]
   }

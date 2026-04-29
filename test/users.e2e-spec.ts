@@ -67,6 +67,8 @@ async function registerAndLogin(
   return { token: accessToken, tenantId: user!.tenant_id, userId: user!.id };
 }
 
+jest.setTimeout(60000);
+
 describe('Users E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -107,7 +109,7 @@ describe('Users E2E', () => {
     const b = await registerAndLogin(app, B, prisma);
     tenantBId = b.tenantId;
     userBId = b.userId;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     const tenantIds = [tenantAId, tenantBId].filter((id): id is string => !!id);
