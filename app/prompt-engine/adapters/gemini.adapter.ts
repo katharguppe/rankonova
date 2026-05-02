@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SYSTEM_PROMPT } from '../prompt-engine.constants';
 import { EngineResult, IEngineAdapter } from './engine-adapter.interface';
 
-const INPUT_COST_PER_TOKEN = 3.5 / 1_000_000;
-const OUTPUT_COST_PER_TOKEN = 10.5 / 1_000_000;
+const INPUT_COST_PER_TOKEN = 0.075 / 1_000_000;
+const OUTPUT_COST_PER_TOKEN = 0.30 / 1_000_000;
 
 @Injectable()
 export class GeminiAdapter implements IEngineAdapter {
@@ -16,7 +16,7 @@ export class GeminiAdapter implements IEngineAdapter {
 
   async execute(promptText: string): Promise<EngineResult> {
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-1.5-flash',
       systemInstruction: SYSTEM_PROMPT,
     });
 

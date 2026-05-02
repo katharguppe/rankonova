@@ -6,7 +6,7 @@ import { PE_REDIS } from '../prompt-engine.constants';
 const RATE_LIMITS: Partial<Record<AiEngine, number>> = {
   [AiEngine.chatgpt]: 5,
   [AiEngine.perplexity]: 3,
-  [AiEngine.gemini]: 2,
+  [AiEngine.gemini]: 10, // raised from 2 for stress test; Google free tier = 15 RPM
   [AiEngine.claude]: 10, // raised from 2 for dev; production cap via OpenRouter account limits
   [AiEngine.grok]: 2,
   [AiEngine.google_ai_overviews]: 2,

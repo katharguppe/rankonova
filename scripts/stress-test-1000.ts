@@ -177,7 +177,7 @@ async function main() {
       api('POST', '/prompt-engine/run', {
         clientId: client.id,
         promptId: prompt.id,
-        engines: ['claude'],
+        engines: ['gemini'],
       }, token).then((res) => {
         if (res.status === 200 || res.status === 201) {
           const ids: string[] = (res.data as any)?.runIds ?? [];
