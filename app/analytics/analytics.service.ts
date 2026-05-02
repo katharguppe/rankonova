@@ -3,6 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AnalyticsCitationService, CitationOverview } from './analytics-citation.service';
 import { AnalyticsSovService, SovEntry } from './analytics-sov.service';
 import { AnalyticsAnomalyService } from './analytics-anomaly.service';
+import {
+  AnalyticsDashboardService,
+  SentimentAnalysis,
+  PromptAnalysis,
+  EngineBreakdown,
+  CitationSource,
+  GeoBreakdown,
+} from './analytics-dashboard.service';
 
 @Injectable()
 export class AnalyticsService {
@@ -11,6 +19,7 @@ export class AnalyticsService {
     private readonly citation: AnalyticsCitationService,
     private readonly sov: AnalyticsSovService,
     private readonly anomaly: AnalyticsAnomalyService,
+    private readonly dashboard: AnalyticsDashboardService,
   ) {}
 
   async getCitationOverview(clientId: string): Promise<CitationOverview> {
@@ -28,5 +37,25 @@ export class AnalyticsService {
 
   async detectAnomalies(clientId: string, tenantId: string): Promise<void> {
     return this.anomaly.detectAnomalies(clientId, tenantId);
+  }
+
+  async getSentiment(clientId: string): Promise<SentimentAnalysis> {
+    return this.dashboard.getSentiment(clientId);
+  }
+
+  async getPrompts(clientId: string): Promise<PromptAnalysis[]> {
+    return this.dashboard.getPrompts(clientId);
+  }
+
+  async getEngines(clientId: string): Promise<EngineBreakdown[]> {
+    return this.dashboard.getEngines(clientId);
+  }
+
+  async getSources(clientId: string): Promise<CitationSource[]> {
+    return this.dashboard.getSources(clientId);
+  }
+
+  async getGeo(clientId: string): Promise<GeoBreakdown[]> {
+    return this.dashboard.getGeo(clientId);
   }
 }
