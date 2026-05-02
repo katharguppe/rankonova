@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { Sentiment } from '@prisma/client';
 
 export interface RawMention {
@@ -14,42 +14,46 @@ const SYSTEM_PROMPT =
   'You are a brand mention extractor. Extract all brand mentions. ' +
   'Return valid JSON only. No explanation. No markdown.';
 
-const SCHEMA_HINT =
-  'Return exactly: { "mentions": [{ "brand": string, "position": number, ' +
-  '"sentiment": "positive"|"negative"|"neutral"|"mixed", ' +
-  '"cited_url": string|null, "context_snippet": string|null }] }';
+const USER_TEMPLATE = (raw: string) =>
+  `Extract all brand mentions from this AI response.\n` +
+  `Return exactly: {"mentions":[{"brand":string,"position":number,"sentiment":"positive"|"negative"|"neutral"|"mixed","cited_url":string|null,"context_snippet":string|null}]}\n\n` +
+  `Response:\n${raw}`;
 
 @Injectable()
 export class ExtractionHaikuService {
   private readonly logger = new Logger(ExtractionHaikuService.name);
-  private readonly client: Anthropic;
+  private readonly client: OpenAI;
 
   constructor() {
-    this.client = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] });
+    // Cerebras llama3.1-8b: fast, free tier, OpenAI-compatible — used in place of Haiku
+    this.client = new OpenAI({
+      apiKey: process.env['CEREBRAS_API_KEY'],
+      baseURL: 'https://api.cerebras.ai/v1',
+    });
   }
 
   async extract(rawResponse: string): Promise<RawMention[]> {
     let text: string;
     try {
-      const response = await this.client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+      const response = await this.client.chat.completions.create({
+        model: 'llama3.1-8b',
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
         messages: [
-          {
-            role: 'user',
-            content: `Extract all brand mentions from this AI response.\n${SCHEMA_HINT}\n\nResponse:\n${rawResponse}`,
-          },
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: USER_TEMPLATE(rawResponse) },
         ],
       });
-      text = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      text = response.choices[0]?.message.content ?? '';
     } catch (err) {
-      this.logger.error(`Haiku API error: ${(err as Error).message}`);
+      this.logger.error(`Extraction LLM error: ${(err as Error).message}`);
       return [];
     }
 
+    // Strip markdown code fences if model wraps the JSON
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
     try {
-      const parsed = JSON.parse(text) as { mentions?: unknown[] };
+      const parsed = JSON.parse(cleaned) as { mentions?: unknown[] };
       const mentions = Array.isArray(parsed?.mentions) ? parsed.mentions : [];
       return mentions
         .filter((m): m is Record<string, unknown> => typeof m === 'object' && m !== null)
@@ -64,7 +68,7 @@ export class ExtractionHaikuService {
         }))
         .filter(m => m.brand.length > 0);
     } catch {
-      this.logger.warn('Haiku returned unparseable JSON — skipping extraction');
+      this.logger.warn(`Extraction returned unparseable JSON — skipping. Raw: ${text.slice(0, 200)}`);
       return [];
     }
   }

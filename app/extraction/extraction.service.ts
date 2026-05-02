@@ -24,6 +24,22 @@ export class ExtractionService {
     private readonly writer: ExtractionWriterService,
   ) {}
 
+  async runForPromptRun(promptRunId: string): Promise<number> {
+    const row = await this.prisma.promptRun.findUnique({
+      where: { id: promptRunId },
+      select: { client_id: true },
+    });
+    if (!row) return 0;
+    const clientId = row.client_id;
+    const clientRow = await this.prisma.client.findUnique({
+      where: { id: clientId },
+      select: { tenant_id: true },
+    });
+    const tenantId = clientRow?.tenant_id ?? '';
+    await this.handleExtractionRequested({ promptRunId, clientId, tenantId });
+    return this.prisma.brandMention.count({ where: { run_id: promptRunId } });
+  }
+
   @OnEvent('extraction.requested', { async: true })
   async handleExtractionRequested(event: ExtractionRequestedEvent): Promise<void> {
     const { promptRunId, clientId, tenantId } = event;
