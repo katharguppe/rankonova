@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 import { ExtractionHaikuService } from './extraction-haiku.service';
 import { ExtractionResolverService } from './extraction-resolver.service';
 import { ExtractionWriterService, MentionToWrite } from './extraction-writer.service';
@@ -21,6 +22,7 @@ export class ExtractionService {
     private readonly haiku: ExtractionHaikuService,
     private readonly resolver: ExtractionResolverService,
     private readonly writer: ExtractionWriterService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   async runForPromptRun(promptRunId: string): Promise<number> {
@@ -89,6 +91,10 @@ export class ExtractionService {
     });
 
     await this.writer.upsertMany(toWrite);
+
+    this.analyticsService
+      .detectAnomalies(clientId, tenantId)
+      .catch((err: Error) => this.logger.error(`anomaly detection failed for ${clientId}: ${err.message}`));
 
     const elapsed = Date.now() - start;
     if (elapsed > WARN_THRESHOLD_MS) {
