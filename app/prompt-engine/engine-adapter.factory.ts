@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiEngine } from '@prisma/client';
+import { CerebrasAdapter } from './adapters/cerebras.adapter';
 import { ChatGptAdapter } from './adapters/chatgpt.adapter';
 import { ClaudeAdapter } from './adapters/claude.adapter';
 import { GeminiAdapter } from './adapters/gemini.adapter';
@@ -17,6 +18,7 @@ export class EngineAdapterFactory {
     private readonly claude: ClaudeAdapter,
     private readonly grok: GrokAdapter,
     private readonly googleAio: GoogleAioAdapter,
+    private readonly cerebras: CerebrasAdapter,
   ) {}
 
   get(engine: AiEngine): IEngineAdapter {
@@ -33,6 +35,8 @@ export class EngineAdapterFactory {
         return this.grok;
       case AiEngine.google_ai_overviews:
         return this.googleAio;
+      case AiEngine.cerebras:
+        return this.cerebras;
     }
   }
 }

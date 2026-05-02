@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import Redis from 'ioredis';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PromptsModule } from '../prompts/prompts.module';
+import { CerebrasAdapter } from './adapters/cerebras.adapter';
 import { ChatGptAdapter } from './adapters/chatgpt.adapter';
 import { ClaudeAdapter } from './adapters/claude.adapter';
 import { GeminiAdapter } from './adapters/gemini.adapter';
@@ -38,6 +39,7 @@ import { PromptRunWorker } from './workers/prompt-run.worker';
     PromptRunWorker,
     PromptEngineScheduler,
     EngineAdapterFactory,
+    CerebrasAdapter,
     ChatGptAdapter,
     PerplexityAdapter,
     GeminiAdapter,

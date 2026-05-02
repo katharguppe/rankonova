@@ -10,6 +10,7 @@ const RATE_LIMITS: Partial<Record<AiEngine, number>> = {
   [AiEngine.claude]: 10, // raised from 2 for dev; production cap via OpenRouter account limits
   [AiEngine.grok]: 2,
   [AiEngine.google_ai_overviews]: 2,
+  [AiEngine.cerebras]: 10, // free tier 30 RPM; capped at 10 to match stress-test batch size
 };
 
 // Atomic check-and-increment via Lua to avoid TOCTOU race

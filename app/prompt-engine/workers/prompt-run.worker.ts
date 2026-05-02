@@ -30,7 +30,7 @@ export class PromptRunWorker {
     private readonly quotaService: QuotaService,
   ) {}
 
-  @Process({ name: 'run-prompt', concurrency: 10 })
+  @Process({ name: 'run-prompt', concurrency: 1 })
   async process(job: Job<PromptRunJobPayload>): Promise<void> {
     const { promptRunId, promptId, clientId, tenantId, engine } = job.data;
 

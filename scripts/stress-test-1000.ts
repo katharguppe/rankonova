@@ -20,7 +20,7 @@ const STRESS_SLUG = 'stress-1000';
 const STRESS_EMAIL = 'stress-1000@aeo-suite-test.invalid';
 const STRESS_PASSWORD = 'StressTest1!';
 const BATCH_SIZE = 10;
-const BATCHES = 100;
+const BATCHES = 10; // pilot: 100 runs; change to 90 for remaining after pilot passes
 const INTER_BATCH_MS = 65_000;
 const POLL_INTERVAL_MS = 10_000;
 const POST_QUEUE_POLL_TIMEOUT_MS = 20 * 60_000; // 20 min for tail-end runs to finish
@@ -177,7 +177,7 @@ async function main() {
       api('POST', '/prompt-engine/run', {
         clientId: client.id,
         promptId: prompt.id,
-        engines: ['gemini'],
+        engines: ['cerebras'],
       }, token).then((res) => {
         if (res.status === 200 || res.status === 201) {
           const ids: string[] = (res.data as any)?.runIds ?? [];

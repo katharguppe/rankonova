@@ -16,7 +16,7 @@ export class GeminiAdapter implements IEngineAdapter {
 
   async execute(promptText: string): Promise<EngineResult> {
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: SYSTEM_PROMPT,
     });
 
