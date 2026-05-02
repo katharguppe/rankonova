@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import Redis from 'ioredis';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PromptsModule } from '../prompts/prompts.module';
+import { ExtractionModule } from '../extraction/extraction.module';
 import { CerebrasAdapter } from './adapters/cerebras.adapter';
 import { ChatGptAdapter } from './adapters/chatgpt.adapter';
 import { ClaudeAdapter } from './adapters/claude.adapter';
@@ -24,6 +25,7 @@ import { PromptRunWorker } from './workers/prompt-run.worker';
   imports: [
     PrismaModule,
     PromptsModule,
+    ExtractionModule,
     BullModule.registerQueue({
       name: PROMPT_RUNS_QUEUE,
       settings: {

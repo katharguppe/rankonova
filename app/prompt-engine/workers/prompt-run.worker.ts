@@ -1,7 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common';
 import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bull';
 import { PromptRunStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -11,6 +10,7 @@ import { EngineRateLimiterService } from '../rate-limiter/engine-rate-limiter.se
 import { CostTrackerService } from '../cost/cost-tracker.service';
 import { PROMPT_RUNS_QUEUE } from '../prompt-engine.constants';
 import { PromptRunJobPayload } from '../prompt-engine.types';
+import { ExtractionService } from '../../extraction/extraction.service';
 
 function substituteTokens(text: string, city: string, brand: string, model: string): string {
   return text
@@ -29,7 +29,7 @@ export class PromptRunWorker {
     private readonly rateLimiter: EngineRateLimiterService,
     private readonly costTracker: CostTrackerService,
     private readonly quotaService: QuotaService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly extractionService: ExtractionService,
   ) {}
 
   @Process({ name: 'run-prompt', concurrency: 1 })
@@ -103,7 +103,9 @@ export class PromptRunWorker {
         this.costTracker.incrementCost(tenantId, result.costUsd),
       ]);
 
-      this.eventEmitter.emit('extraction.requested', { promptRunId, clientId, tenantId });
+      this.extractionService.runForPromptRun(promptRunId).catch((err: Error) =>
+        this.logger.error(`Extraction failed for run ${promptRunId}: ${err.message}`),
+      );
     } catch (err) {
       if (err instanceof NotImplementedException) {
         // Engine not available — fail immediately, no retry

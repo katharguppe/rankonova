@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExtractionHaikuService } from './extraction-haiku.service';
 import { ExtractionResolverService } from './extraction-resolver.service';
@@ -40,7 +39,6 @@ export class ExtractionService {
     return this.prisma.brandMention.count({ where: { run_id: promptRunId } });
   }
 
-  @OnEvent('extraction.requested', { async: true })
   async handleExtractionRequested(event: ExtractionRequestedEvent): Promise<void> {
     const { promptRunId, clientId, tenantId } = event;
     const start = Date.now();
