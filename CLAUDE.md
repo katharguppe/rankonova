@@ -4,7 +4,7 @@
 ## Stack
 NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Router, shadcn/ui, Tailwind, Docker
 
-## Current Phase: 0
+## Current Phase: 4 (complete) — next: Phase 5
 
 ## Module Boundaries
   Session -> auth	: app\auth\ only
