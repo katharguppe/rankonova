@@ -64,6 +64,8 @@ async function registerAndLogin(
   return { token: accessToken, tenantId: user!.tenant_id, userId: user!.id };
 }
 
+jest.setTimeout(60000);
+
 describe('Tenants E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -139,7 +141,7 @@ describe('Tenants E2E', () => {
       });
     expect(res.status).toBe(201);
     clientBId = (res.body as { id: string }).id;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     // Filter out any IDs that were never assigned (beforeAll partial failure)

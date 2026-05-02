@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
@@ -24,6 +26,8 @@ import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({ redis: process.env['REDIS_URL'] ?? 'redis://localhost:6379' }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     HealthModule,
     CommonModule,

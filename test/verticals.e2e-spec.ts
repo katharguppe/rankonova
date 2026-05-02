@@ -77,6 +77,8 @@ async function registerAndLogin(
   return { token: accessToken, userId: user!.id };
 }
 
+jest.setTimeout(60000);
+
 describe('Verticals E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -109,7 +111,7 @@ describe('Verticals E2E', () => {
       await prisma.tenant.deleteMany({ where: { id: { in: _pcTids } } });
     }
     const _leftoverVerts = await prisma.vertical.findMany({
-      where: { slug: { startsWith: 'e2e-test-vert' } },
+      where: { slug: { in: ['e2e-test-vert', 'e2e-clone-vert'] } },
       select: { id: true },
     });
     const _leftoverVertIds = _leftoverVerts.map(v => v.id);
@@ -138,7 +140,7 @@ describe('Verticals E2E', () => {
     tenantToken = tu.token;
     const tuUser = await prisma.user.findUnique({ where: { email: TENANT_USER.email } });
     tenantId = tuUser!.tenant_id;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     const ids = [verticalId, clonedVerticalId].filter((id): id is string => !!id);

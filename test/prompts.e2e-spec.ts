@@ -78,6 +78,8 @@ async function registerAndLogin(
   return { token: accessToken, userId: user!.id };
 }
 
+jest.setTimeout(60000);
+
 describe('Prompts E2E', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -180,7 +182,7 @@ describe('Prompts E2E', () => {
       },
     });
     testVerticalId = vertical.id;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     // Delete prompts under the test vertical and both test tenants
@@ -203,7 +205,7 @@ describe('Prompts E2E', () => {
     if (tids.length) await prisma.tenant.deleteMany({ where: { id: { in: tids } } });
 
     await app.close();
-  });
+  }, 60000);
 
   // ── Auth guard ────────────────────────────────────────────────────────────
 

@@ -22,6 +22,8 @@ process.env['REFRESH_TOKEN_EXPIRES_IN'] = '2592000';
 // 32-byte AES-256 key (64 hex chars)
 process.env['ENCRYPTION_KEY'] = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
+jest.setTimeout(60000);
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;

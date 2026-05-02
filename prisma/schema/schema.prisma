@@ -95,6 +95,7 @@ enum AiEngine {
   claude
   grok
   google_ai_overviews
+  cerebras
 }
 
 enum ResponseStatus {

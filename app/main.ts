@@ -1,10 +1,18 @@
+import * as dotenv from 'dotenv';
+dotenv.config({ override: true }); // .env wins over stale Windows user-level env vars in dev
 import { generateKeyPairSync } from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
+import { createBullBoard } from '@bull-board/api';
+import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { getQueueToken } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { AppModule } from './app.module';
+import { PROMPT_RUNS_QUEUE } from './prompt-engine/prompt-engine.constants';
 
 function seedDevKeys(): void {
   if (process.env['JWT_PUBLIC_KEY']) return;
@@ -43,6 +51,22 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
+
+  // BullBoard — mount before listen; protected by shared secret header
+  const bullBoardAdapter = new ExpressAdapter();
+  bullBoardAdapter.setBasePath('/admin/queues');
+  createBullBoard({
+    queues: [new BullAdapter(app.get<Queue>(getQueueToken(PROMPT_RUNS_QUEUE)))],
+    serverAdapter: bullBoardAdapter,
+  });
+  app.use('/admin/queues', (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+    const secret = process.env['ADMIN_QUEUE_SECRET'];
+    if (secret && req.headers['x-admin-secret'] !== secret) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    next();
+  }, bullBoardAdapter.getRouter());
 
   const port = parseInt(process.env['PORT'] ?? '3000', 10);
   await app.listen(port);
