@@ -1,11 +1,11 @@
 /**
- * Phase 3 Exit Criteria: 1000-run stress test via Claude/OpenRouter.
+ * Phase 3 Exit Criteria: 1000-run stress test via Cerebras (llama3.1-8b).
  * 100 batches of 10 jobs, 65-second inter-batch wait.
  * All records kept in prompt_runs table. No cleanup at end.
  *
- * Run: npx ts-node scripts/stress-test-1000.ts
- * Expected duration: ~110 minutes
- * Expected cost: ~$5 USD (OpenRouter Claude)
+ * Run:            npx ts-node scripts/stress-test-1000.ts
+ * Continue mode:  npx ts-node scripts/stress-test-1000.ts --continue
+ *   --continue skips pre-cleanup + registration; reuses existing tenant/client.
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -20,7 +20,7 @@ const STRESS_SLUG = 'stress-1000';
 const STRESS_EMAIL = 'stress-1000@aeo-suite-test.invalid';
 const STRESS_PASSWORD = 'StressTest1!';
 const BATCH_SIZE = 10;
-const BATCHES = 10; // pilot: 100 runs; change to 90 for remaining after pilot passes
+const BATCHES = 90; // remaining 900 runs after pilot; set to 10 for pilot, 100 for full fresh run
 const INTER_BATCH_MS = 65_000;
 const POLL_INTERVAL_MS = 10_000;
 const POST_QUEUE_POLL_TIMEOUT_MS = 20 * 60_000; // 20 min for tail-end runs to finish
@@ -33,6 +33,16 @@ function ts() {
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+async function doLogin(email: string, password: string): Promise<string> {
+  const res = await api('POST', '/auth/login', { email, password });
+  if (res.status !== 200 && res.status !== 201) {
+    throw new Error(`Login failed (${res.status}): ${JSON.stringify(res.data)}`);
+  }
+  const tok = (res.data as any)?.accessToken as string;
+  if (!tok) throw new Error('No accessToken in login response');
+  return tok;
 }
 
 async function api(
@@ -54,45 +64,26 @@ async function api(
 }
 
 async function main() {
+  const continueMode = process.argv.includes('--continue');
   const pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter } as any);
   await prisma.$connect();
 
   const startTime = Date.now();
+  const modeLabel = continueMode ? 'CONTINUE (+900)' : 'FRESH (100)';
   console.log(`\n[${ts()}] ═══════════════════════════════════════════════════`);
-  console.log(`[${ts()}] Phase 3 Exit Criteria: 1000-run stress test`);
+  console.log(`[${ts()}] Phase 3 Exit Criteria: 1000-run stress test [${modeLabel}]`);
   console.log(`[${ts()}] ${BATCHES} batches × ${BATCH_SIZE} jobs, ${INTER_BATCH_MS / 1000}s inter-batch wait`);
   console.log(`[${ts()}] ═══════════════════════════════════════════════════\n`);
 
-  // ── Step 1: Pre-cleanup any leftover stress data ────────────────────────────
-  console.log(`[${ts()}] [1] Pre-cleanup stress-1000 tenant...`);
-  const leftoverTenant = await (prisma as any).tenant.findUnique({
-    where: { slug: STRESS_SLUG },
-    select: { id: true },
-  });
-  if (leftoverTenant) {
-    const users = await (prisma as any).user.findMany({
-      where: { tenant_id: leftoverTenant.id },
-      select: { id: true },
-    });
-    const userIds = users.map((u: any) => u.id);
-    if (userIds.length) {
-      await (prisma as any).authEvent.deleteMany({ where: { user_id: { in: userIds } } });
-      await (prisma as any).refreshToken.deleteMany({ where: { user_id: { in: userIds } } });
-    }
-    await (prisma as any).promptRun.deleteMany({ where: { client: { tenant_id: leftoverTenant.id } } });
-    await (prisma as any).client.deleteMany({ where: { tenant_id: leftoverTenant.id } });
-    await (prisma as any).user.deleteMany({ where: { tenant_id: leftoverTenant.id } });
-    await (prisma as any).tenant.delete({ where: { id: leftoverTenant.id } });
-    console.log(`    Removed leftover tenant.`);
-  } else {
-    console.log(`    No leftover data.`);
-  }
+  let token: string;
+  let client: { id: string };
+  let prompt: { id: string; text: string };
 
-  // ── Step 2: Find an active prompt ─────────────────────────────────────────
-  console.log(`\n[${ts()}] [2] Finding active prompt...`);
-  const prompt = await (prisma as any).prompt.findFirst({
+  // ── Step 2: Find an active prompt (always needed) ─────────────────────────
+  console.log(`[${ts()}] [1] Finding active prompt...`);
+  prompt = await (prisma as any).prompt.findFirst({
     where: { is_active: true },
     select: { id: true, text: true },
     orderBy: { created_at: 'asc' },
@@ -101,65 +92,84 @@ async function main() {
   console.log(`    prompt.id=${prompt.id}`);
   console.log(`    text: ${prompt.text.slice(0, 80)}${prompt.text.length > 80 ? '...' : ''}`);
 
-  // ── Step 3: Register tenant+user ───────────────────────────────────────────
-  console.log(`\n[${ts()}] [3] Registering stress tenant...`);
-  const reg = await api('POST', '/auth/register', {
-    email: STRESS_EMAIL,
-    password: STRESS_PASSWORD,
-    tenantName: 'Stress Test 1000',
-    tenantSlug: STRESS_SLUG,
-    billingEmail: STRESS_EMAIL,
-  });
-  if (reg.status !== 201) throw new Error(`Register failed (${reg.status}): ${JSON.stringify(reg.data)}`);
-  const verificationToken = (reg.data as any)?.verificationToken as string;
-  if (!verificationToken) throw new Error('No verificationToken in register response');
+  if (continueMode) {
+    // ── Continue mode: reuse existing tenant + client, skip cleanup ──────────
+    console.log(`\n[${ts()}] [2] Continue mode — reusing existing stress-1000 tenant...`);
+    const tenant = await (prisma as any).tenant.findUnique({
+      where: { slug: STRESS_SLUG }, select: { id: true },
+    });
+    if (!tenant) throw new Error('stress-1000 tenant not found — run without --continue first.');
 
-  // ── Step 4: Verify email ──────────────────────────────────────────────────
-  const verify = await api('GET', `/auth/verify-email?token=${verificationToken}`);
-  if (verify.status !== 200) throw new Error(`Email verify failed (${verify.status}): ${JSON.stringify(verify.data)}`);
-  console.log(`    Tenant registered + email verified.`);
+    const existingClient = await (prisma as any).client.findFirst({
+      where: { tenant_id: tenant.id, is_active: true },
+      select: { id: true },
+    });
+    if (!existingClient) throw new Error('No active client for stress-1000 tenant.');
+    client = existingClient;
+    console.log(`    Reusing client.id=${client.id}`);
 
-  // ── Step 5: Login ─────────────────────────────────────────────────────────
-  console.log(`\n[${ts()}] [4] Logging in...`);
-  const login = await api('POST', '/auth/login', { email: STRESS_EMAIL, password: STRESS_PASSWORD });
-  if (login.status !== 200 && login.status !== 201) {
-    throw new Error(`Login failed (${login.status}): ${JSON.stringify(login.data)}`);
+    console.log(`\n[${ts()}] [3] Logging in...`);
+    token = await doLogin(STRESS_EMAIL, STRESS_PASSWORD);
+    console.log(`    Login OK.`);
+  } else {
+    // ── Fresh mode: pre-cleanup + register + create client ────────────────────
+    console.log(`\n[${ts()}] [2] Pre-cleanup stress-1000 tenant...`);
+    const leftoverTenant = await (prisma as any).tenant.findUnique({
+      where: { slug: STRESS_SLUG }, select: { id: true },
+    });
+    if (leftoverTenant) {
+      const users = await (prisma as any).user.findMany({
+        where: { tenant_id: leftoverTenant.id }, select: { id: true },
+      });
+      const userIds = users.map((u: any) => u.id);
+      if (userIds.length) {
+        await (prisma as any).authEvent.deleteMany({ where: { user_id: { in: userIds } } });
+        await (prisma as any).refreshToken.deleteMany({ where: { user_id: { in: userIds } } });
+      }
+      await (prisma as any).promptRun.deleteMany({ where: { client: { tenant_id: leftoverTenant.id } } });
+      await (prisma as any).client.deleteMany({ where: { tenant_id: leftoverTenant.id } });
+      await (prisma as any).user.deleteMany({ where: { tenant_id: leftoverTenant.id } });
+      await (prisma as any).tenant.delete({ where: { id: leftoverTenant.id } });
+      console.log(`    Removed leftover tenant.`);
+    } else {
+      console.log(`    No leftover data.`);
+    }
+
+    console.log(`\n[${ts()}] [3] Registering stress tenant...`);
+    const reg = await api('POST', '/auth/register', {
+      email: STRESS_EMAIL, password: STRESS_PASSWORD,
+      tenantName: 'Stress Test 1000', tenantSlug: STRESS_SLUG, billingEmail: STRESS_EMAIL,
+    });
+    if (reg.status !== 201) throw new Error(`Register failed (${reg.status}): ${JSON.stringify(reg.data)}`);
+    const verificationToken = (reg.data as any)?.verificationToken as string;
+    if (!verificationToken) throw new Error('No verificationToken in register response');
+    const verify = await api('GET', `/auth/verify-email?token=${verificationToken}`);
+    if (verify.status !== 200) throw new Error(`Email verify failed (${verify.status}): ${JSON.stringify(verify.data)}`);
+    console.log(`    Tenant registered + email verified.`);
+
+    console.log(`\n[${ts()}] [4] Logging in...`);
+    token = await doLogin(STRESS_EMAIL, STRESS_PASSWORD);
+    console.log(`    Login OK.`);
+
+    console.log(`\n[${ts()}] [5] Creating stress client in DB...`);
+    const tenant = await (prisma as any).tenant.findUnique({
+      where: { slug: STRESS_SLUG }, select: { id: true },
+    });
+    if (!tenant) throw new Error('Stress tenant not found after registration');
+    const anyVertical = await (prisma as any).vertical.findFirst({
+      where: { is_active: true }, select: { id: true, name: true }, orderBy: { created_at: 'asc' },
+    });
+    if (!anyVertical) throw new Error('No active vertical found — run the seed first.');
+    client = await (prisma as any).client.create({
+      data: {
+        tenant_id: tenant.id, vertical_id: anyVertical.id,
+        name: 'Stress Test Client', brand_name: 'StressClient',
+        aliases: ['StressClient'], city: 'TestCity', state: 'TestState',
+        website_url: 'https://stress-test.invalid', models: {}, is_active: true,
+      },
+    });
+    console.log(`    client.id=${client.id}  vertical=${anyVertical.name}`);
   }
-  const token = (login.data as any)?.accessToken as string;
-  if (!token) throw new Error('No accessToken in login response');
-  console.log(`    Login OK.`);
-
-  // ── Step 6: Create client ─────────────────────────────────────────────────
-  console.log(`\n[${ts()}] [5] Creating stress client in DB...`);
-  const tenant = await (prisma as any).tenant.findUnique({
-    where: { slug: STRESS_SLUG },
-    select: { id: true },
-  });
-  if (!tenant) throw new Error('Stress tenant not found after registration');
-
-  // Find any active vertical for the client
-  const anyVertical = await (prisma as any).vertical.findFirst({
-    where: { is_active: true },
-    select: { id: true, name: true },
-    orderBy: { created_at: 'asc' },
-  });
-  if (!anyVertical) throw new Error('No active vertical found — run the seed first.');
-
-  const client = await (prisma as any).client.create({
-    data: {
-      tenant_id: tenant.id,
-      vertical_id: anyVertical.id,
-      name: 'Stress Test Client',
-      brand_name: 'StressClient',
-      aliases: ['StressClient'],
-      city: 'TestCity',
-      state: 'TestState',
-      website_url: 'https://stress-test.invalid',
-      models: {},
-      is_active: true,
-    },
-  });
-  console.log(`    client.id=${client.id}  vertical=${anyVertical.name}`);
 
   // ── Step 7: Queue 1000 runs in 100 batches ────────────────────────────────
   console.log(`\n[${ts()}] [6] Starting load: ${BATCHES} batches × ${BATCH_SIZE} = ${BATCHES * BATCH_SIZE} runs`);
@@ -172,25 +182,40 @@ async function main() {
     const batchRunIds: string[] = [];
     const batchErrors: string[] = [];
 
-    // Fire BATCH_SIZE requests as fast as possible
-    const fires = Array.from({ length: BATCH_SIZE }, (_, i) =>
-      api('POST', '/prompt-engine/run', {
-        clientId: client.id,
-        promptId: prompt.id,
-        engines: ['cerebras'],
-      }, token).then((res) => {
-        if (res.status === 200 || res.status === 201) {
-          const ids: string[] = (res.data as any)?.runIds ?? [];
-          batchRunIds.push(...ids);
-        } else {
-          batchErrors.push(`job ${i + 1}: HTTP ${res.status} — ${JSON.stringify(res.data)}`);
-        }
-      }).catch((err: Error) => {
-        batchErrors.push(`job ${i + 1}: ${err.message}`);
-      }),
-    );
+    const fireJobs = async (tok: string) => {
+      const runIds: string[] = [];
+      const errors: string[] = [];
+      await Promise.all(Array.from({ length: BATCH_SIZE }, (_, i) =>
+        api('POST', '/prompt-engine/run', {
+          clientId: client.id,
+          promptId: prompt.id,
+          engines: ['cerebras'],
+        }, tok).then((res) => {
+          if (res.status === 200 || res.status === 201) {
+            const ids: string[] = (res.data as any)?.runIds ?? [];
+            runIds.push(...ids);
+          } else {
+            errors.push(`job ${i + 1}: HTTP ${res.status} — ${JSON.stringify(res.data)}`);
+          }
+        }).catch((err: Error) => {
+          errors.push(`job ${i + 1}: ${err.message}`);
+        }),
+      ));
+      return { runIds, errors };
+    };
 
-    await Promise.all(fires);
+    let { runIds: batchRun, errors: batchErrs } = await fireJobs(token);
+
+    // Re-login and retry once if all jobs returned 401 (NestJS watch-mode restart invalidated JWT)
+    if (batchErrs.length > 0 && batchErrs.every(e => e.includes('HTTP 401'))) {
+      console.log(`[${ts()}] Batch ${batch}: all 401 — re-logging in (app restart detected)...`);
+      token = await doLogin(STRESS_EMAIL, STRESS_PASSWORD);
+      console.log(`[${ts()}] Re-login OK. Retrying batch ${batch}...`);
+      ({ runIds: batchRun, errors: batchErrs } = await fireJobs(token));
+    }
+
+    batchRunIds.push(...batchRun);
+    batchErrors.push(...batchErrs);
     allRunIds.push(...batchRunIds);
     batchFailures += batchErrors.length;
 
