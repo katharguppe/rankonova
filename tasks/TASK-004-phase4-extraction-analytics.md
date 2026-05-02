@@ -1,6 +1,6 @@
 # TASK-004: Phase 4 — Extraction and Analytics
 
-## Status: IN PROGRESS
+## Status: DONE
 ## Phase: 4
 ## Branch: feature/TASK-004 (created from main dbf070fa, 2026-05-02)
 
@@ -57,10 +57,15 @@ AnalyticsService facade + AnalyticsController (2 GET endpoints, JWT auth) + Anal
 **Do:** Implemented in commit `7e5134a2` on feature/TASK-004.
 9 files: 4 new analytics services, constants, updated module/controller/service, extraction wired.
 
-**Check:** tsc --noEmit clean, eslint --max-warnings=0 clean. Awaiting smoke test (fire run → verify
-citation cache keys set, SoV endpoint returns data, anomaly check runs without error).
+**Check:** tsc --noEmit clean, eslint --max-warnings=0 clean. Smoke test PASSED:
+- GET /analytics/:clientId/citation-overview → {windows:{7d:9.34,30d:9.34,90d:9.34}, byEngine:{cerebras:9.34}, byIntent:{purchase_intent:9.37,local_discovery:0}}
+- GET /analytics/:clientId/share-of-voice → [{brand_name:"StressClient",is_client:true,citation_rate:9.34}]
+- Redis keys: citation:*:overview + citation:*:24h (9.33) + citation:*:24h:prev all set, TTL 1h
+- detectAnomalies fired, no false-positive notifications
+- 8 brand_mentions auto-created on new run (Google, Amazon, Apple, etc.)
+- 89/89 E2E green
 
-**Act:** Pending smoke test results.
+**Act:** All checks PASSED. Merged to main.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
