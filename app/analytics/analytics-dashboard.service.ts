@@ -216,11 +216,9 @@ export class AnalyticsDashboardService {
       LIMIT 20
     `;
 
-    const result: CitationSource[] = rows.map(r => ({
-      url: r.url,
-      domain: this.extractDomain(r.url),
-      mention_count: parseInt(r.mention_count, 10),
-    }));
+    const result: CitationSource[] = rows
+      .map(r => ({ url: r.url, domain: this.extractDomain(r.url), mention_count: parseInt(r.mention_count, 10) }))
+      .filter(r => r.url && r.url !== 'null' && r.domain !== '');
 
     await this.redis.setex(`analytics:${clientId}:sources`, TTL, JSON.stringify(result));
     return result;
