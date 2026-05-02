@@ -37,6 +37,8 @@ export class EngineAdapterFactory {
         return this.googleAio;
       case AiEngine.cerebras:
         return this.cerebras;
+      default:
+        throw new Error(`Unsupported engine: ${engine as string}`);
     }
   }
 }
