@@ -1,10 +1,19 @@
-export default function PromptsPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-slate-900">Prompt Analysis</h1>
-      <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
-        Coming in Cycle 2
-      </div>
-    </div>
-  );
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
+import type { PromptAnalysis } from '@/lib/types';
+import PromptsClient from './PromptsClient';
+
+export default async function PromptsPage({ params }: { params: { clientId: string } }) {
+  const token = cookies().get('aeo_access_token')?.value;
+  if (!token) redirect('/login');
+
+  let initial: PromptAnalysis[] | null = null;
+  try {
+    initial = await apiFetch<PromptAnalysis[]>(`/analytics/${params.clientId}/prompts`, token);
+  } catch {
+    // render with null; client will retry via SWR
+  }
+
+  return <PromptsClient clientId={params.clientId} initial={initial} />;
 }

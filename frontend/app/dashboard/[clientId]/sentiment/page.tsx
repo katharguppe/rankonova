@@ -1,10 +1,19 @@
-export default function SentimentPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-slate-900">Sentiment Analysis</h1>
-      <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
-        Coming in Cycle 2
-      </div>
-    </div>
-  );
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
+import type { SentimentAnalysis } from '@/lib/types';
+import SentimentClient from './SentimentClient';
+
+export default async function SentimentPage({ params }: { params: { clientId: string } }) {
+  const token = cookies().get('aeo_access_token')?.value;
+  if (!token) redirect('/login');
+
+  let initial: SentimentAnalysis | null = null;
+  try {
+    initial = await apiFetch<SentimentAnalysis>(`/analytics/${params.clientId}/sentiment`, token);
+  } catch {
+    // render with null; client will retry via SWR
+  }
+
+  return <SentimentClient clientId={params.clientId} initial={initial} />;
 }
