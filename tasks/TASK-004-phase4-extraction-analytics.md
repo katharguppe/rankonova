@@ -1,8 +1,8 @@
 # TASK-004: Phase 4 — Extraction and Analytics
 
-## Status: PLANNING
+## Status: IN PROGRESS
 ## Phase: 4
-## Branch: feature/TASK-004 (create when TASK-003 exits)
+## Branch: feature/TASK-004 (created from main dbf070fa, 2026-05-02)
 
 ## Objective
 Async extraction pipeline processes every PromptRun and produces structured BrandMention records via Claude Haiku. Citation scoring (7/30/90-day windows) cached in Redis. Share of voice, anomaly detection with alerting.
@@ -28,22 +28,28 @@ Async extraction pipeline processes every PromptRun and produces structured Bran
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
-**Do:**
-**Check:**
-**Act:**
+**Plan:** ExtractionHaikuService (structured JSON via claude-haiku-4-5-20251001) + alias-aware
+resolver + idempotent writer + OnEvent orchestrator. EventEmitterModule wired globally.
+Minimal touch to PromptRunWorker (emit only). Prisma migration adds @@unique([run_id, brand_name]).
+
+**Approved:** Yes (2026-05-02)
+
+**Do:** Implemented in commit `5dfa9183` on feature/TASK-004.
+
+**Check:** tsc --noEmit clean, eslint --max-warnings=0 clean. App restart pending.
+
+**Act:** Pending live smoke test and 200-response accuracy validation.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Claude Haiku extraction service | TODO | — | Structured JSON output |
-| Alias resolution logic | TODO | — | Client + competitor aliases |
-| BrandMention writer (idempotent) | TODO | — | Upsert on run_id + brand |
-| Citation score calculator | TODO | — | 7/30/90-day windows |
-| Redis cache writer/reader | TODO | — | TTL 1h, recalc on miss |
-| Share of voice query | TODO | — | Client vs each competitor |
-| Anomaly detector | TODO | — | Threshold checks post-extraction |
-| Notification creator | TODO | — | Critical/High on breach |
-| extraction.requested event handler | TODO | — | Wired to PromptRun completion |
+| Claude Haiku extraction service | DONE | `5dfa9183` | claude-haiku-4-5-20251001, structured JSON, malformed JSON safe |
+| Alias resolution logic | DONE | `5dfa9183` | Client + competitor aliases, lowercase normalisation |
+| BrandMention writer (idempotent) | DONE | `5dfa9183` | Upsert on @@unique([run_id, brand_name]) |
+| extraction.requested event handler | DONE | `5dfa9183` | OnEvent orchestrator, <3s warn threshold, idempotency guard |
+| Citation score calculator | TODO | — | 7/30/90-day windows (analytics session) |
+| Redis cache writer/reader | TODO | — | TTL 1h, recalc on miss (analytics session) |
+| Share of voice query | TODO | — | Client vs each competitor (analytics session) |
+| Anomaly detector | TODO | — | Threshold checks post-extraction (analytics session) |
+| Notification creator | TODO | — | Critical/High on breach (analytics session) |
 | 200-response accuracy validation | TODO | — | Manual ground truth comparison |
