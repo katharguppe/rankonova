@@ -413,6 +413,7 @@ model BrandMention {
   client     Client      @relation(fields: [client_id], references: [id])
   competitor Competitor? @relation(fields: [competitor_id], references: [id])
 
+  @@unique([run_id, brand_name])
   @@index([run_id])
   @@index([client_id])
   @@index([competitor_id])

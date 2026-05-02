@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common';
 import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bull';
 import { PromptRunStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -28,6 +29,7 @@ export class PromptRunWorker {
     private readonly rateLimiter: EngineRateLimiterService,
     private readonly costTracker: CostTrackerService,
     private readonly quotaService: QuotaService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Process({ name: 'run-prompt', concurrency: 1 })
@@ -100,6 +102,8 @@ export class PromptRunWorker {
         this.quotaService.increment(tenantId),
         this.costTracker.incrementCost(tenantId, result.costUsd),
       ]);
+
+      this.eventEmitter.emit('extraction.requested', { promptRunId, clientId, tenantId });
     } catch (err) {
       if (err instanceof NotImplementedException) {
         // Engine not available — fail immediately, no retry
