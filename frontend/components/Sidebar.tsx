@@ -39,13 +39,16 @@ export default function Sidebar({ clientId, brandName }: SidebarProps) {
   }
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col h-screen bg-white border-r border-slate-200">
-      <div className="px-4 py-5 border-b border-slate-100">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
-        <p className="text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
+    <aside className="w-14 md:w-56 shrink-0 flex flex-col h-screen bg-white border-r border-slate-200">
+      <div className="px-3 md:px-4 py-5 border-b border-slate-100">
+        <p className="hidden md:block text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
+        <p className="hidden md:block text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
+        <div className="md:hidden flex justify-center">
+          <span className="text-xs font-bold text-blue-600">A</span>
+        </div>
       </div>
 
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-1 md:px-2 py-3 space-y-0.5 overflow-y-auto">
         {sections.map(({ href, label, icon: Icon }) => {
           const full = `/dashboard/${clientId}/${href}`;
           const active = pathname === full;
@@ -53,27 +56,29 @@ export default function Sidebar({ clientId, brandName }: SidebarProps) {
             <Link
               key={href}
               href={full}
+              title={label}
               className={cn(
-                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+                'flex items-center gap-2.5 px-2 md:px-3 py-2 rounded-lg text-sm transition-colors',
                 active
                   ? 'bg-blue-50 text-blue-700 font-medium'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
               )}
             >
-              <Icon size={15} />
-              {label}
+              <Icon size={15} className="shrink-0" />
+              <span className="hidden md:inline">{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-2 py-3 border-t border-slate-100">
+      <div className="px-1 md:px-2 py-3 border-t border-slate-100">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2.5 px-3 py-2 w-full rounded-lg text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          title="Sign out"
+          className="flex items-center gap-2.5 px-2 md:px-3 py-2 w-full rounded-lg text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
         >
-          <LogOut size={15} />
-          Sign out
+          <LogOut size={15} className="shrink-0" />
+          <span className="hidden md:inline">Sign out</span>
         </button>
       </div>
     </aside>

@@ -69,8 +69,8 @@ export default function PromptsClient({ clientId, initial }: Props) {
         <p className="text-sm text-slate-500 mt-0.5">Citation rate per prompt (last 30 days)</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50 text-left">
               <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-1/2">

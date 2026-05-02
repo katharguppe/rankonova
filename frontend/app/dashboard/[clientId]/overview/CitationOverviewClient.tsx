@@ -60,7 +60,7 @@ export default function CitationOverviewClient({ clientId, initial }: Props) {
       </div>
 
       {/* Top KPI row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {(['7d', '30d', '90d'] as const).map(w => (
           <div key={w} className="bg-white rounded-xl border border-slate-200 p-5">
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -83,7 +83,7 @@ export default function CitationOverviewClient({ clientId, initial }: Props) {
       </div>
 
       {/* Gauge + Engine chart row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* 7-day radial gauge */}
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-sm font-medium text-slate-700 mb-3">7-day Citation Rate</p>
@@ -145,10 +145,10 @@ function OverviewSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       <div className="h-6 w-48 bg-slate-200 rounded" />
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[0, 1, 2].map(i => <div key={i} className="h-28 bg-slate-100 rounded-xl" />)}
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="h-64 bg-slate-100 rounded-xl" />
         <div className="h-64 bg-slate-100 rounded-xl" />
       </div>

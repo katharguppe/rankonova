@@ -68,7 +68,7 @@ export default function SentimentClient({ clientId, initial }: Props) {
       </div>
 
       {/* Donut + stats row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <p className="text-sm font-medium text-slate-700 mb-3">Overall Sentiment</p>
           {total === 0 ? (

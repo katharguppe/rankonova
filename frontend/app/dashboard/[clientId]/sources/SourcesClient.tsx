@@ -34,8 +34,8 @@ export default function SourcesClient({ clientId, initial }: Props) {
         <p className="text-sm text-slate-500 mt-0.5">URLs cited in AI responses for your brand (last 30 days)</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm min-w-[560px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50 text-left">
               <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Domain</th>
