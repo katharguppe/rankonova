@@ -99,5 +99,5 @@ Replace "Coming in Cycle 2" skeletons with full SSR + SWR client components.
 | Citation Sources section | DONE | `c1780c0c` | Domain, URL link, mention count bars |
 | Geographic Segmentation section | DONE | `c1780c0c` | BarChart (multi-city) + table with citation rate |
 | Auto-refresh (SWR refreshInterval) | DONE | `26846901` | 5 min interval on all 7 sections |
-| Responsive layout | DONE | `pending` | Sidebar icon-only <md, grids 1-col mobile, table overflow-x-auto |
-| Performance measurement | DONE | `pending` | SSR ~100ms (Next.js ~95ms + Redis ~5ms); cache < 5ms |
+| Responsive layout | DONE | `67206e33` | Sidebar icon-only <md, grids 1-col mobile, table overflow-x-auto |
+| Performance measurement | DONE | `67206e33` | SSR ~100ms (Next.js ~95ms + Redis ~5ms); cache < 5ms |
