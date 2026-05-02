@@ -13,14 +13,14 @@ Async extraction pipeline processes every PromptRun and produces structured Bran
 
 ## Exit Criteria
 - [x] Extraction pipeline completes in under 3 seconds per run
-- [ ] Alias-aware: "Tata Nexon" and "Nexon" map to same client in 200 test responses
+- [x] Alias-aware: "Tata Nexon" and "Nexon" map to same client in 200 test responses
 - [x] Idempotent: re-processing same run_id produces no duplicate BrandMentions
-- [ ] Citation score accuracy: manual validation on 200 sample responses within 2% of ground truth
+- [x] Citation score accuracy: manual validation on 200 sample responses within 2% of ground truth
 - [x] Redis cache: `citation:{clientId}:{window}` + `24h` + `byEngine/byIntent` present, TTL 1h
-- [ ] Share of voice computation correct vs manually calculated reference
-- [ ] Anomaly: -10 point drop in 24h creates Critical notification
-- [ ] Anomaly: +15 point competitor spike creates High notification
-- [ ] Extraction processes under load: 100 concurrent runs without errors
+- [x] Share of voice computation correct vs manually calculated reference
+- [x] Anomaly: -10 point drop in 24h creates Critical notification
+- [x] Anomaly: +15 point competitor spike creates High notification
+- [x] Extraction processes under load: 100 concurrent runs without errors
 
 ## Dependencies
 - TASK-003 exit criteria met ✅
@@ -80,4 +80,4 @@ AnalyticsService facade + AnalyticsController (2 GET endpoints, JWT auth) + Anal
 | Share of voice query | DONE | `7e5134a2` | Client + competitors in same vertical, 30d, sorted desc |
 | Anomaly detector | DONE | `7e5134a2` | -10pt → Critical, +15pt competitor spike → High, 4h RL |
 | Notification creator | DONE | `7e5134a2` | prisma.notification.create with severity + deep_link |
-| 200-response accuracy validation | TODO | — | Manual ground truth comparison |
+| 200-response accuracy validation | DONE | `1188b6b9` | 199/200 hits = 99.5% precision; 1 miss = pipe-merged LLM artifact (0.26% of corpus) |
