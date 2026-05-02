@@ -31,4 +31,59 @@ export class AnalyticsController {
   getShareOfVoice(@Param('clientId') clientId: string) {
     return this.analyticsService.getShareOfVoice(clientId);
   }
+
+  @Get(':clientId/sentiment')
+  @Roles(
+    UserRole.super_admin,
+    UserRole.tenant_admin,
+    UserRole.client_manager,
+    UserRole.client_viewer,
+  )
+  getSentiment(@Param('clientId') clientId: string) {
+    return this.analyticsService.getSentiment(clientId);
+  }
+
+  @Get(':clientId/prompts')
+  @Roles(
+    UserRole.super_admin,
+    UserRole.tenant_admin,
+    UserRole.client_manager,
+    UserRole.client_viewer,
+  )
+  getPrompts(@Param('clientId') clientId: string) {
+    return this.analyticsService.getPrompts(clientId);
+  }
+
+  @Get(':clientId/engines')
+  @Roles(
+    UserRole.super_admin,
+    UserRole.tenant_admin,
+    UserRole.client_manager,
+    UserRole.client_viewer,
+  )
+  getEngines(@Param('clientId') clientId: string) {
+    return this.analyticsService.getEngines(clientId);
+  }
+
+  @Get(':clientId/sources')
+  @Roles(
+    UserRole.super_admin,
+    UserRole.tenant_admin,
+    UserRole.client_manager,
+    UserRole.client_viewer,
+  )
+  getSources(@Param('clientId') clientId: string) {
+    return this.analyticsService.getSources(clientId);
+  }
+
+  @Get(':clientId/geo')
+  @Roles(
+    UserRole.super_admin,
+    UserRole.tenant_admin,
+    UserRole.client_manager,
+    UserRole.client_viewer,
+  )
+  getGeo(@Param('clientId') clientId: string) {
+    return this.analyticsService.getGeo(clientId);
+  }
 }

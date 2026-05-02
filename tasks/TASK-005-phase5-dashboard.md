@@ -1,16 +1,15 @@
 # TASK-005: Phase 5 — Dashboard
 
-## Status: PLANNING
+## Status: IN PROGRESS
 ## Phase: 5
-## Branch: feature/TASK-005 (create when TASK-004 exits)
+## Branch: feature/TASK-005 (created from main 983b3895, 2026-05-02)
 
 ## Objective
 Client-facing analytics dashboard in Next.js 14 App Router. All 7 sections with real data from extraction pipeline. SSR under 2 seconds. Auto-refresh every 5 minutes. Responsive down to tablet.
 
 ## Scope
-- `frontend/app/dashboard/` — all dashboard sections, SSR pages
-- `frontend/components/` — chart components (Recharts), shared UI (shadcn/ui)
-- `frontend/lib/` — type-safe API client (openapi-typescript generated)
+- `frontend/` — Next.js 14 App Router dashboard
+- `app/analytics/` — 5 new backend endpoints (sentiment, prompts, engines, sources, geo)
 
 ## Exit Criteria
 - [ ] Citation Overview: 7-day gauge + 30-day per-engine line chart + delta badge render correctly
@@ -27,30 +26,42 @@ Client-facing analytics dashboard in Next.js 14 App Router. All 7 sections with 
 - [ ] No placeholder states after first extraction run
 
 ## Dependencies
-- TASK-004 exit criteria met
+- TASK-004 exit criteria met ✅
 
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
-**Do:**
-**Check:**
-**Act:**
+**Plan:** Backend gap-fill (5 new analytics endpoints: sentiment, prompts, engines, sources, geo) +
+Next.js 14 frontend scaffold + auth flow (login → httpOnly cookie) + dashboard shell (sidebar) +
+Citation Overview section (SSR + SWR) + Share of Voice section (SSR + SWR).
+
+**Approved:** Yes (2026-05-02)
+
+**Do:** Partial — session ended mid-implementation.
+- Backend: AnalyticsDashboardService + 5 new controller routes + module update. tsc + eslint clean.
+- Frontend scaffold: package.json, tsconfig, tailwind, postcss, next.config, globals.css, layout,
+  root page redirect, middleware (auth cookie check), /api/auth route handler (POST login + DELETE logout),
+  /api/analytics/[clientId]/[endpoint] proxy route handler.
+- Remaining: `npm install`, login page, dashboard layout + sidebar, Citation Overview + SoV sections.
+
+**Check:** Backend tsc + eslint --max-warnings=0 clean. Frontend not yet installed or built.
+
+**Act:** Continue in next session — resume from login page onwards.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Next.js 14 App Router setup | TODO | — | Inside monorepo or separate |
-| OpenAPI spec generation from NestJS | TODO | — | Swagger → openapi.json |
-| openapi-typescript client generation | TODO | — | Typed fetch wrapper |
-| Citation Overview section | TODO | — | |
-| Share of Voice section | TODO | — | |
-| Sentiment Analysis section | TODO | — | |
-| Prompt-Level Analysis section | TODO | — | |
-| Engine Breakdown section | TODO | — | |
-| Citation Source Analysis section | TODO | — | |
-| Geographic Segmentation section | TODO | — | |
-| Auto-refresh (SWR or polling) | TODO | — | 5 min interval |
+| Next.js 14 scaffold (package.json, tsconfig, tailwind) | DONE | `pending` | Manual scaffold, no create-next-app |
+| Auth middleware + /api/auth route handler | DONE | `pending` | httpOnly cookie pattern |
+| /api/analytics proxy route handler | DONE | `pending` | Forwards to NestJS with cookie token |
+| Backend: AnalyticsDashboardService (5 endpoints) | DONE | `pending` | sentiment, prompts, engines, sources, geo |
+| Backend: controller + module wired | DONE | `pending` | tsc + eslint clean |
+| npm install (frontend deps) | TODO | — | recharts, swr, clsx, lucide-react, tailwind |
+| Login page UI | TODO | — | Email/password form → /api/auth POST |
+| Dashboard layout + Sidebar | TODO | — | 7-section nav, client ID from URL |
+| Citation Overview section | TODO | — | SSR + SWR, RadialBar gauge + engine bars |
+| Share of Voice section | TODO | — | SSR + SWR, horizontal bar chart |
+| Remaining 5 sections (skeleton) | TODO | — | Sentiment, Prompts, Engines, Sources, Geo |
+| Auto-refresh (SWR refreshInterval) | TODO | — | 5 min interval |
 | Responsive layout | TODO | — | Tablet + mobile tested |
 | Performance measurement | TODO | — | SSR < 2s, chart < 200ms |

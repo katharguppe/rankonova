@@ -601,6 +601,40 @@ PDCA: present plan before touching any file.
 '@
     }
 
+    # alias
+    dashboard = @{
+        model = $SONNET
+        task  = "TASK-005"
+        label = "Phase 5 . Analytics Dashboard (Next.js)"
+        prompt = @'
+Stack: Next.js 14 App Router, TypeScript, shadcn/ui, Tailwind, Recharts
+Task file: tasks/TASK-005-phase5-dashboard.md
+Module scope: frontend/ ONLY.
+
+Objective: Client analytics dashboard per PRD F-07.
+API client: typed fetch wrapper generated from NestJS Swagger spec.
+  Command: npx openapi-typescript http://localhost:3000/api-json -o frontend/lib/api.d.ts
+
+Dashboard sections to implement:
+  Citation Overview: 7-day gauge + 30-day line chart per engine + delta
+  Share of Voice: stacked bar vs top 5 competitors (filter by intent, engine)
+  Sentiment Analysis: donut chart + 30-day trend + context snippets
+  Prompt-Level Analysis: table with citation rate, engine breakdown, trend
+  Engine Breakdown: side-by-side citation rate comparison
+  Citation Source Analysis: URLs + schema types found
+  Geographic Segmentation: citation by city
+
+Performance targets:
+  Dashboard SSR initial load: under 2 seconds
+  Chart data (from API cache): under 200ms
+  Auto-refresh: every 5 minutes while open
+  Responsive: tablet + mobile functional
+
+Context7: use for Next.js App Router data fetching, shadcn/ui components, Recharts.
+PDCA: present plan before touching any file.
+'@
+    }
+
     # -- Debug -----------------------------------------------------------------
     debug = @{
         model = $SONNET
