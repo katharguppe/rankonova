@@ -1,6 +1,6 @@
 # TASK-006: Phase 6 — Diagnostics
 
-## Status: IN PROGRESS — Cycle 2 complete
+## Status: IN PROGRESS — Cycle 3 complete
 ## Phase: 6
 ## Branch: feature/TASK-006 (create when TASK-005 exits)
 
@@ -43,6 +43,13 @@ Gap report pipeline that answers "why does my competitor get cited and I don't?"
 **Check:** tsc --noEmit clean, diff engine smoke-test produced correct gaps + 6 ranked actions with right priorities
 **Act:** Committed d75415ea
 
+### Cycle 3
+**Plan:** DiagnosticsService orchestrator (full 9-step pipeline), DiagnosticsController (3 routes), GapReport versioning with previous_report_id chain
+**Approved:** 2026-05-03
+**Do:** diagnostics.service.ts (generateReport, listReports, getLatestReport, findTopCompetitor, getNextVersion, upsertCitationSources), diagnostics.controller.ts (POST generate / GET reports / GET latest)
+**Check:** tsc --noEmit clean; POST /generate → 401, GET /reports → 200 [], GET /reports/latest → 404 (all correct)
+**Act:** Committed a9dcb6d9
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -55,6 +62,6 @@ Gap report pipeline that answers "why does my competitor get cited and I don't?"
 | Off-site gap analysis | PARTIAL | d75415ea | Placeholder shape; Phases 8-11 populate fields |
 | Claude Sonnet summariser | DONE | d75415ea | DiagnosticsSummaryService, OpenRouter, fallback |
 | Recommended actions ranker | DONE | d75415ea | 7 rules, HIGH_IMPACT_SCHEMA set, sorted by priority |
-| GapReport versioning | TODO | — | previous_report_id chain |
+| GapReport versioning | DONE | a9dcb6d9 | getNextVersion(): MAX(version)+1, previous_report_id chain |
 | Auto-trigger on citation drop | TODO | — | -10 point threshold |
 | 10-client report generation test | TODO | — | Srinivas validates findings |
