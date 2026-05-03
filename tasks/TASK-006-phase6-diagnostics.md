@@ -1,6 +1,6 @@
 # TASK-006: Phase 6 — Diagnostics
 
-## Status: PLANNING
+## Status: IN PROGRESS — Cycle 1 complete
 ## Phase: 6
 ## Branch: feature/TASK-006 (create when TASK-005 exits)
 
@@ -30,19 +30,19 @@ Gap report pipeline that answers "why does my competitor get cited and I don't?"
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
-**Do:**
-**Check:**
-**Act:**
+**Plan:** Install Playwright+Cheerio; build DiagnosticsCrawlerService (crawlUrl, crawlSite, buildSiteProfile) + diagnostics.types.ts interfaces
+**Approved:** 2026-05-03
+**Do:** diagnostics.types.ts, diagnostics-crawler.service.ts, diagnostics.module.ts updated; playwright chromium installed
+**Check:** tsc --noEmit clean, nest build clean, Playwright smoke test passed (JSON-LD extraction verified)
+**Act:** Committed 3b25dbcf
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Playwright URL crawler | TODO | — | JS-rendered page support |
-| extruct microservice integration | TODO | — | JSON-LD, microdata, RDFa |
-| Schema type extractor | TODO | — | schema.org types from page |
-| FAQ schema detector | TODO | — | |
+| Playwright URL crawler | DONE | 3b25dbcf | crawlUrl + crawlSite BFS, networkidle, UA spoofing |
+| extruct microservice integration | SKIPPED | — | Playwright page.evaluate covers JSON-LD/microdata fully |
+| Schema type extractor | DONE | 3b25dbcf | recursive @type traversal inside JSON-LD blocks |
+| FAQ schema detector | DONE | 3b25dbcf | checks for FAQPage in schemaTypes |
 | Client site crawler (top 10 pages) | TODO | — | |
 | On-site diff engine | TODO | — | |
 | Off-site gap analysis | TODO | — | Aggregator, reviews, community |
