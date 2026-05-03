@@ -1,6 +1,6 @@
 # TASK-006: Phase 6 — Diagnostics
 
-## Status: IN PROGRESS — Cycle 1 complete
+## Status: IN PROGRESS — Cycle 2 complete
 ## Phase: 6
 ## Branch: feature/TASK-006 (create when TASK-005 exits)
 
@@ -36,6 +36,13 @@ Gap report pipeline that answers "why does my competitor get cited and I don't?"
 **Check:** tsc --noEmit clean, nest build clean, Playwright smoke test passed (JSON-LD extraction verified)
 **Act:** Committed 3b25dbcf
 
+### Cycle 2
+**Plan:** DiagnosticsDiffService (computeGaps → OnSiteGaps + OffSiteGaps + ranked actions) + DiagnosticsSummaryService (Claude Sonnet via OpenRouter)
+**Approved:** 2026-05-03
+**Do:** diagnostics-diff.service.ts (7 ranked rules, FAQPage dedup), diagnostics-summary.service.ts (OpenRouter claude-sonnet-4-6, deterministic fallback), module wired
+**Check:** tsc --noEmit clean, diff engine smoke-test produced correct gaps + 6 ranked actions with right priorities
+**Act:** Committed d75415ea
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -43,11 +50,11 @@ Gap report pipeline that answers "why does my competitor get cited and I don't?"
 | extruct microservice integration | SKIPPED | — | Playwright page.evaluate covers JSON-LD/microdata fully |
 | Schema type extractor | DONE | 3b25dbcf | recursive @type traversal inside JSON-LD blocks |
 | FAQ schema detector | DONE | 3b25dbcf | checks for FAQPage in schemaTypes |
-| Client site crawler (top 10 pages) | TODO | — | |
-| On-site diff engine | TODO | — | |
-| Off-site gap analysis | TODO | — | Aggregator, reviews, community |
-| Claude Sonnet summariser | TODO | — | 400-600 words |
-| Recommended actions ranker | TODO | — | By citation impact |
+| Client site crawler (top 10 pages) | DONE | 3b25dbcf | crawlSite BFS in DiagnosticsCrawlerService |
+| On-site diff engine | DONE | d75415ea | DiagnosticsDiffService.computeGaps |
+| Off-site gap analysis | PARTIAL | d75415ea | Placeholder shape; Phases 8-11 populate fields |
+| Claude Sonnet summariser | DONE | d75415ea | DiagnosticsSummaryService, OpenRouter, fallback |
+| Recommended actions ranker | DONE | d75415ea | 7 rules, HIGH_IMPACT_SCHEMA set, sorted by priority |
 | GapReport versioning | TODO | — | previous_report_id chain |
 | Auto-trigger on citation drop | TODO | — | -10 point threshold |
 | 10-client report generation test | TODO | — | Srinivas validates findings |
