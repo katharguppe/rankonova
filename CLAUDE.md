@@ -4,7 +4,7 @@
 ## Stack
 NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Router, shadcn/ui, Tailwind, Docker
 
-## Current Phase: 4 (complete) — next: Phase 5
+## Current Phase: 5 (complete) — next: Phase 6
 
 ## Module Boundaries
   Session -> auth	: app\auth\ only
@@ -27,7 +27,14 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
   Session -> debug   : one error + one file per session
 
 ## Key Config
-[Fill in: env vars, thresholds, IDs, endpoints]
+  Stress client ID : cmonwtk9r00002ku9q59ge1h4
+  Demo user email  : demo@aeo-suite.local
+  Demo password    : Demo@2026!
+  Backend port     : 3000
+  Frontend port    : 3001
+  DB               : postgres://aeo:aeo_dev@127.0.0.1:5433/aeo_suite
+  Redis            : redis://localhost:6379
+  Auth response    : { accessToken: "..." }  (camelCase, not access_token)
 
 ## Git
   main / dev / feature/TASK-XXX
