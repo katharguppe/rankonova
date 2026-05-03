@@ -48,6 +48,13 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 **Check:** Backend typecheck clean.
 **Act:** Committed. Ready for Cycle 4 (approval state machine + controller endpoints).
 
+### Cycle 4
+**Plan:** Approval state machine (draft→revision→approved→published), regenerate with review notes, 60-day follow-up @Cron, client_manager notification on draft. 4 new controller endpoints.
+**Approved:** 2026-05-03
+**Do:** revisionNotes added to all 4 generators; dto/request-revision.dto.ts; full service rewrite with approveOutput, requestRevision, regenerateOutput, publishOutput, runFollowUpCapture; updated controller.
+**Check:** Backend typecheck clean.
+**Act:** Committed. Ready for Cycle 5 (smoke tests + CLAUDE.md phase update).
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -60,8 +67,8 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 | Comparison Page generator | DONE | — | generators/comparison-page.generator.ts — table check, FAQPage + secondary schema |
 | Entity Authority Page generator | DONE | — | generators/entity-authority-page.generator.ts — VERTICAL_SCHEMA_TYPES map, Wikidata facts |
 | Segment Article generator | DONE | — | generators/segment-article.generator.ts — 1200-1800w, HowTo/Article schema |
-| Approval workflow state machine | TODO | — | draft→revision→approved→published |
-| Client manager notification | TODO | — | On draft created |
-| Revision loop (inject review notes) | TODO | — | |
-| 60-day follow-up scheduler | TODO | — | citation_rate_after capture |
+| Approval workflow state machine | DONE | — | VALID_TRANSITIONS map; assertValidTransition on every state change |
+| Client manager notification | DONE | — | notifyDraftCreated() — Notification record on generate + regenerate |
+| Revision loop (inject review notes) | DONE | — | regenerateOutput() — revisionNotes injected into all 4 generators |
+| 60-day follow-up scheduler | DONE | — | @Cron EVERY_DAY_AT_2AM — captures citation_rate_after on due outputs |
 | 50-piece Srinivas review session | TODO | — | Quality gate |

@@ -12,6 +12,7 @@ export interface SegmentArticleInput {
   segment: string;
   targetQuestion?: string;
   gapSummary?: string;
+  revisionNotes?: string;
 }
 
 const SYSTEM_PROMPT = `You are an AEO content writer specialising in Answer Engine Optimization (AEO).
@@ -100,6 +101,14 @@ export class SegmentArticleGeneratorService {
         ``,
         `GAP CONTEXT — use to identify which topics the article should cover:`,
         input.gapSummary,
+      );
+    }
+
+    if (input.revisionNotes) {
+      lines.push(
+        ``,
+        `REVISION INSTRUCTIONS — the previous version had these issues. Address ALL of them:`,
+        input.revisionNotes,
       );
     }
 

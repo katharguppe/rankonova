@@ -11,6 +11,7 @@ export interface EntityAuthorityInput {
   verticalName: string;
   schemaOrgType: string;
   gapSummary?: string;
+  revisionNotes?: string;
 }
 
 // Mapping from vertical slug to schema.org @type
@@ -99,6 +100,14 @@ export class EntityAuthorityPageGeneratorService {
         ``,
         `CONTEXT — use to identify which entity facts to emphasise:`,
         input.gapSummary,
+      );
+    }
+
+    if (input.revisionNotes) {
+      lines.push(
+        ``,
+        `REVISION INSTRUCTIONS — the previous version had these issues. Address ALL of them:`,
+        input.revisionNotes,
       );
     }
 

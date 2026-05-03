@@ -11,6 +11,7 @@ export interface FaqGeneratorInput {
   verticalName: string;
   gapSummary?: string;
   targetQuestion?: string;
+  revisionNotes?: string;
 }
 
 const SYSTEM_PROMPT = `You are an AEO content writer specialising in Answer Engine Optimization (AEO).
@@ -120,6 +121,14 @@ export class FaqPageGeneratorService {
         ``,
         `GAP CONTEXT — use to select which questions to answer:`,
         input.gapSummary,
+      );
+    }
+
+    if (input.revisionNotes) {
+      lines.push(
+        ``,
+        `REVISION INSTRUCTIONS — the previous version had these issues. Address ALL of them:`,
+        input.revisionNotes,
       );
     }
 
