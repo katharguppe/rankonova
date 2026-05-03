@@ -1,4 +1,143 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { ContentOutput, ContentType } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { FaqPageGeneratorService } from './generators/faq-page.generator';
+import { QualityValidatorService } from './validators/quality-validator';
+import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Injectable()
-export class ContentAgentService {}
+export class ContentAgentService {
+  private readonly logger = new Logger(ContentAgentService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly faqGenerator: FaqPageGeneratorService,
+    private readonly validator: QualityValidatorService,
+  ) {}
+
+  async generateContent(tenantId: string, dto: GenerateContentDto): Promise<ContentOutput> {
+    const { clientId, contentType, targetPromptId } = dto;
+
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenant_id: tenantId, is_active: true, deleted_at: null },
+      include: { vertical: { select: { name: true, slug: true } } },
+    });
+    if (!client) throw new NotFoundException(`Client ${clientId} not found`);
+
+    let targetQuestion: string | undefined;
+    if (targetPromptId) {
+      const prompt = await this.prisma.prompt.findFirst({
+        where: { id: targetPromptId, is_active: true },
+        select: { text: true },
+      });
+      targetQuestion = prompt?.text;
+    }
+
+    const latestGap = await this.prisma.gapReport.findFirst({
+      where: { client_id: clientId },
+      orderBy: { version: 'desc' },
+      select: { plain_english_summary: true },
+    });
+
+    if (contentType !== ContentType.faq_page) {
+      throw new BadRequestException(
+        `Content type "${contentType}" is not yet supported (Cycle 3 adds remaining types)`,
+      );
+    }
+
+    this.logger.log(`Generating ${contentType} for ${client.brand_name} (${clientId})`);
+
+    const generated = await this.faqGenerator.generate({
+      clientName: client.name,
+      brandName: client.brand_name,
+      city: client.city,
+      state: client.state,
+      websiteUrl: client.website_url,
+      verticalName: client.vertical.name,
+      gapSummary: latestGap?.plain_english_summary,
+      targetQuestion,
+    });
+
+    const validation = this.validator.validate(generated.title, generated.htmlContent);
+
+    if (validation.issues.length > 0) {
+      this.logger.warn(
+        `${validation.issues.length} validation issue(s) for ${client.brand_name}: ` +
+          validation.issues.map((i) => i.rule).join(', '),
+      );
+    }
+
+    const reviewNotes = validation.issues.length > 0
+      ? this.validator.formatIssuesSummary(validation.issues)
+      : null;
+
+    const citationRateBefore = await this.getLatestCitationRate(clientId);
+
+    const output = await this.prisma.contentOutput.create({
+      data: {
+        client_id: clientId,
+        target_prompt_id: targetPromptId ?? null,
+        type: contentType,
+        title: generated.title,
+        html_content: generated.htmlContent,
+        schema_json: generated.schemaJson as object,
+        generation_prompt: generated.generationPrompt,
+        status: 'draft',
+        review_notes: reviewNotes,
+        citation_rate_before: citationRateBefore,
+      },
+    });
+
+    this.logger.log(
+      `ContentOutput ${output.id} saved — ${contentType}, valid=${validation.valid}, issues=${validation.issues.length}`,
+    );
+
+    return output;
+  }
+
+  listOutputs(tenantId: string, clientId: string) {
+    return this.prisma.contentOutput.findMany({
+      where: {
+        client_id: clientId,
+        client: { tenant_id: tenantId },
+      },
+      orderBy: { created_at: 'desc' },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        status: true,
+        review_notes: true,
+        citation_rate_before: true,
+        citation_rate_after: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+  }
+
+  async getOutput(tenantId: string, outputId: string): Promise<ContentOutput | null> {
+    return this.prisma.contentOutput.findFirst({
+      where: { id: outputId, client: { tenant_id: tenantId } },
+    });
+  }
+
+  private async getLatestCitationRate(clientId: string): Promise<number | null> {
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+    const [total, cited] = await Promise.all([
+      this.prisma.promptRun.count({
+        where: { client_id: clientId, ran_at: { gte: cutoff }, status: 'completed' },
+      }),
+      this.prisma.brandMention.count({
+        where: { client_id: clientId, is_client_brand: true, created_at: { gte: cutoff } },
+      }),
+    ]);
+    if (total === 0) return null;
+    return Math.round((cited / total) * 1000) / 10;
+  }
+}

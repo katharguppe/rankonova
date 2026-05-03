@@ -34,18 +34,25 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 **Check:** Migration applied (5/5 green). Backend typecheck clean.
 **Act:** Committed. Ready for Cycle 2 (FAQ Page generator).
 
+### Cycle 2
+**Plan:** FAQ Page generator (Claude Sonnet via OpenRouter) + quality validator (6 rules). Wire into service + controller.
+**Approved:** 2026-05-03
+**Do:** generators/faq-page.generator.ts, validators/quality-validator.ts, content-agent.types.ts, dto/generate-content.dto.ts, updated service + controller + module.
+**Check:** Backend typecheck clean.
+**Act:** Committed. Ready for Cycle 3 (remaining 3 content types).
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
-| Prisma schema + migration | DONE | — | +follow_up_scheduled_at, +previous_version_id self-rel |
-| FAQ Page generator | TODO | — | Claude Sonnet + AEO system prompt |
+| Prisma schema + migration | DONE | c044d188 | +follow_up_scheduled_at, +previous_version_id self-rel |
+| FAQ Page generator | DONE | — | generators/faq-page.generator.ts — Claude Sonnet via OpenRouter |
+| JSON-LD validator | DONE | — | validators/quality-validator.ts — all 6 checks |
+| Answer rules validator | DONE | — | word count 50-90, specific number required |
+| Blocked phrases checker | DONE | — | 11 phrases with replacement suggestions |
+| HTML validator | DONE | — | structural tags + schema block count |
 | Comparison Page generator | TODO | — | |
 | Entity Authority Page generator | TODO | — | |
 | Segment Article generator | TODO | — | 1200-1800 words |
-| JSON-LD validator | TODO | — | Parses without error |
-| Answer rules validator | TODO | — | Length, number, superlatives |
-| Blocked phrases checker | TODO | — | Replacement suggestions |
-| HTML validator | TODO | — | No broken tags |
 | Approval workflow state machine | TODO | — | draft→revision→approved→published |
 | Client manager notification | TODO | — | On draft created |
 | Revision loop (inject review notes) | TODO | — | |
