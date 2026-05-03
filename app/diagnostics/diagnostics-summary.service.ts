@@ -38,16 +38,23 @@ export class DiagnosticsSummaryService {
   async generateSummary(input: SummaryInput): Promise<string> {
     const userMessage = this.buildUserMessage(input);
 
-    const response = await this.client.chat.completions.create({
-      model: 'anthropic/claude-sonnet-4-6',
-      max_tokens: 1200,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
-      ],
-    });
-
-    const text = response.choices[0]?.message.content?.trim() ?? '';
+    let text = '';
+    try {
+      const response = await this.client.chat.completions.create({
+        model: 'anthropic/claude-sonnet-4-6',
+        max_tokens: 1200,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
+      });
+      text = response.choices[0]?.message.content?.trim() ?? '';
+    } catch (err) {
+      this.logger.warn(
+        `Summary API call failed for ${input.clientName}: ${(err as Error).message} — using fallback`,
+      );
+      return this.fallbackSummary(input);
+    }
 
     if (text.length === 0) {
       this.logger.warn(`Summary returned empty for client ${input.clientName}`);

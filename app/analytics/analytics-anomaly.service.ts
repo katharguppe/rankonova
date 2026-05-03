@@ -1,9 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { NotificationSeverity } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import Redis from 'ioredis';
 import { AEO_ANALYTICS_REDIS } from './analytics.constants';
 import { AnalyticsCitationService } from './analytics-citation.service';
+
+export interface CitationDropEvent {
+  clientId: string;
+  tenantId: string;
+  delta: number;
+}
 
 const NOTIF_RL_TTL = 4 * 3600; // 4 hours
 const DROP_THRESHOLD = -10;
@@ -16,6 +23,7 @@ export class AnalyticsAnomalyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly citation: AnalyticsCitationService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(AEO_ANALYTICS_REDIS) private readonly redis: Redis,
   ) {}
 
@@ -53,6 +61,12 @@ export class AnalyticsAnomalyService {
     });
 
     this.logger.warn(`[anomaly] citation_drop clientId=${clientId} delta=${delta.toFixed(1)}`);
+
+    this.eventEmitter.emit('analytics.citation_drop', {
+      clientId,
+      tenantId,
+      delta,
+    } satisfies CitationDropEvent);
   }
 
   private async checkCompetitorSpikes(clientId: string, tenantId: string): Promise<void> {

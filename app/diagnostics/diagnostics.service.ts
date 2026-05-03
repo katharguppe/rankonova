@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { GapReport } from '@prisma/client';
+import { CitationDropEvent } from '../analytics/analytics-anomaly.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DiagnosticsCrawlerService } from './diagnostics-crawler.service';
 import { DiagnosticsDiffService } from './diagnostics-diff.service';
@@ -24,6 +26,16 @@ export class DiagnosticsService {
     private readonly diff: DiagnosticsDiffService,
     private readonly summary: DiagnosticsSummaryService,
   ) {}
+
+  // ── event listener ─────────────────────────────────────────────────────────
+
+  @OnEvent('analytics.citation_drop')
+  onCitationDrop({ clientId, delta }: CitationDropEvent): void {
+    this.logger.log(`Auto-triggering gap report for client ${clientId} (citation drop ${delta.toFixed(1)}pts)`);
+    this.generateReport(clientId).catch((err: Error) =>
+      this.logger.error(`Auto-triggered gap report failed for ${clientId}: ${err.message}`),
+    );
+  }
 
   // ── public API ─────────────────────────────────────────────────────────────
 

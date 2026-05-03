@@ -16,7 +16,8 @@ export class DiagnosticsCrawlerService {
     let browser: Browser | null = null;
     try {
       browser = await chromium.launch({ headless: true });
-      const page = await this.openPage(browser, url);
+      const { page, navOk } = await this.openPage(browser, url);
+      if (!navOk) return this.emptyExtraction(url, 'navigation failed');
       return await this.extractPage(page, url);
     } catch (err) {
       this.logger.warn(`crawlUrl failed ${url}: ${(err as Error).message}`);
@@ -42,8 +43,10 @@ export class DiagnosticsCrawlerService {
         visited.add(url);
 
         try {
-          const page = await this.openPage(browser, url);
-          const extraction = await this.extractPage(page, url);
+          const { page, navOk } = await this.openPage(browser, url);
+          const extraction = navOk
+            ? await this.extractPage(page, url)
+            : this.emptyExtraction(url, 'navigation failed');
           results.push(extraction);
 
           if (results.length < maxPages) {
@@ -107,15 +110,20 @@ export class DiagnosticsCrawlerService {
 
   // ── private helpers ──────────────────────────────────────────────────────────
 
-  private async openPage(browser: Browser, url: string): Promise<Page> {
+  private async openPage(
+    browser: Browser,
+    url: string,
+  ): Promise<{ page: Page; navOk: boolean }> {
     const page = await browser.newPage();
     await page.setExtraHTTPHeaders({ 'User-Agent': UA });
+    let navOk = false;
     try {
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+      navOk = true;
     } catch {
-      // networkidle can hang on chat-widget/analytics pings — extract what loaded
+      // DNS failure / network error — execution context is destroyed, skip evaluation
     }
-    return page;
+    return { page, navOk };
   }
 
   private async extractPage(page: Page, url: string): Promise<PageExtraction> {
