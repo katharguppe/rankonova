@@ -1,6 +1,6 @@
 # TASK-007: Phase 7 — Content Agent
 
-## Status: PLANNING
+## Status: IN PROGRESS
 ## Phase: 7
 ## Branch: feature/TASK-007 (create when TASK-006 exits)
 
@@ -28,15 +28,16 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
-**Do:**
-**Check:**
-**Act:**
+**Plan:** Add `follow_up_scheduled_at` + `previous_version_id` self-relation to `ContentOutput`; run migration; regenerate Prisma client.
+**Approved:** 2026-05-03
+**Do:** Updated `prisma/schema/schema.prisma`; wrote migration SQL; `prisma migrate deploy`; `prisma generate`.
+**Check:** Migration applied (5/5 green). Backend typecheck clean.
+**Act:** Committed. Ready for Cycle 2 (FAQ Page generator).
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
+| Prisma schema + migration | DONE | — | +follow_up_scheduled_at, +previous_version_id self-rel |
 | FAQ Page generator | TODO | — | Claude Sonnet + AEO system prompt |
 | Comparison Page generator | TODO | — | |
 | Entity Authority Page generator | TODO | — | |
