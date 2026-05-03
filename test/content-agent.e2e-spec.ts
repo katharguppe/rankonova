@@ -259,7 +259,7 @@ describe('ContentAgent (e2e)', () => {
 
     // ── Pre-cleanup (anchor on slugs) ─────────────────────────────────────────
     const oldTenants = await prisma.tenant.findMany({
-      where: { slug: { in: [ADMIN.tenantSlug, OTHER.tenantSlug] } },
+      where: { slug: { in: [ADMIN.tenantSlug, OTHER.tenantSlug, 'ignored-viewer-e2e'] } },
       select: { id: true },
     });
     const oldTids = oldTenants.map((t) => t.id);
@@ -405,6 +405,7 @@ describe('ContentAgent (e2e)', () => {
       await prisma.tenant.deleteMany({ where: { id: { in: tids } } });
     }
     await prisma.vertical.deleteMany({ where: { slug: 'content-agent-e2e-auto' } });
+    await prisma.tenant.deleteMany({ where: { slug: 'ignored-viewer-e2e' } });
     await app.close();
   });
 
