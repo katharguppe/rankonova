@@ -20,7 +20,7 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 - [x] Quality validator catches and flags: invalid JSON-LD, answer >90 words, no number in answer, blocked phrases, broken HTML, title >70 chars
 - [x] Approval workflow: draft → notify client_manager → approve/revision/reject → regenerate with notes
 - [x] 60-day `citation_rate_after` capture scheduled correctly
-- [ ] 50 pieces reviewed by Srinivas, quality standard met
+- [ ] 50 pieces reviewed by Srinivas, quality standard met — DEFERRED to Phase 14 beta
 
 ## Dependencies
 - TASK-006 exit criteria met (gap report feeds content generation context)
@@ -59,8 +59,8 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 **Plan:** E2E test suite (16 cases, mocked generators) + smoke script (10-piece live generation, approval workflow test).
 **Approved:** 2026-05-03
 **Do:** test/content-agent.e2e-spec.ts (16 tests, overrideProvider for all 4 generators, real DB + validator); scripts/smoke-test-content-agent.ts (login, 10-piece generation, approve/publish/revision/regen workflow, guard test, JSON report).
-**Check:** 16/16 E2E green. All state machine guards confirmed.
-**Act:** Committed. TASK-007 done (pending 50-piece Srinivas review).
+**Check:** 16/16 E2E green (fixed viewer tenant cleanup). Full suite 105/105 pass. All state machine guards confirmed.
+**Act:** Committed. Merged to main (259970e3). Pushed to origin. TASK-007 DONE.
 
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
@@ -78,6 +78,7 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 | Client manager notification | DONE | — | notifyDraftCreated() — Notification record on generate + regenerate |
 | Revision loop (inject review notes) | DONE | — | regenerateOutput() — revisionNotes injected into all 4 generators |
 | 60-day follow-up scheduler | DONE | — | @Cron EVERY_DAY_AT_2AM — captures citation_rate_after on due outputs |
-| E2E test suite | DONE | — | test/content-agent.e2e-spec.ts — 16/16 green, mocked generators, real DB/validator |
-| Smoke script | DONE | — | scripts/smoke-test-content-agent.ts — 10-piece generation, full workflow, JSON report |
-| 50-piece Srinivas review session | TODO | — | Quality gate |
+| E2E test suite | DONE | ad002673 | test/content-agent.e2e-spec.ts — 16/16 green, full suite 105/105 |
+| Smoke script | DONE | ffd1c5f2 | scripts/smoke-test-content-agent.ts — 10-piece generation, full workflow, JSON report |
+| Merge to main | DONE | 259970e3 | Merged feature/TASK-007, pushed to origin |
+| 50-piece Srinivas review session | DEFERRED | — | Deferred to Phase 14 beta |
