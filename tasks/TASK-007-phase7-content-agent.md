@@ -41,6 +41,13 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 **Check:** Backend typecheck clean.
 **Act:** Committed. Ready for Cycle 3 (remaining 3 content types).
 
+### Cycle 3
+**Plan:** Comparison Page + Entity Authority Page + Segment Article generators. Update validator with ContentType dispatch + 3 type-specific checks. Service dispatches all 4 types.
+**Approved:** 2026-05-03
+**Do:** generators/comparison-page.generator.ts, generators/entity-authority-page.generator.ts, generators/segment-article.generator.ts; updated validator + service + module.
+**Check:** Backend typecheck clean.
+**Act:** Committed. Ready for Cycle 4 (approval state machine + controller endpoints).
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -50,9 +57,9 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 | Answer rules validator | DONE | — | word count 50-90, specific number required |
 | Blocked phrases checker | DONE | — | 11 phrases with replacement suggestions |
 | HTML validator | DONE | — | structural tags + schema block count |
-| Comparison Page generator | TODO | — | |
-| Entity Authority Page generator | TODO | — | |
-| Segment Article generator | TODO | — | 1200-1800 words |
+| Comparison Page generator | DONE | — | generators/comparison-page.generator.ts — table check, FAQPage + secondary schema |
+| Entity Authority Page generator | DONE | — | generators/entity-authority-page.generator.ts — VERTICAL_SCHEMA_TYPES map, Wikidata facts |
+| Segment Article generator | DONE | — | generators/segment-article.generator.ts — 1200-1800w, HowTo/Article schema |
 | Approval workflow state machine | TODO | — | draft→revision→approved→published |
 | Client manager notification | TODO | — | On draft created |
 | Revision loop (inject review notes) | TODO | — | |

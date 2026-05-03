@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ContentType } from '@prisma/client';
 import { ValidationIssue, ValidationResult } from '../content-agent.types';
 
 interface FaqAnswer {
@@ -28,16 +29,27 @@ const NUMBER_RE =
 
 @Injectable()
 export class QualityValidatorService {
-  validate(title: string, htmlContent: string): ValidationResult {
+  validate(title: string, htmlContent: string, contentType?: ContentType): ValidationResult {
     const issues: ValidationIssue[] = [];
 
     this.checkTitle(title, issues);
     this.checkHtmlStructure(htmlContent, issues);
     this.checkJsonLdBlocks(htmlContent, issues);
 
-    const answers = this.extractFaqAnswers(htmlContent);
-    if (answers.length > 0) {
-      this.checkAnswerRules(answers, issues);
+    if (contentType === ContentType.faq_page) {
+      const answers = this.extractFaqAnswers(htmlContent);
+      if (answers.length > 0) {
+        this.checkAnswerRules(answers, issues);
+      }
+    }
+
+    if (contentType === ContentType.comparison_page) {
+      this.checkComparisonTable(htmlContent, issues);
+    }
+
+    if (contentType === ContentType.segment_article) {
+      this.checkSegmentArticleWordCount(htmlContent, issues);
+      this.checkSegmentArticleHeadings(htmlContent, issues);
     }
 
     this.checkBlockedPhrases(htmlContent, issues);
@@ -201,6 +213,63 @@ export class QualityValidatorService {
         });
       }
     }
+  }
+
+  private checkComparisonTable(html: string, issues: ValidationIssue[]): void {
+    if (!html.toLowerCase().includes('<table')) {
+      issues.push({
+        rule: 'comparison_no_table',
+        message: 'Comparison page contains no <table> element',
+        suggestion: 'Add a semantic HTML comparison table with <thead>, <tbody>, and <th scope="col">',
+        fatal: true,
+      });
+    } else if (!html.toLowerCase().includes('<thead')) {
+      issues.push({
+        rule: 'comparison_table_no_thead',
+        message: 'Comparison table is missing <thead>',
+        suggestion: 'Add a <thead> with column headers using <th scope="col">',
+        fatal: false,
+      });
+    }
+  }
+
+  private checkSegmentArticleWordCount(html: string, issues: ValidationIssue[]): void {
+    const wordCount = this.countBodyWords(html);
+    if (wordCount < 1200) {
+      issues.push({
+        rule: 'article_too_short',
+        message: `Segment article body is ${wordCount} words (min 1200)`,
+        suggestion: 'Expand the article to at least 1200 words of body text',
+        fatal: true,
+      });
+    } else if (wordCount > 1800) {
+      issues.push({
+        rule: 'article_too_long',
+        message: `Segment article body is ${wordCount} words (max 1800)`,
+        suggestion: 'Trim the article to 1800 words or fewer',
+        fatal: false,
+      });
+    }
+  }
+
+  private checkSegmentArticleHeadings(html: string, issues: ValidationIssue[]): void {
+    const h2Count = (html.match(/<h2[^>]*>/gi) ?? []).length;
+    if (h2Count < 2) {
+      issues.push({
+        rule: 'article_insufficient_headings',
+        message: `Segment article has only ${h2Count} <h2> heading(s) (min 2 expected at this length)`,
+        suggestion: 'Add H2 subheadings every 250-350 words',
+        fatal: false,
+      });
+    }
+  }
+
+  private countBodyWords(html: string): number {
+    const withoutScripts = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '');
+    const text = this.stripTags(withoutScripts);
+    return text.split(/\s+/).filter(Boolean).length;
   }
 
   private checkBlockedPhrases(html: string, issues: ValidationIssue[]): void {
