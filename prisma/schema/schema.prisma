@@ -477,27 +477,31 @@ model GapReport {
 // ─────────────────────────────────────────────
 
 model ContentOutput {
-  id                   String        @id @default(cuid())
-  client_id            String
-  target_prompt_id     String?
-  type                 ContentType
-  title                String
-  html_content         String        @db.Text
-  schema_json          Json          // validated JSON-LD object
-  generation_prompt    String        @db.Text // stored for auditability
-  status               ContentStatus @default(draft)
-  review_notes         String?
-  approved_by          String?
-  approved_at          DateTime?
-  published_at         DateTime?
-  citation_rate_before Float?
-  citation_rate_after  Float?        // captured 60 days post-publish
-  created_at           DateTime      @default(now())
-  updated_at           DateTime      @updatedAt
+  id                     String        @id @default(cuid())
+  client_id              String
+  target_prompt_id       String?
+  type                   ContentType
+  title                  String
+  html_content           String        @db.Text
+  schema_json            Json          // validated JSON-LD object
+  generation_prompt      String        @db.Text // stored for auditability
+  status                 ContentStatus @default(draft)
+  review_notes           String?
+  approved_by            String?
+  approved_at            DateTime?
+  published_at           DateTime?
+  follow_up_scheduled_at DateTime?     // 60-day citation_rate_after capture
+  previous_version_id    String?       @unique
+  citation_rate_before   Float?
+  citation_rate_after    Float?        // captured 60 days post-publish
+  created_at             DateTime      @default(now())
+  updated_at             DateTime      @updatedAt
 
-  client        Client   @relation(fields: [client_id], references: [id])
-  target_prompt Prompt?  @relation(fields: [target_prompt_id], references: [id])
-  approver      User?    @relation("ApprovedBy", fields: [approved_by], references: [id])
+  client           Client         @relation(fields: [client_id], references: [id])
+  target_prompt    Prompt?        @relation(fields: [target_prompt_id], references: [id])
+  approver         User?          @relation("ApprovedBy", fields: [approved_by], references: [id])
+  previous_version ContentOutput? @relation("ContentRevision", fields: [previous_version_id], references: [id])
+  next_version     ContentOutput? @relation("ContentRevision")
 
   @@index([client_id])
   @@index([client_id, status])
