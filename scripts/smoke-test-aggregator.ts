@@ -3,7 +3,7 @@
  * prints snapshot results, writes report to smoke-results-aggregator.json.
  *
  * Requires: app running on localhost:3000, .env populated, Playwright installed.
- * Run: npx ts-node --require dotenv/register scripts/smoke-test-aggregator.ts
+ * Run: npx ts-node scripts/smoke-test-aggregator.ts
  */
 
 import * as fs from 'fs';
