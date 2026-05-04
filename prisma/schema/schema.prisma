@@ -292,10 +292,11 @@ model Client {
   brand_mentions    BrandMention[]
   gap_reports       GapReport[]
   content_outputs   ContentOutput[]
-  review_audits     ReviewAudit[]
-  community_threads CommunityThread[]
-  weekly_briefs     WeeklyBrief[]
-  notifications     Notification[]
+  review_audits          ReviewAudit[]
+  community_threads      CommunityThread[]
+  aggregator_snapshots   AggregatorSnapshot[]
+  weekly_briefs          WeeklyBrief[]
+  notifications          Notification[]
 
   @@index([tenant_id])
   @@index([vertical_id])
@@ -556,6 +557,33 @@ model CommunityThread {
   @@index([client_id, response_status])
   @@index([ai_citation_count])
   @@map("community_threads")
+}
+
+// ─────────────────────────────────────────────
+// AGGREGATOR SNAPSHOTS (Module A)
+// ─────────────────────────────────────────────
+
+model AggregatorSnapshot {
+  id                 String   @id @default(cuid())
+  client_id          String
+  platform           String   // "CarDekho" | "JustDial" | "ZigWheels" | etc.
+  profile_url        String
+  completeness_score Float    // 0.0 – 100.0
+  fields_present     Json     // string[]
+  fields_missing     Json     // string[]
+  competitor_scores  Json     // { competitor_id, name, score, url }[]
+  content_hash       String   // SHA-256 of extracted field values
+  raw_extract        Json     // { field: string | null }
+  update_pack        Json     // { field, suggestion }[] — generated for missing fields
+  crawled_at         DateTime
+  created_at         DateTime @default(now())
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@index([client_id])
+  @@index([client_id, platform])
+  @@index([client_id, platform, crawled_at])
+  @@map("aggregator_snapshots")
 }
 
 // ─────────────────────────────────────────────
