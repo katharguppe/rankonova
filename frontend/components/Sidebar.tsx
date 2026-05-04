@@ -11,6 +11,7 @@ import {
   Cpu,
   Link2,
   MapPin,
+  FileText,
   LogOut,
 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const sections = [
   { href: 'engines',        label: 'Engine Breakdown',    icon: Cpu        },
   { href: 'sources',        label: 'Citation Sources',    icon: Link2      },
   { href: 'geo',            label: 'Geographic',          icon: MapPin     },
+  { href: 'content',        label: 'Content',             icon: FileText   },
 ];
 
 interface SidebarProps {
