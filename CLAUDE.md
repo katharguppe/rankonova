@@ -6,6 +6,15 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 
 ## Current Phase: 7 (complete) — next: Phase 8
 
+## Phase 7 Handoff (2026-05-04, main HEAD: 85aeeab8)
+  Content generators  : Cerebras (CEREBRAS_API_KEY), model llama3.1-8b, baseURL https://api.cerebras.ai/v1
+  Generator fallback  : non-HTML response wrapped in minimal HTML shell (warn+wrap, never throw)
+  Content UI (F-07)   : /dashboard/[clientId]/content — tabs, table, iframe preview, approve, revision
+  Preview fix         : html_content included in listOutputs select; openPreview uses item.html_content directly
+  19 content outputs  : in DB for stress client cmonwtk9r00002ku9q59ge1h4
+  E2E suite           : 105/105 green (16 content-agent, mocked generators)
+  Smoke script        : scripts/smoke-test-content-agent.ts — 10/10 generation + full workflow
+
 ## Module Boundaries
   Session -> auth	: app\auth\ only
   Session -> tenants	: app\tenants\ only
