@@ -293,6 +293,8 @@ model Client {
   gap_reports       GapReport[]
   content_outputs   ContentOutput[]
   review_audits          ReviewAudit[]
+  review_snapshots       ReviewSnapshot[]
+  review_request_kit     ReviewRequestKit?
   community_threads      CommunityThread[]
   aggregator_snapshots   AggregatorSnapshot[]
   weekly_briefs          WeeklyBrief[]
@@ -514,22 +516,73 @@ model ContentOutput {
 // ─────────────────────────────────────────────
 
 model ReviewAudit {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   client_id             String
-  platform              String   // "google" | "cardekho" | "justdial" | etc.
+  platform              String    // "google" | "cardekho" | "justdial" | etc.
   rating                Float?
   review_count          Int?
   response_rate         Float?
+  recency               DateTime? // date of most recent review scraped
+  keyword_frequency     Json?     // { word: count }[] top-10 review keywords
+  review_velocity       Float?    // reviews per 30-day window
   last_checked_at       DateTime
-  gap_vs_top_competitor Json?    // { rating_gap, review_count_gap, response_rate_gap }
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  gap_vs_top_competitor Json?     // { rating_gap, review_count_gap, response_rate_gap }
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
   client Client @relation(fields: [client_id], references: [id])
 
   @@index([client_id])
   @@index([client_id, platform])
   @@map("review_audits")
+}
+
+// ─────────────────────────────────────────────
+// REVIEW SNAPSHOTS (Module B)
+// ─────────────────────────────────────────────
+
+model ReviewSnapshot {
+  id                    String         @id @default(cuid())
+  client_id             String
+  platform              String
+  reviewer_name         String?
+  rating                Float
+  review_text           String         @db.Text
+  review_date           DateTime?
+  is_negative           Boolean        @default(false)
+  response_draft        String?        @db.Text
+  response_status       ResponseStatus @default(pending)
+  response_submitted_at DateTime?
+  detected_at           DateTime
+  created_at            DateTime       @default(now())
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@index([client_id])
+  @@index([client_id, platform])
+  @@index([client_id, is_negative, response_status])
+  @@index([client_id, detected_at])
+  @@map("review_snapshots")
+}
+
+// ─────────────────────────────────────────────
+// REVIEW REQUEST KITS (Module B)
+// ─────────────────────────────────────────────
+
+model ReviewRequestKit {
+  id                String   @id @default(cuid())
+  client_id         String   @unique
+  whatsapp_template String   @db.Text
+  sms_template      String
+  email_subject     String
+  email_body        String   @db.Text
+  qr_code_html      String   @db.Text
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@map("review_request_kits")
 }
 
 // ─────────────────────────────────────────────
