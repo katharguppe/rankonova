@@ -84,7 +84,8 @@ export class FaqPageGeneratorService {
     }
 
     if (!html.includes('<html') && !html.includes('<!DOCTYPE')) {
-      throw new Error(`FAQ generator returned non-HTML content (${html.length} chars)`);
+      this.logger.warn(`llama3.1-8b returned markdown — wrapping in HTML shell (${html.length} chars)`);
+      html = `<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="UTF-8"><title>${input.brandName} | AEO FAQ</title></head>\n<body>\n${html}\n</body>\n</html>`;
     }
 
     const title = this.extractTitle(html);
