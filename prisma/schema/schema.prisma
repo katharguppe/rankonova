@@ -590,25 +590,31 @@ model ReviewRequestKit {
 // ─────────────────────────────────────────────
 
 model CommunityThread {
-  id                  String         @id @default(cuid())
-  client_id           String
-  platform            String         // "reddit" | forum identifier
-  url                 String
-  thread_title        String
-  is_client_mentioned Boolean        @default(false)
-  ai_citation_count   Int            @default(0) // how often AI engines cite this URL
-  response_draft      String?        @db.Text
-  response_status     ResponseStatus @default(pending)
-  detected_at         DateTime
-  responded_at        DateTime?
-  created_at          DateTime       @default(now())
-  updated_at          DateTime       @updatedAt
+  id                         String         @id @default(cuid())
+  client_id                  String
+  platform                   String         // "reddit" | forum identifier
+  url                        String
+  thread_title               String
+  question_text              String?        @db.Text
+  thread_score               Int            @default(0)
+  is_client_mentioned        Boolean        @default(false)
+  is_competitor_recommended  Boolean        @default(false)
+  competitor_names_mentioned Json?          // string[] -- competitor names found in thread
+  ai_citation_count          Int            @default(0)
+  response_draft             String?        @db.Text
+  response_status            ResponseStatus @default(pending)
+  detected_at                DateTime
+  responded_at               DateTime?
+  created_at                 DateTime       @default(now())
+  updated_at                 DateTime       @updatedAt
 
   client Client @relation(fields: [client_id], references: [id])
 
   @@index([client_id])
   @@index([client_id, response_status])
   @@index([ai_citation_count])
+  @@index([client_id, is_competitor_recommended, is_client_mentioned])
+  @@index([client_id, ai_citation_count])
   @@map("community_threads")
 }
 
