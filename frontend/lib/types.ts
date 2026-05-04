@@ -42,3 +42,40 @@ export interface GeoBreakdown {
   state: string;
   citation_rate: number;
 }
+
+export type ContentType =
+  | 'faq_page'
+  | 'comparison_page'
+  | 'entity_authority_page'
+  | 'segment_article';
+
+export type ContentStatus =
+  | 'draft'
+  | 'approved'
+  | 'revision_requested'
+  | 'published';
+
+export interface ContentListItem {
+  id: string;
+  type: ContentType;
+  title: string;
+  status: ContentStatus;
+  review_notes: string | null;
+  previous_version_id: string | null;
+  citation_rate_before: number | null;
+  citation_rate_after: number | null;
+  approved_at: string | null;
+  published_at: string | null;
+  follow_up_scheduled_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentOutput extends ContentListItem {
+  client_id: string;
+  target_prompt_id: string | null;
+  html_content: string;
+  schema_json: object;
+  generation_prompt: string;
+  approved_by: string | null;
+}
