@@ -62,6 +62,27 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 **Check:** 16/16 E2E green (fixed viewer tenant cleanup). Full suite 105/105 pass. All state machine guards confirmed.
 **Act:** Committed. Merged to main (259970e3). Pushed to origin. TASK-007 DONE.
 
+### Cycle 6 — Content UI (PRD F-07)
+**Plan:** Add Content section to Next.js dashboard: tab bar, table with type/status badges, fullscreen iframe preview, approve + request-revision buttons.
+**Approved:** 2026-05-04
+**Do:** frontend/lib/types.ts (+4 types); 4 API proxy routes under frontend/app/api/content/; frontend/app/dashboard/[clientId]/content/page.tsx (SSR); ContentClient.tsx (~450 lines, SWR, tabs, table, modals); Sidebar.tsx (Content link).
+**Check:** TypeScript clean; UI renders table with badges, preview modal, approve/revision modals.
+**Act:** Committed.
+
+### Cycle 7 — Switch generators to Cerebras; HTML fallback
+**Plan:** OpenRouter out of credits. Switch all 4 generators to Cerebras (free). Fix 500 errors when llama3.1-8b returns markdown.
+**Approved:** 2026-05-04
+**Do:** All 4 generators: apiKey=CEREBRAS_API_KEY, baseURL=https://api.cerebras.ai/v1, model=llama3.1-8b. Replace `throw new Error` on non-HTML with warn+wrap in minimal HTML shell. Smoke test: 10/10 pass.
+**Check:** Smoke test 10/10 green; 0 errors; 19 records in DB.
+**Act:** Committed (e0d5f715).
+
+### Cycle 8 — Preview fix: html_content in list response
+**Plan:** Preview modal showed "Failed to load preview" — secondary fetch to /content/output/:id was failing in browser. Fix: include html_content in listOutputs select so item.html_content is available directly.
+**Approved:** 2026-05-04
+**Do:** content-agent.service.ts listOutputs select +html_content; types.ts ContentListItem +html_content, ContentOutput -html_content (inherited); ContentClient.tsx openPreview() simplified to setPreviewItem(item) only; iframe sandbox=allow-scripts allow-same-origin.
+**Check:** List endpoint returns html_content (4880 chars); TypeScript clean.
+**Act:** Committed (5aa621c0). Pushed. Phase 7 fully done.
+
 ## Checkpoints
 | Step | Status | Git Commit | Notes |
 |------|--------|------------|-------|
@@ -81,4 +102,7 @@ Generate production-ready AEO-optimized HTML pages with embedded JSON-LD schema.
 | E2E test suite | DONE | ad002673 | test/content-agent.e2e-spec.ts — 16/16 green, full suite 105/105 |
 | Smoke script | DONE | ffd1c5f2 | scripts/smoke-test-content-agent.ts — 10-piece generation, full workflow, JSON report |
 | Merge to main | DONE | 259970e3 | Merged feature/TASK-007, pushed to origin |
+| Switch generators to Cerebras | DONE | e0d5f715 | All 4 generators: llama3.1-8b, CEREBRAS_API_KEY; HTML fallback wrap |
+| Content UI (F-07) | DONE | 5aa621c0 (partial) | 4 proxy routes, ContentClient, preview modal, approve/revision |
+| Preview fix (html_content in list) | DONE | 5aa621c0 | listOutputs +html_content; openPreview uses item directly |
 | 50-piece Srinivas review session | DEFERRED | — | Deferred to Phase 14 beta |
