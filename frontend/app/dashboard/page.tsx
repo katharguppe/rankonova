@@ -9,7 +9,7 @@ export default async function DashboardIndex() {
   if (!token) redirect('/login');
 
   try {
-    const clients = await apiFetch<Client[]>('/clients', token);
+    const clients = await apiFetch<Client[]>('/tenants/me/clients', token);
     if (clients.length > 0) {
       redirect(`/dashboard/${clients[0].id}/overview`);
     }
