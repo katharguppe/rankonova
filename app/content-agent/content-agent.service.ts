@@ -212,6 +212,7 @@ export class ContentAgentService {
         type: true,
         title: true,
         status: true,
+        html_content: true,
         review_notes: true,
         previous_version_id: true,
         citation_rate_before: true,

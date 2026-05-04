@@ -4,7 +4,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { X, Eye, CheckCircle, RotateCcw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ContentListItem, ContentOutput, ContentStatus, ContentType } from '@/lib/types';
+import type { ContentListItem, ContentStatus, ContentType } from '@/lib/types';
 
 // ── Static maps ───────────────────────────────────────────────────────────────
 
@@ -70,8 +70,6 @@ export default function ContentClient({ clientId, initial }: Props) {
 
   // Preview modal state
   const [previewItem, setPreviewItem] = useState<ContentListItem | null>(null);
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Revision modal state
   const [revisionItem, setRevisionItem] = useState<ContentListItem | null>(null);
@@ -94,25 +92,12 @@ export default function ContentClient({ clientId, initial }: Props) {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
-  async function openPreview(item: ContentListItem) {
+  function openPreview(item: ContentListItem) {
     setPreviewItem(item);
-    setPreviewHtml(null);
-    setPreviewLoading(true);
-    try {
-      const res = await fetch(`/api/content/output/${item.id}`);
-      if (!res.ok) throw new Error();
-      const full: ContentOutput = await res.json();
-      setPreviewHtml(full.html_content);
-    } catch {
-      setPreviewHtml('<p style="padding:2rem;color:#64748b">Failed to load preview.</p>');
-    } finally {
-      setPreviewLoading(false);
-    }
   }
 
   function closePreview() {
     setPreviewItem(null);
-    setPreviewHtml(null);
   }
 
   async function handleApprove(item: ContentListItem) {
@@ -288,20 +273,13 @@ export default function ContentClient({ clientId, initial }: Props) {
             </button>
           </div>
           <div className="flex-1 overflow-hidden bg-white">
-            {previewLoading ? (
-              <div className="flex items-center justify-center h-full gap-2 text-slate-400">
-                <Loader2 size={18} className="animate-spin" />
-                <span className="text-sm">Loading preview…</span>
-              </div>
-            ) : (
-              <iframe
-                key={previewItem.id}
-                srcDoc={previewHtml ?? ''}
-                sandbox="allow-same-origin"
-                className="w-full h-full border-0"
-                title="Content preview"
-              />
-            )}
+            <iframe
+              key={previewItem.id}
+              srcDoc={previewItem.html_content}
+              sandbox="allow-scripts allow-same-origin"
+              className="w-full h-full border-0"
+              title="Content preview"
+            />
           </div>
         </div>
       )}

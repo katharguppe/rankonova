@@ -60,6 +60,7 @@ export interface ContentListItem {
   type: ContentType;
   title: string;
   status: ContentStatus;
+  html_content: string;
   review_notes: string | null;
   previous_version_id: string | null;
   citation_rate_before: number | null;
@@ -74,7 +75,6 @@ export interface ContentListItem {
 export interface ContentOutput extends ContentListItem {
   client_id: string;
   target_prompt_id: string | null;
-  html_content: string;
   schema_json: object;
   generation_prompt: string;
   approved_by: string | null;
