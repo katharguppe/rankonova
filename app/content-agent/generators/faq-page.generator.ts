@@ -60,8 +60,8 @@ export class FaqPageGeneratorService {
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env['OPENROUTER_API_KEY'],
-      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env['CEREBRAS_API_KEY'],
+      baseURL: 'https://api.cerebras.ai/v1',
     });
   }
 
@@ -71,7 +71,7 @@ export class FaqPageGeneratorService {
     let html: string;
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'anthropic/claude-sonnet-4-6',
+        model: 'llama3.1-8b',
         max_tokens: 4000,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
