@@ -43,7 +43,7 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
   JWT fix   : scripts/fix-jwt-keys.js — generates + verifies matched RS256-2048 pair, writes to .env
   Vertical  : news_rss_feeds Json? added; Automotive + Healthcare seeded with RSS feeds
 
-## Phase 7 Handoff (2026-05-04, main HEAD: 85aeeab8)
+## Phase 7 Handoff (2026-05-04, main HEAD: ebb71cd8)
   Content generators  : Cerebras (CEREBRAS_API_KEY), model llama3.1-8b, baseURL https://api.cerebras.ai/v1
   Generator fallback  : non-HTML response wrapped in minimal HTML shell (warn+wrap, never throw)
   Content UI (F-07)   : /dashboard/[clientId]/content — tabs, table, iframe preview, approve, revision
