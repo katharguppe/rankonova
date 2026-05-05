@@ -79,3 +79,40 @@ export interface ContentOutput extends ContentListItem {
   generation_prompt: string;
   approved_by: string | null;
 }
+
+// ── Diagnostics ──────────────────────────────────────────────────────────────
+
+export interface OnSiteGaps {
+  missing_schema_types: string[];
+  faq_coverage_score: number;
+  freshness_gap: number;
+  entity_density_gap: number;
+  internal_link_gap: number;
+}
+
+export interface OffSiteGaps {
+  aggregator_presence: number;
+  review_volume_gap: number;
+  community_presence: number;
+  entity_recognition: number;
+  pr_coverage: number;
+}
+
+export interface RecommendedAction {
+  action: string;
+  estimated_impact: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface GapReport {
+  id: string;
+  version: number;
+  generated_at: string;
+  plain_english_summary: string;
+  on_site_gaps: OnSiteGaps;
+  off_site_gaps: OffSiteGaps;
+  recommended_actions: RecommendedAction[];
+  top_cited_competitor_id: string | null;
+  top_cited_domain: string | null;
+  created_at: string;
+}

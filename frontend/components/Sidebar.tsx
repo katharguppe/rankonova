@@ -12,18 +12,22 @@ import {
   Link2,
   MapPin,
   FileText,
+  Stethoscope,
+  Globe,
   LogOut,
 } from 'lucide-react';
 
 const sections = [
-  { href: 'overview',       label: 'Citation Overview',   icon: TrendingUp },
-  { href: 'share-of-voice', label: 'Share of Voice',      icon: BarChart2  },
-  { href: 'sentiment',      label: 'Sentiment Analysis',  icon: PieChart   },
-  { href: 'prompts',        label: 'Prompt Analysis',     icon: List       },
-  { href: 'engines',        label: 'Engine Breakdown',    icon: Cpu        },
-  { href: 'sources',        label: 'Citation Sources',    icon: Link2      },
-  { href: 'geo',            label: 'Geographic',          icon: MapPin     },
-  { href: 'content',        label: 'Content',             icon: FileText   },
+  { href: 'overview',       label: 'Citation Overview',   icon: TrendingUp  },
+  { href: 'share-of-voice', label: 'Share of Voice',      icon: BarChart2   },
+  { href: 'sentiment',      label: 'Sentiment Analysis',  icon: PieChart    },
+  { href: 'prompts',        label: 'Prompt Analysis',     icon: List        },
+  { href: 'engines',        label: 'Engine Breakdown',    icon: Cpu         },
+  { href: 'sources',        label: 'Citation Sources',    icon: Link2       },
+  { href: 'geo',            label: 'Geographic',          icon: MapPin      },
+  { href: 'content',        label: 'Content',             icon: FileText    },
+  { href: 'diagnostics',    label: 'Diagnostics',         icon: Stethoscope },
+  { href: 'offsite',        label: 'Off-Site Builder',    icon: Globe       },
 ];
 
 interface SidebarProps {
