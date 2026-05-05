@@ -8,3 +8,6 @@ dist/
 coverage/
 .next/
 *.tsbuildinfo
+smoke-results-*.json
+NUL
+frontend/NUL
