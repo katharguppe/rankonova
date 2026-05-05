@@ -297,6 +297,7 @@ model Client {
   review_request_kit     ReviewRequestKit?
   community_threads      CommunityThread[]
   aggregator_snapshots   AggregatorSnapshot[]
+  entity_checks          EntityCheck[]
   weekly_briefs          WeeklyBrief[]
   notifications          Notification[]
 
@@ -643,6 +644,42 @@ model AggregatorSnapshot {
   @@index([client_id, platform])
   @@index([client_id, platform, crawled_at])
   @@map("aggregator_snapshots")
+}
+
+// ─────────────────────────────────────────────
+// ENTITY CHECKS (Module D)
+// ─────────────────────────────────────────────
+
+model EntityCheck {
+  id                        String    @id @default(cuid())
+  client_id                 String
+
+  // Wikidata
+  wikidata_found            Boolean   @default(false)
+  wikidata_qid              String?   // e.g. "Q12345678"
+  wikidata_submission_draft Json?     // structured draft when not found
+
+  // Google Knowledge Panel
+  gkp_detected              Boolean   @default(false)
+  gkp_snapshot              Json?     // { title, description, image_url, source_url }
+
+  // Wikipedia
+  wikipedia_notable         Boolean   @default(false)
+  wikipedia_url             String?
+  wikipedia_flag            String?   // "threshold_met" | "borderline" | "not_notable"
+
+  // Change tracking
+  status_changed            Boolean   @default(false)
+  previous_check_id         String?
+
+  checked_at                DateTime  @default(now())
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  @@index([client_id, checked_at])
+  @@map("entity_checks")
 }
 
 // ─────────────────────────────────────────────
