@@ -83,6 +83,11 @@ export async function seedVerticals(prisma: PrismaClient) {
         },
       ],
       wikidata_entity_type: 'Q1420',
+      news_rss_feeds: [
+        { url: 'https://www.autocarindia.com/rss', name: 'Autocar India' },
+        { url: 'https://www.motorbeam.com/feed/', name: 'MotorBeam' },
+        { url: 'https://auto.ndtv.com/rss/news', name: 'NDTV Auto' },
+      ],
       review_platforms: [
         { name: 'Google My Business', type: 'api', config: {} },
         { name: 'CarDekho Reviews', type: 'scrape', config: { base_url: 'https://www.cardekho.com' } },
@@ -330,6 +335,10 @@ export async function seedVerticals(prisma: PrismaClient) {
         },
       ],
       wikidata_entity_type: 'Q35638',
+      news_rss_feeds: [
+        { url: 'https://health.ndtv.com/feeds', name: 'NDTV Health' },
+        { url: 'https://economictimes.indiatimes.com/industry/healthcare/biotech/rssfeeds/13352286.cms', name: 'ET Healthcare' },
+      ],
       review_platforms: [
         { name: 'Google My Business', type: 'api', config: {} },
         { name: 'Practo Reviews', type: 'scrape', config: { base_url: 'https://www.practo.com' } },
@@ -351,6 +360,7 @@ export async function seedVerticals(prisma: PrismaClient) {
         schema_types: v.schema_types,
         community_platforms: v.community_platforms,
         wikidata_entity_type: v.wikidata_entity_type,
+        news_rss_feeds: (v.news_rss_feeds ?? undefined) as import('@prisma/client').Prisma.InputJsonValue | undefined,
         review_platforms: v.review_platforms,
         is_active: true,
       },

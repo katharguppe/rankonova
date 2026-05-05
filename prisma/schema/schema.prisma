@@ -104,6 +104,13 @@ enum ResponseStatus {
   skipped
 }
 
+enum PrSignalStatus {
+  draft
+  approved
+  distributed
+  archived
+}
+
 enum BillingEventType {
   subscription_created
   subscription_renewed
@@ -237,6 +244,7 @@ model Vertical {
   schema_types         Json     // string[] of schema.org types
   community_platforms  Json     // { platform, identifiers, keywords }[]
   wikidata_entity_type String?
+  news_rss_feeds       Json?    // { url, name }[]
   review_platforms     Json     // { name, type: "api"|"scrape", config }[]
   is_active            Boolean  @default(true)
   created_at           DateTime @default(now())
@@ -298,6 +306,7 @@ model Client {
   community_threads      CommunityThread[]
   aggregator_snapshots   AggregatorSnapshot[]
   entity_checks          EntityCheck[]
+  pr_signals             PrSignal[]
   weekly_briefs          WeeklyBrief[]
   notifications          Notification[]
 
@@ -756,4 +765,46 @@ model BillingEvent {
   @@index([tenant_id, created_at])
   @@index([tenant_id, event_type])
   @@map("billing_events")
+}
+
+// ─────────────────────────────────────────────
+// PR SIGNALS (Module E)
+// ─────────────────────────────────────────────
+
+model PrSignal {
+  id                     String         @id @default(cuid())
+  client_id              String
+  news_title             String
+  news_url               String
+  news_source            String
+  published_at           DateTime?
+  relevance_score        Float
+  pr_angle               String         @db.Text
+  press_release_draft    String         @db.Text
+  distribution_checklist Json           // { outlet, journalist, contact, wire_service }[]
+  status                 PrSignalStatus @default(draft)
+  approved_at            DateTime?
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @updatedAt
+
+  client  Client     @relation(fields: [client_id], references: [id])
+  pickups PrPickup[]
+
+  @@index([client_id, created_at])
+  @@index([client_id, status])
+  @@map("pr_signals")
+}
+
+model PrPickup {
+  id           String   @id @default(cuid())
+  pr_signal_id String
+  domain       String
+  indexed_url  String?
+  is_ai_trusted Boolean @default(false)
+  detected_at  DateTime @default(now())
+
+  pr_signal PrSignal @relation(fields: [pr_signal_id], references: [id])
+
+  @@index([pr_signal_id])
+  @@map("pr_pickups")
 }
