@@ -6,7 +6,7 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 
 ## Current Phase: 8 (complete) — next: Phase 9
 
-## Phase 8 Handoff (2026-05-05, main HEAD: cf54638c)
+## Phase 8 Handoff (2026-05-05, main HEAD: 1de9d951)
   All 5 Offsite modules shipped under app\offsite\:
 
   Module A — Aggregator Profile Monitor
