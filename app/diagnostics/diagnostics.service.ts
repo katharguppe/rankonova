@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { DiagnosticsCrawlerService } from './diagnostics-crawler.service';
 import { DiagnosticsDiffService } from './diagnostics-diff.service';
 import { DiagnosticsSummaryService } from './diagnostics-summary.service';
-import { PageExtraction } from './diagnostics.types';
+import { PageExtraction, OnSiteGaps, OffSiteGaps, RecommendedAction, SiteProfile } from './diagnostics.types';
 
 const MAX_COMPETITOR_URLS = 3;
 
@@ -48,53 +48,94 @@ export class DiagnosticsService {
 
     this.logger.log(`Generating gap report for client ${clientId} (${client.brand_name})`);
 
-    // Competitor data + client site crawled in parallel where possible
-    const { topCompetitor, competitorUrls } = await this.findTopCompetitor(clientId);
+    // Fetch competitor config + previous report in parallel
+    const [{ topCompetitor, competitorUrls }, previousReport] = await Promise.all([
+      this.findTopCompetitor(clientId),
+      this.prisma.gapReport.findFirst({
+        where: { client_id: clientId },
+        orderBy: { version: 'desc' },
+      }),
+    ]);
 
     const [competitorPages, clientPages] = await Promise.all([
       this.crawlCompetitorUrls(competitorUrls),
       this.crawler.crawlSite(client.website_url, 10),
     ]);
 
-    const competitorProfile = this.crawler.buildSiteProfile(competitorPages);
-    const clientProfile = this.crawler.buildSiteProfile(clientPages);
+    // If the client site is entirely unreachable, preserve the previous report's
+    // gap scores rather than overwriting with zeros.
+    const crawlFailed = clientPages.length === 0 || clientPages.every((p) => !!p.error);
 
-    const { onSiteGaps, offSiteGaps, recommendedActions } = this.diff.computeGaps(
-      clientProfile,
-      competitorProfile,
-    );
+    let dbOnSiteGaps: object;
+    let dbOffSiteGaps: object;
+    let dbRecommendedActions: object[];
+    let summaryOnSite: OnSiteGaps;
+    let summaryOffSite: OffSiteGaps;
+    let summaryActions: RecommendedAction[];
+    let clientProfile: SiteProfile;
+    let competitorProfile: SiteProfile;
+
+    if (crawlFailed && previousReport) {
+      this.logger.warn(
+        `Client site crawl failed entirely for ${clientId} — preserving previous report gaps`,
+      );
+      dbOnSiteGaps = previousReport.on_site_gaps as object;
+      dbOffSiteGaps = previousReport.off_site_gaps as object;
+      dbRecommendedActions = previousReport.recommended_actions as object[];
+      summaryOnSite = this.fromDbOnSiteGaps(previousReport.on_site_gaps);
+      summaryOffSite = this.fromDbOffSiteGaps();
+      summaryActions = this.fromDbActions(previousReport.recommended_actions as object[]);
+      clientProfile = this.crawler.buildSiteProfile([]);
+      competitorProfile = this.crawler.buildSiteProfile([]);
+    } else {
+      competitorProfile = this.crawler.buildSiteProfile(competitorPages);
+      clientProfile = this.crawler.buildSiteProfile(clientPages);
+      const { onSiteGaps, offSiteGaps, recommendedActions } = this.diff.computeGaps(
+        clientProfile,
+        competitorProfile,
+      );
+      dbOnSiteGaps = this.toDbOnSiteGaps(onSiteGaps);
+      dbOffSiteGaps = this.toDbOffSiteGaps(offSiteGaps);
+      dbRecommendedActions = this.toDbActions(recommendedActions);
+      summaryOnSite = onSiteGaps;
+      summaryOffSite = offSiteGaps;
+      summaryActions = recommendedActions;
+    }
 
     const plainEnglishSummary = await this.summary.generateSummary({
       clientName: client.brand_name,
       clientWebsite: client.website_url,
       competitorDomain: topCompetitor?.domain ?? 'N/A',
-      onSiteGaps,
-      offSiteGaps,
-      recommendedActions,
+      onSiteGaps: summaryOnSite,
+      offSiteGaps: summaryOffSite,
+      recommendedActions: summaryActions,
       clientProfile,
       competitorProfile,
     });
 
-    const { version, previousReportId } = await this.getNextVersion(clientId);
+    const version = (previousReport?.version ?? 0) + 1;
 
-    // Upsert citation sources and create report concurrently
-    const [report] = await Promise.all([
+    const createOps: Promise<unknown>[] = [
       this.prisma.gapReport.create({
         data: {
           client_id: clientId,
           version,
           generated_at: new Date(),
-          on_site_gaps: onSiteGaps as object,
-          off_site_gaps: offSiteGaps as object,
+          on_site_gaps: dbOnSiteGaps,
+          off_site_gaps: dbOffSiteGaps,
           top_cited_competitor_id: topCompetitor?.id ?? null,
           top_cited_domain: topCompetitor?.domain ?? null,
           plain_english_summary: plainEnglishSummary,
-          recommended_actions: recommendedActions as unknown as object[],
-          previous_report_id: previousReportId,
+          recommended_actions: dbRecommendedActions as unknown as object[],
+          previous_report_id: previousReport?.id ?? null,
         },
       }),
-      this.upsertCitationSources(competitorPages),
-    ]);
+    ];
+    if (!crawlFailed) {
+      createOps.push(this.upsertCitationSources(competitorPages));
+    }
+
+    const [report] = await Promise.all(createOps) as [GapReport, ...unknown[]];
 
     this.logger.log(`Gap report v${version} stored for client ${clientId}`);
     return report;
@@ -188,18 +229,71 @@ export class DiagnosticsService {
     return Promise.all(urls.map((url) => this.crawler.crawlUrl(url)));
   }
 
-  private async getNextVersion(
-    clientId: string,
-  ): Promise<{ version: number; previousReportId: string | null }> {
-    const latest = await this.prisma.gapReport.findFirst({
-      where: { client_id: clientId },
-      orderBy: { version: 'desc' },
-      select: { id: true, version: true },
-    });
+  // ── gap format helpers ──────────────────────────────────────────────────────
+  // Backend types use camelCase; frontend reads snake_case from JSONB.
+  // These helpers translate at the DB boundary.
+
+  private toDbOnSiteGaps(g: OnSiteGaps): object {
     return {
-      version: (latest?.version ?? 0) + 1,
-      previousReportId: latest?.id ?? null,
+      missing_schema_types: g.missingSchemaTypes,
+      faq_coverage_score: g.faqCoverageScore / 100, // 0-100 → 0-1 (frontend multiplies by 100 for %)
+      freshness_gap: g.freshnessGap,
+      entity_density_gap: g.entityDensityGap,
+      internal_link_gap: g.internalLinkGap,
     };
+  }
+
+  private toDbOffSiteGaps(_g: OffSiteGaps): object {
+    // Off-site gaps are populated by Phase 8 offsite modules; store zeros here.
+    return {
+      aggregator_presence: 0,
+      review_volume_gap: 0,
+      community_presence: 0,
+      entity_recognition: 0,
+      pr_coverage: 0,
+    };
+  }
+
+  private toDbActions(actions: RecommendedAction[]): object[] {
+    const desc: Record<string, string> = {
+      high: 'High impact — significant AI citation improvement expected within 4-6 weeks',
+      medium: 'Medium impact — moderate citation lift expected within 6-12 weeks',
+      low: 'Low impact — gradual improvement over time',
+    };
+    return actions.map((a) => ({
+      action: a.action,
+      estimated_impact: desc[a.estimatedImpact] ?? a.estimatedImpact,
+      priority: a.estimatedImpact,
+    }));
+  }
+
+  private fromDbOnSiteGaps(raw: unknown): OnSiteGaps {
+    const g = (raw ?? {}) as Record<string, unknown>;
+    return {
+      missingSchemaTypes: (g['missing_schema_types'] as string[]) ?? [],
+      faqCoverageScore: Math.round(((g['faq_coverage_score'] as number) ?? 0) * 100),
+      freshnessGap: (g['freshness_gap'] as number) ?? 0,
+      entityDensityGap: (g['entity_density_gap'] as number) ?? 0,
+      internalLinkGap: (g['internal_link_gap'] as number) ?? 0,
+    };
+  }
+
+  private fromDbOffSiteGaps(): OffSiteGaps {
+    return {
+      aggregatorPresence: 'unknown',
+      reviewVolumeGap: 0,
+      communityPresence: 'unknown',
+      entityRecognition: 'unknown',
+      prCoverage: 'unknown',
+    };
+  }
+
+  private fromDbActions(raw: object[]): RecommendedAction[] {
+    return (raw as Record<string, unknown>[]).map((a, i) => ({
+      action: (a['action'] as string) ?? '',
+      estimatedImpact: ((a['priority'] as 'high' | 'medium' | 'low') ?? 'medium'),
+      priority: i + 1,
+    }));
   }
 
   private async upsertCitationSources(pages: PageExtraction[]): Promise<void> {
