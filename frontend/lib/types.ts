@@ -80,6 +80,78 @@ export interface ContentOutput extends ContentListItem {
   approved_by: string | null;
 }
 
+// ── Offsite — Aggregator ─────────────────────────────────────────────────────
+
+export interface AggregatorUpdatePackItem { field: string; suggestion: string; }
+export interface AggregatorCompetitorScore { competitor_id: string; name: string; score: number; url: string; }
+export interface AggregatorSnapshot {
+  id: string; client_id: string; platform: string; profile_url: string;
+  completeness_score: number; fields_present: string[]; fields_missing: string[];
+  competitor_scores: AggregatorCompetitorScore[]; content_hash: string;
+  raw_extract: Record<string, string | null>; update_pack: AggregatorUpdatePackItem[];
+  crawled_at: string; created_at: string;
+}
+
+// ── Offsite — Reviews ────────────────────────────────────────────────────────
+
+export interface ReviewAudit {
+  id: string; client_id: string; platform: string; profile_url: string;
+  review_count: number; average_rating: number; review_velocity: number | null;
+  keyword_frequency: Record<string, number> | null; negative_count: number;
+  crawled_at: string; updated_at: string;
+}
+
+// ── Offsite — Community ──────────────────────────────────────────────────────
+
+export type CommunityResponseStatus = 'pending' | 'posted' | 'skipped';
+export interface CommunityThread {
+  id: string; client_id: string; platform: string; url: string;
+  thread_title: string; question_text: string | null; thread_score: number;
+  is_client_mentioned: boolean; is_competitor_recommended: boolean;
+  competitor_names_mentioned: string[]; ai_citation_count: number;
+  response_draft: string | null; response_status: CommunityResponseStatus;
+  detected_at: string; responded_at: string | null; created_at: string; updated_at: string;
+}
+
+// ── Offsite — Knowledge Graph ────────────────────────────────────────────────
+
+export interface WikidataSubmissionDraft {
+  label: string; description: string; aliases: string[];
+  claims: { P31: string; P17: string; P131: string; P856: string; };
+}
+export interface GkpSnapshot {
+  title: string; description: string; image_url: string | null; source_url: string | null;
+}
+export interface EntityCheck {
+  id: string; client_id: string;
+  wikidata_found: boolean; wikidata_qid: string | null;
+  wikidata_submission_draft: WikidataSubmissionDraft | null;
+  gkp_detected: boolean; gkp_snapshot: GkpSnapshot | null;
+  wikipedia_notable: boolean; wikipedia_url: string | null;
+  wikipedia_flag: 'threshold_met' | 'borderline' | 'not_notable' | null;
+  status_changed: boolean; previous_check_id: string | null;
+  checked_at: string; created_at: string;
+}
+
+// ── Offsite — PR ─────────────────────────────────────────────────────────────
+
+export type PrSignalStatus = 'draft' | 'approved' | 'distributed' | 'archived';
+export interface DistributionContact {
+  outlet: string; journalist: string; contact: string; wire_service: boolean;
+}
+export interface PrPickup {
+  id: string; pr_signal_id: string; domain: string; indexed_url: string | null;
+  is_ai_trusted: boolean; detected_at: string;
+}
+export interface PrSignal {
+  id: string; client_id: string; news_title: string; news_url: string;
+  news_source: string; published_at: string | null; relevance_score: number;
+  pr_angle: string; press_release_draft: string;
+  distribution_checklist: DistributionContact[];
+  status: PrSignalStatus; approved_at: string | null; pickups: PrPickup[];
+  created_at: string; updated_at: string;
+}
+
 // ── Diagnostics ──────────────────────────────────────────────────────────────
 
 export interface OnSiteGaps {

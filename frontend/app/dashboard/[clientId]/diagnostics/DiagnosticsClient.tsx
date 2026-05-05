@@ -19,16 +19,17 @@ async function fetchReport(url: string): Promise<GapReport | null> {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ScoreCard({ label, value, fmt }: { label: string; value: number; fmt: 'pct' | 'count' | 'score' }) {
+function ScoreCard({ label, value, fmt }: { label: string; value: number | undefined; fmt: 'pct' | 'count' | 'score' }) {
+  const v = value ?? 0;
   const display = fmt === 'pct'
-    ? `${Math.round(value * 100)}%`
+    ? `${Math.round(v * 100)}%`
     : fmt === 'score'
-    ? value.toFixed(1)
-    : String(value);
+    ? v.toFixed(1)
+    : String(v);
 
   const level = fmt === 'pct'
-    ? (value >= 0.7 ? 'good' : value >= 0.4 ? 'warn' : 'bad')
-    : (value === 0 ? 'good' : value <= 2 ? 'warn' : 'bad');
+    ? (v >= 0.7 ? 'good' : v >= 0.4 ? 'warn' : 'bad')
+    : (v === 0 ? 'good' : v <= 2 ? 'warn' : 'bad');
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col gap-1">
@@ -44,7 +45,7 @@ function ScoreCard({ label, value, fmt }: { label: string; value: number; fmt: '
         <div className={cn(
           'h-1 rounded-full',
           level === 'good' ? 'bg-emerald-500' : level === 'warn' ? 'bg-amber-400' : 'bg-red-400',
-        )} style={{ width: fmt === 'pct' ? `${Math.round(value * 100)}%` : `${Math.min(100, value * 20)}%` }} />
+        )} style={{ width: fmt === 'pct' ? `${Math.round(v * 100)}%` : `${Math.min(100, v * 20)}%` }} />
       </div>
     </div>
   );
@@ -198,7 +199,7 @@ export default function DiagnosticsClient({ clientId, initial }: Props) {
               Recommended Actions <span className="text-slate-400 font-normal normal-case">(ordered by citation impact)</span>
             </h2>
             <div className="space-y-2">
-              {report.recommended_actions.map((item, i) => (
+              {(report.recommended_actions ?? []).map((item, i) => (
                 <div
                   key={i}
                   className="bg-white border border-slate-200 rounded-lg px-4 py-3 flex items-start gap-4"
@@ -214,7 +215,7 @@ export default function DiagnosticsClient({ clientId, initial }: Props) {
                   <PriorityBadge priority={item.priority} />
                 </div>
               ))}
-              {report.recommended_actions.length === 0 && (
+              {(report.recommended_actions ?? []).length === 0 && (
                 <p className="text-sm text-slate-400">No recommended actions generated.</p>
               )}
             </div>
@@ -227,20 +228,21 @@ export default function DiagnosticsClient({ clientId, initial }: Props) {
 
 // ── Gap grids ─────────────────────────────────────────────────────────────────
 
-function OnSiteGapsGrid({ gaps }: { gaps: OnSiteGaps }) {
+function OnSiteGapsGrid({ gaps }: { gaps: OnSiteGaps | undefined }) {
+  const missing = gaps?.missing_schema_types ?? [];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-      <ScoreCard label="FAQ Coverage" value={gaps.faq_coverage_score} fmt="pct" />
-      <ScoreCard label="Freshness Gap" value={gaps.freshness_gap} fmt="score" />
-      <ScoreCard label="Entity Density Gap" value={gaps.entity_density_gap} fmt="score" />
-      <ScoreCard label="Internal Link Gap" value={gaps.internal_link_gap} fmt="score" />
+      <ScoreCard label="FAQ Coverage" value={gaps?.faq_coverage_score} fmt="pct" />
+      <ScoreCard label="Freshness Gap" value={gaps?.freshness_gap} fmt="score" />
+      <ScoreCard label="Entity Density Gap" value={gaps?.entity_density_gap} fmt="score" />
+      <ScoreCard label="Internal Link Gap" value={gaps?.internal_link_gap} fmt="score" />
       <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col gap-1 sm:col-span-1 col-span-2">
         <p className="text-xs text-slate-500 font-medium">Missing Schema Types</p>
-        {gaps.missing_schema_types.length === 0 ? (
+        {missing.length === 0 ? (
           <p className="text-sm text-emerald-600 font-semibold">None</p>
         ) : (
           <div className="flex flex-wrap gap-1 mt-1">
-            {gaps.missing_schema_types.map((t) => (
+            {missing.map((t) => (
               <span key={t} className="text-xs bg-red-50 text-red-700 border border-red-100 rounded px-1.5 py-0.5">{t}</span>
             ))}
           </div>
@@ -250,14 +252,14 @@ function OnSiteGapsGrid({ gaps }: { gaps: OnSiteGaps }) {
   );
 }
 
-function OffSiteGapsGrid({ gaps }: { gaps: OffSiteGaps }) {
+function OffSiteGapsGrid({ gaps }: { gaps: OffSiteGaps | undefined }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-      <ScoreCard label="Aggregator Presence" value={gaps.aggregator_presence} fmt="pct" />
-      <ScoreCard label="Review Volume Gap" value={gaps.review_volume_gap} fmt="score" />
-      <ScoreCard label="Community Presence" value={gaps.community_presence} fmt="pct" />
-      <ScoreCard label="Entity Recognition" value={gaps.entity_recognition} fmt="pct" />
-      <ScoreCard label="PR Coverage" value={gaps.pr_coverage} fmt="pct" />
+      <ScoreCard label="Aggregator Presence" value={gaps?.aggregator_presence} fmt="pct" />
+      <ScoreCard label="Review Volume Gap" value={gaps?.review_volume_gap} fmt="score" />
+      <ScoreCard label="Community Presence" value={gaps?.community_presence} fmt="pct" />
+      <ScoreCard label="Entity Recognition" value={gaps?.entity_recognition} fmt="pct" />
+      <ScoreCard label="PR Coverage" value={gaps?.pr_coverage} fmt="pct" />
     </div>
   );
 }
