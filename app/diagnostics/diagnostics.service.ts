@@ -48,13 +48,14 @@ export class DiagnosticsService {
 
     this.logger.log(`Generating gap report for client ${clientId} (${client.brand_name})`);
 
-    // Fetch competitor config + previous report in parallel
-    const [{ topCompetitor, competitorUrls }, previousReport] = await Promise.all([
+    // Fetch competitor config + previous report + best gap report in parallel
+    const [{ topCompetitor, competitorUrls }, previousReport, bestGapReport] = await Promise.all([
       this.findTopCompetitor(clientId),
       this.prisma.gapReport.findFirst({
         where: { client_id: clientId },
         orderBy: { version: 'desc' },
       }),
+      this.findBestGapReport(clientId),
     ]);
 
     const [competitorPages, clientPages] = await Promise.all([
@@ -75,16 +76,16 @@ export class DiagnosticsService {
     let clientProfile: SiteProfile;
     let competitorProfile: SiteProfile;
 
-    if (crawlFailed && previousReport) {
+    if (crawlFailed && bestGapReport) {
       this.logger.warn(
-        `Client site crawl failed entirely for ${clientId} — preserving previous report gaps`,
+        `Client site crawl failed entirely for ${clientId} — preserving best gap report v${bestGapReport.version} gaps`,
       );
-      dbOnSiteGaps = previousReport.on_site_gaps as object;
-      dbOffSiteGaps = previousReport.off_site_gaps as object;
-      dbRecommendedActions = previousReport.recommended_actions as object[];
-      summaryOnSite = this.fromDbOnSiteGaps(previousReport.on_site_gaps);
+      dbOnSiteGaps = bestGapReport.on_site_gaps as object;
+      dbOffSiteGaps = bestGapReport.off_site_gaps as object;
+      dbRecommendedActions = bestGapReport.recommended_actions as object[];
+      summaryOnSite = this.fromDbOnSiteGaps(bestGapReport.on_site_gaps);
       summaryOffSite = this.fromDbOffSiteGaps();
-      summaryActions = this.fromDbActions(previousReport.recommended_actions as object[]);
+      summaryActions = this.fromDbActions(bestGapReport.recommended_actions as object[]);
       clientProfile = this.crawler.buildSiteProfile([]);
       competitorProfile = this.crawler.buildSiteProfile([]);
     } else {
@@ -222,6 +223,22 @@ export class DiagnosticsService {
       topCompetitor: { id: competitorId, name: competitor?.name ?? '', domain },
       competitorUrls,
     };
+  }
+
+  // Returns the most recent report with actual non-zero faq_coverage_score (snake_case).
+  // Falls back to the absolute latest report if none has real data.
+  private async findBestGapReport(clientId: string): Promise<GapReport | null> {
+    const recent = await this.prisma.gapReport.findMany({
+      where: { client_id: clientId },
+      orderBy: { version: 'desc' },
+      take: 20,
+    });
+    const withData = recent.find((r) => {
+      const g = r.on_site_gaps as Record<string, unknown>;
+      const score = g['faq_coverage_score'] as number | undefined;
+      return typeof score === 'number' && score > 0;
+    });
+    return withData ?? recent[0] ?? null;
   }
 
   private async crawlCompetitorUrls(urls: string[]): Promise<PageExtraction[]> {
