@@ -34,6 +34,11 @@ async function fetcher<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+function fmt(date: string | null | undefined): string {
+  if (!date) return '—';
+  try { return new Date(date).toLocaleString('en-IN'); } catch { return '—'; }
+}
+
 // ── Shared ────────────────────────────────────────────────────────────────────
 
 function RunButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
@@ -55,9 +60,7 @@ function RunButton({ onClick, loading }: { onClick: () => void; loading: boolean
 }
 
 function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="py-16 text-center text-slate-400 text-sm">{message}</div>
-  );
+  return <div className="py-16 text-center text-slate-400 text-sm">{message}</div>;
 }
 
 function TabError({ message }: { message: string }) {
@@ -76,63 +79,72 @@ function AggregatorTab({ snapshots }: { snapshots: AggregatorSnapshot[] }) {
 
   return (
     <div className="space-y-4">
-      {snapshots.map((snap) => (
-        <div key={snap.id} className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="font-semibold text-slate-900">{snap.platform}</p>
-              <a
-                href={snap.profile_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5"
-              >
-                {snap.profile_url.slice(0, 60)}{snap.profile_url.length > 60 ? '…' : ''}
-                <ExternalLink size={10} />
-              </a>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900">{snap.completeness_score.toFixed(0)}%</p>
-              <p className="text-xs text-slate-400">completeness</p>
-            </div>
-          </div>
+      {snapshots.map((snap) => {
+        const score = snap?.completeness_score ?? 0;
+        const url = snap?.profile_url ?? '';
+        const missing = snap?.fields_missing ?? [];
+        const pack = snap?.update_pack ?? [];
 
-          {/* Progress bar */}
-          <div className="h-2 bg-slate-100 rounded-full mb-4">
-            <div
-              className={cn('h-2 rounded-full', snap.completeness_score >= 70 ? 'bg-emerald-500' : snap.completeness_score >= 40 ? 'bg-amber-400' : 'bg-red-400')}
-              style={{ width: `${snap.completeness_score}%` }}
-            />
-          </div>
-
-          {snap.fields_missing.length > 0 && (
-            <div className="mb-3">
-              <p className="text-xs font-medium text-slate-500 mb-1.5">Missing fields</p>
-              <div className="flex flex-wrap gap-1">
-                {snap.fields_missing.map((f) => (
-                  <span key={f} className="text-xs bg-red-50 text-red-700 border border-red-100 rounded px-1.5 py-0.5">{f}</span>
-                ))}
+        return (
+          <div key={snap.id} className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-semibold text-slate-900">{snap?.platform ?? '—'}</p>
+                {url && (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5"
+                  >
+                    {url.slice(0, 60)}{url.length > 60 ? '…' : ''}
+                    <ExternalLink size={10} />
+                  </a>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-slate-900">{score.toFixed(0)}%</p>
+                <p className="text-xs text-slate-400">completeness</p>
               </div>
             </div>
-          )}
 
-          {snap.update_pack.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-slate-500 mb-1.5">Suggestions</p>
-              <ol className="space-y-1">
-                {snap.update_pack.slice(0, 5).map((u, i) => (
-                  <li key={i} className="text-xs text-slate-700 flex gap-2">
-                    <span className="text-slate-400 font-mono shrink-0">{i + 1}.</span>
-                    <span><span className="font-medium">{u.field}:</span> {u.suggestion}</span>
-                  </li>
-                ))}
-              </ol>
+            <div className="h-2 bg-slate-100 rounded-full mb-4">
+              <div
+                className={cn('h-2 rounded-full',
+                  score >= 70 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-400' : 'bg-red-400')}
+                style={{ width: `${score}%` }}
+              />
             </div>
-          )}
 
-          <p className="text-xs text-slate-400 mt-3">Crawled {new Date(snap.crawled_at).toLocaleString('en-IN')}</p>
-        </div>
-      ))}
+            {missing.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs font-medium text-slate-500 mb-1.5">Missing fields</p>
+                <div className="flex flex-wrap gap-1">
+                  {missing.map((f) => (
+                    <span key={f} className="text-xs bg-red-50 text-red-700 border border-red-100 rounded px-1.5 py-0.5">{f}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pack.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1.5">Suggestions</p>
+                <ol className="space-y-1">
+                  {pack.slice(0, 5).map((u, i) => (
+                    <li key={i} className="text-xs text-slate-700 flex gap-2">
+                      <span className="text-slate-400 font-mono shrink-0">{i + 1}.</span>
+                      <span><span className="font-medium">{u?.field ?? ''}:</span> {u?.suggestion ?? ''}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-400 mt-3">Crawled {fmt(snap?.crawled_at)}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -144,33 +156,42 @@ function ReviewsTab({ audits }: { audits: ReviewAudit[] }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {audits.map((audit) => (
-        <div key={audit.id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold text-slate-900">{audit.platform}</p>
-            {audit.negative_count > 0 && (
-              <span className="text-xs bg-red-100 text-red-700 font-medium px-2 py-0.5 rounded-full">
-                {audit.negative_count} negative
-              </span>
-            )}
+      {audits.map((audit) => {
+        const negCount = audit?.negative_count ?? 0;
+        const reviewCount = audit?.review_count ?? 0;
+        const rating = audit?.average_rating ?? 0;
+        const velocity = audit?.review_velocity;
+
+        return (
+          <div key={audit.id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-slate-900">{audit?.platform ?? '—'}</p>
+              {negCount > 0 && (
+                <span className="text-xs bg-red-100 text-red-700 font-medium px-2 py-0.5 rounded-full">
+                  {negCount} negative
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-xl font-bold text-slate-900">{reviewCount}</p>
+                <p className="text-xs text-slate-400">reviews</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-amber-500">{rating.toFixed(1)}</p>
+                <p className="text-xs text-slate-400">avg rating</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-blue-600">
+                  {velocity != null ? velocity.toFixed(1) : '—'}
+                </p>
+                <p className="text-xs text-slate-400">velocity</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400">Updated {fmt(audit?.updated_at)}</p>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-xl font-bold text-slate-900">{audit.review_count}</p>
-              <p className="text-xs text-slate-400">reviews</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-amber-500">{audit.average_rating.toFixed(1)}</p>
-              <p className="text-xs text-slate-400">avg rating</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-blue-600">{audit.review_velocity?.toFixed(1) ?? '—'}</p>
-              <p className="text-xs text-slate-400">velocity</p>
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">Updated {new Date(audit.updated_at).toLocaleString('en-IN')}</p>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -182,8 +203,12 @@ function CommunityTab({ threads }: { threads: CommunityThread[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = opOnly
-    ? threads.filter((t) => t.is_competitor_recommended && !t.is_client_mentioned)
+    ? threads.filter((t) => (t?.is_competitor_recommended ?? false) && !(t?.is_client_mentioned ?? false))
     : threads;
+
+  const opCount = threads.filter(
+    (t) => (t?.is_competitor_recommended ?? false) && !(t?.is_client_mentioned ?? false),
+  ).length;
 
   if (!threads.length) return <EmptyState message="No community threads yet — click Run Now to scan." />;
 
@@ -194,13 +219,15 @@ function CommunityTab({ threads }: { threads: CommunityThread[] }) {
           onClick={() => setOpOnly(false)}
           className={cn('px-3 py-1 rounded-full text-xs font-medium transition-colors',
             !opOnly ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}
-        >All ({threads.length})</button>
+        >
+          All ({threads.length})
+        </button>
         <button
           onClick={() => setOpOnly(true)}
           className={cn('px-3 py-1 rounded-full text-xs font-medium transition-colors',
             opOnly ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}
         >
-          Opportunities ({threads.filter((t) => t.is_competitor_recommended && !t.is_client_mentioned).length})
+          Opportunities ({opCount})
         </button>
       </div>
 
@@ -216,48 +243,57 @@ function CommunityTab({ threads }: { threads: CommunityThread[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((t) => (
-              <>
-                <tr
-                  key={t.id}
-                  className="hover:bg-slate-50 cursor-pointer"
-                  onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      {expandedId === t.id ? <ChevronDown size={12} className="text-slate-400 shrink-0" /> : <ChevronRight size={12} className="text-slate-400 shrink-0" />}
-                      <span className="text-slate-800 line-clamp-1">{t.thread_title}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-slate-500 hidden sm:table-cell">{t.platform}</td>
-                  <td className="px-3 py-3 text-center">
-                    {t.is_competitor_recommended
-                      ? <span className="inline-block w-2 h-2 rounded-full bg-red-400" title="Competitor mentioned" />
-                      : <span className="inline-block w-2 h-2 rounded-full bg-slate-200" />}
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    {t.is_client_mentioned
-                      ? <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" title="Client mentioned" />
-                      : <span className="inline-block w-2 h-2 rounded-full bg-slate-200" />}
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
-                      t.response_status === 'posted' ? 'bg-emerald-100 text-emerald-700' :
-                      t.response_status === 'skipped' ? 'bg-slate-100 text-slate-500' :
-                      'bg-amber-100 text-amber-700'
-                    )}>{t.response_status}</span>
-                  </td>
-                </tr>
-                {expandedId === t.id && t.response_draft && (
-                  <tr key={`${t.id}-draft`} className="bg-blue-50">
-                    <td colSpan={5} className="px-6 py-3">
-                      <p className="text-xs font-semibold text-slate-500 mb-1">Draft response</p>
-                      <p className="text-sm text-slate-700 leading-relaxed">{t.response_draft}</p>
+            {filtered.map((t) => {
+              const isComp = t?.is_competitor_recommended ?? false;
+              const isClient = t?.is_client_mentioned ?? false;
+              const status = t?.response_status ?? 'pending';
+              const draft = t?.response_draft ?? null;
+
+              return (
+                <>
+                  <tr
+                    key={t.id}
+                    className="hover:bg-slate-50 cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {expandedId === t.id
+                          ? <ChevronDown size={12} className="text-slate-400 shrink-0" />
+                          : <ChevronRight size={12} className="text-slate-400 shrink-0" />}
+                        <span className="text-slate-800 line-clamp-1">{t?.thread_title ?? '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-slate-500 hidden sm:table-cell">{t?.platform ?? '—'}</td>
+                    <td className="px-3 py-3 text-center">
+                      {isComp
+                        ? <span className="inline-block w-2 h-2 rounded-full bg-red-400" title="Competitor mentioned" />
+                        : <span className="inline-block w-2 h-2 rounded-full bg-slate-200" />}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {isClient
+                        ? <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" title="Client mentioned" />
+                        : <span className="inline-block w-2 h-2 rounded-full bg-slate-200" />}
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                        status === 'posted'  ? 'bg-emerald-100 text-emerald-700' :
+                        status === 'skipped' ? 'bg-slate-100 text-slate-500' :
+                        'bg-amber-100 text-amber-700'
+                      )}>{status}</span>
                     </td>
                   </tr>
-                )}
-              </>
-            ))}
+                  {expandedId === t.id && draft && (
+                    <tr key={`${t.id}-draft`} className="bg-blue-50">
+                      <td colSpan={5} className="px-6 py-3">
+                        <p className="text-xs font-semibold text-slate-500 mb-1">Draft response</p>
+                        <p className="text-sm text-slate-700 leading-relaxed">{draft}</p>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
           </tbody>
         </table>
         {filtered.length === 0 && (
@@ -275,24 +311,29 @@ function KnowledgeGraphTab({ check }: { check: EntityCheck | null }) {
 
   if (!check) return <EmptyState message="No entity check yet — click Run Now to scan Wikidata, GKP, and Wikipedia." />;
 
+  const wikidataFound = check?.wikidata_found ?? false;
+  const gkpDetected   = check?.gkp_detected   ?? false;
+  const wikiNotable   = check?.wikipedia_notable ?? false;
+  const wikiFlag      = check?.wikipedia_flag ?? null;
+
   return (
     <div className="space-y-4">
-      <p className="text-xs text-slate-400">Last checked {new Date(check.checked_at).toLocaleString('en-IN')}</p>
+      <p className="text-xs text-slate-400">Last checked {fmt(check?.checked_at)}</p>
 
-      {/* 3 status cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Wikidata */}
-        <div className={cn('border rounded-xl p-5', check.wikidata_found ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50')}>
+        <div className={cn('border rounded-xl p-5',
+          wikidataFound ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50')}>
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Wikidata</p>
           <div className="flex items-center gap-2">
-            {check.wikidata_found
+            {wikidataFound
               ? <CheckCircle2 size={18} className="text-emerald-600" />
               : <XCircle size={18} className="text-red-500" />}
-            <p className={cn('font-semibold', check.wikidata_found ? 'text-emerald-700' : 'text-red-700')}>
-              {check.wikidata_found ? 'Entity found' : 'Not found'}
+            <p className={cn('font-semibold', wikidataFound ? 'text-emerald-700' : 'text-red-700')}>
+              {wikidataFound ? 'Entity found' : 'Not found'}
             </p>
           </div>
-          {check.wikidata_qid && (
+          {check?.wikidata_qid && (
             <a
               href={`https://www.wikidata.org/wiki/${check.wikidata_qid}`}
               target="_blank"
@@ -305,41 +346,40 @@ function KnowledgeGraphTab({ check }: { check: EntityCheck | null }) {
         </div>
 
         {/* GKP */}
-        <div className={cn('border rounded-xl p-5', check.gkp_detected ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white')}>
+        <div className={cn('border rounded-xl p-5',
+          gkpDetected ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white')}>
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Knowledge Panel</p>
           <div className="flex items-center gap-2">
-            {check.gkp_detected
+            {gkpDetected
               ? <CheckCircle2 size={18} className="text-emerald-600" />
               : <XCircle size={18} className="text-slate-400" />}
-            <p className={cn('font-semibold', check.gkp_detected ? 'text-emerald-700' : 'text-slate-500')}>
-              {check.gkp_detected ? 'Detected' : 'Not detected'}
+            <p className={cn('font-semibold', gkpDetected ? 'text-emerald-700' : 'text-slate-500')}>
+              {gkpDetected ? 'Detected' : 'Not detected'}
             </p>
           </div>
-          {check.gkp_snapshot?.title && (
+          {check?.gkp_snapshot?.title && (
             <p className="text-xs text-slate-600 mt-2">{check.gkp_snapshot.title}</p>
           )}
         </div>
 
         {/* Wikipedia */}
         <div className={cn('border rounded-xl p-5',
-          check.wikipedia_flag === 'threshold_met' ? 'border-emerald-200 bg-emerald-50' :
-          check.wikipedia_flag === 'borderline' ? 'border-amber-200 bg-amber-50' :
-          'border-slate-200 bg-white'
-        )}>
+          wikiFlag === 'threshold_met' ? 'border-emerald-200 bg-emerald-50' :
+          wikiFlag === 'borderline'    ? 'border-amber-200  bg-amber-50'    :
+          'border-slate-200 bg-white')}>
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Wikipedia</p>
           <div className="flex items-center gap-2">
-            {check.wikipedia_notable
+            {wikiNotable
               ? <CheckCircle2 size={18} className="text-emerald-600" />
-              : <XCircle size={18} className={check.wikipedia_flag === 'borderline' ? 'text-amber-500' : 'text-slate-400'} />}
+              : <XCircle size={18} className={wikiFlag === 'borderline' ? 'text-amber-500' : 'text-slate-400'} />}
             <p className={cn('font-semibold',
-              check.wikipedia_flag === 'threshold_met' ? 'text-emerald-700' :
-              check.wikipedia_flag === 'borderline' ? 'text-amber-700' : 'text-slate-500'
-            )}>
-              {check.wikipedia_flag === 'threshold_met' ? 'Notable' :
-               check.wikipedia_flag === 'borderline' ? 'Borderline' : 'Not notable'}
+              wikiFlag === 'threshold_met' ? 'text-emerald-700' :
+              wikiFlag === 'borderline'    ? 'text-amber-700'   : 'text-slate-500')}>
+              {wikiFlag === 'threshold_met' ? 'Notable' :
+               wikiFlag === 'borderline'    ? 'Borderline' : 'Not notable'}
             </p>
           </div>
-          {check.wikipedia_url && (
+          {check?.wikipedia_url && (
             <a href={check.wikipedia_url} target="_blank" rel="noopener noreferrer"
               className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-2">
               View page <ExternalLink size={10} />
@@ -348,8 +388,7 @@ function KnowledgeGraphTab({ check }: { check: EntityCheck | null }) {
         </div>
       </div>
 
-      {/* Wikidata submission draft */}
-      {!check.wikidata_found && check.wikidata_submission_draft && (
+      {!wikidataFound && check?.wikidata_submission_draft && (
         <div className="border border-slate-200 rounded-xl overflow-hidden">
           <button
             onClick={() => setDraftOpen(!draftOpen)}
@@ -389,13 +428,12 @@ function PrTab({
 
   const filtered = statusFilter === 'all'
     ? signals
-    : signals.filter((s) => s.status === statusFilter);
+    : signals.filter((s) => s?.status === statusFilter);
 
   if (!signals.length) return <EmptyState message="No PR signals yet — click Run Now to scan RSS feeds." />;
 
   return (
     <div className="space-y-3">
-      {/* Status filter */}
       <div className="flex flex-wrap gap-1.5">
         {(['all', ...PR_STATUSES] as const).map((s) => (
           <button
@@ -405,7 +443,7 @@ function PrTab({
               statusFilter === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             )}
           >
-            {s} ({s === 'all' ? signals.length : signals.filter((x) => x.status === s).length})
+            {s} ({s === 'all' ? signals.length : signals.filter((x) => x?.status === s).length})
           </button>
         ))}
       </div>
@@ -422,82 +460,96 @@ function PrTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((sig) => (
-              <>
-                <tr
-                  key={sig.id}
-                  className="hover:bg-slate-50 cursor-pointer"
-                  onClick={() => setExpandedId(expandedId === sig.id ? null : sig.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      {expandedId === sig.id ? <ChevronDown size={12} className="text-slate-400 shrink-0" /> : <ChevronRight size={12} className="text-slate-400 shrink-0" />}
-                      <span className="text-slate-800 line-clamp-1">{sig.news_title}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-slate-500 text-xs hidden sm:table-cell">{sig.news_source}</td>
-                  <td className="px-3 py-3 text-right font-mono text-xs text-slate-600">
-                    {Math.round(sig.relevance_score * 100)}%
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium capitalize',
-                      sig.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                      sig.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                      sig.status === 'archived' ? 'bg-slate-100 text-slate-500' :
-                      'bg-amber-100 text-amber-700'
-                    )}>{sig.status}</span>
-                  </td>
-                  <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1 justify-end">
-                      {sig.status === 'draft' && (
-                        <button
-                          onClick={() => onApprove(sig.id)}
-                          disabled={actionLoading === sig.id}
-                          className="px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 font-medium"
-                        >
-                          {actionLoading === sig.id ? '…' : 'Approve'}
-                        </button>
-                      )}
-                      {(sig.status === 'draft' || sig.status === 'approved') && (
-                        <button
-                          onClick={() => onArchive(sig.id)}
-                          disabled={actionLoading === sig.id}
-                          className="px-2 py-1 text-xs rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 font-medium"
-                        >
-                          Archive
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-                {expandedId === sig.id && (
-                  <tr key={`${sig.id}-detail`} className="bg-slate-50">
-                    <td colSpan={5} className="px-6 py-4 space-y-3">
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-1">PR Angle</p>
-                        <p className="text-sm text-slate-700">{sig.pr_angle}</p>
+            {filtered.map((sig) => {
+              const status    = sig?.status ?? 'draft';
+              const score     = sig?.relevance_score ?? 0;
+              const checklist = sig?.distribution_checklist ?? [];
+
+              return (
+                <>
+                  <tr
+                    key={sig.id}
+                    className="hover:bg-slate-50 cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === sig.id ? null : sig.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {expandedId === sig.id
+                          ? <ChevronDown size={12} className="text-slate-400 shrink-0" />
+                          : <ChevronRight size={12} className="text-slate-400 shrink-0" />}
+                        <span className="text-slate-800 line-clamp-1">{sig?.news_title ?? '—'}</span>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-1">Press Release Draft</p>
-                        <pre className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">{sig.press_release_draft}</pre>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 mb-1">
-                          Distribution ({sig.distribution_checklist.length} contacts)
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {sig.distribution_checklist.map((c, i) => (
-                            <span key={i} className={cn('text-xs px-2 py-0.5 rounded border',
-                              c.wire_service ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-slate-50 border-slate-200 text-slate-600'
-                            )}>{c.outlet}</span>
-                          ))}
-                        </div>
+                    </td>
+                    <td className="px-3 py-3 text-slate-500 text-xs hidden sm:table-cell">
+                      {sig?.news_source ?? '—'}
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono text-xs text-slate-600">
+                      {Math.round(score * 100)}%
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium capitalize',
+                        status === 'approved'    ? 'bg-emerald-100 text-emerald-700' :
+                        status === 'distributed' ? 'bg-blue-100 text-blue-700'      :
+                        status === 'archived'    ? 'bg-slate-100 text-slate-500'    :
+                        'bg-amber-100 text-amber-700'
+                      )}>{status}</span>
+                    </td>
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 justify-end">
+                        {status === 'draft' && (
+                          <button
+                            onClick={() => onApprove(sig.id)}
+                            disabled={actionLoading === sig.id}
+                            className="px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 font-medium"
+                          >
+                            {actionLoading === sig.id ? '…' : 'Approve'}
+                          </button>
+                        )}
+                        {(status === 'draft' || status === 'approved') && (
+                          <button
+                            onClick={() => onArchive(sig.id)}
+                            disabled={actionLoading === sig.id}
+                            className="px-2 py-1 text-xs rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 font-medium"
+                          >
+                            Archive
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
-                )}
-              </>
-            ))}
+                  {expandedId === sig.id && (
+                    <tr key={`${sig.id}-detail`} className="bg-slate-50">
+                      <td colSpan={5} className="px-6 py-4 space-y-3">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1">PR Angle</p>
+                          <p className="text-sm text-slate-700">{sig?.pr_angle ?? '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1">Press Release Draft</p>
+                          <pre className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                            {sig?.press_release_draft ?? '—'}
+                          </pre>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1">
+                            Distribution ({checklist.length} contacts)
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {checklist.map((c, i) => (
+                              <span key={i} className={cn('text-xs px-2 py-0.5 rounded border',
+                                c?.wire_service
+                                  ? 'bg-violet-50 border-violet-200 text-violet-700'
+                                  : 'bg-slate-50 border-slate-200 text-slate-600'
+                              )}>{c?.outlet ?? '—'}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
           </tbody>
         </table>
         {filtered.length === 0 && (
@@ -523,7 +575,6 @@ export default function OffsiteClient({ clientId, initialAggregator }: Props) {
     setVisited((prev) => new Set<TabId>([...Array.from(prev), id]));
   }
 
-  // Per-tab SWR — key is null until tab has been visited (lazy load)
   const { data: aggData, mutate: mutateAgg } = useSWR<AggregatorSnapshot[]>(
     visited.has('aggregator') ? `/api/offsite/${clientId}/aggregator` : null,
     fetcher, { fallbackData: initialAggregator, revalidateOnFocus: false },
@@ -546,11 +597,11 @@ export default function OffsiteClient({ clientId, initialAggregator }: Props) {
   );
 
   const mutateMap: Record<TabId, () => void> = {
-    aggregator: () => { void mutateAgg(); },
-    reviews: () => { void mutateRev(); },
-    community: () => { void mutateCom(); },
-    'knowledge-graph': () => { void mutateKg(); },
-    pr: () => { void mutatePr(); },
+    aggregator:       () => { void mutateAgg(); },
+    reviews:          () => { void mutateRev(); },
+    community:        () => { void mutateCom(); },
+    'knowledge-graph':() => { void mutateKg(); },
+    pr:               () => { void mutatePr(); },
   };
 
   async function handleRun() {
@@ -594,7 +645,6 @@ export default function OffsiteClient({ clientId, initialAggregator }: Props) {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-900">Off-Site Builder</h1>
         <RunButton onClick={handleRun} loading={running === activeTab} />
@@ -602,7 +652,6 @@ export default function OffsiteClient({ clientId, initialAggregator }: Props) {
 
       {runError && <TabError message={runError} />}
 
-      {/* Tab bar */}
       <div className="flex border-b border-slate-200 gap-0">
         {TABS.map(({ id, label }) => (
           <button
@@ -620,11 +669,10 @@ export default function OffsiteClient({ clientId, initialAggregator }: Props) {
         ))}
       </div>
 
-      {/* Tab content */}
       <div>
-        {activeTab === 'aggregator' && <AggregatorTab snapshots={aggData ?? []} />}
-        {activeTab === 'reviews' && <ReviewsTab audits={revData ?? []} />}
-        {activeTab === 'community' && <CommunityTab threads={comData ?? []} />}
+        {activeTab === 'aggregator'      && <AggregatorTab    snapshots={aggData ?? []} />}
+        {activeTab === 'reviews'         && <ReviewsTab       audits={revData ?? []} />}
+        {activeTab === 'community'       && <CommunityTab     threads={comData ?? []} />}
         {activeTab === 'knowledge-graph' && <KnowledgeGraphTab check={kgData ?? null} />}
         {activeTab === 'pr' && (
           <PrTab
