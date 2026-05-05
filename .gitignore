@@ -9,5 +9,6 @@ coverage/
 .next/
 *.tsbuildinfo
 smoke-results-*.json
+status.md
 NUL
 frontend/NUL
