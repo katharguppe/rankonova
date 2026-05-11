@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('aeo_access_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const isPublic = pathname.startsWith('/login') || pathname.startsWith('/api/auth');
+  const isPublic = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/api/auth');
 
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
