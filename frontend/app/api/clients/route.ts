@@ -1,0 +1,47 @@
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+
+export async function POST(request: Request) {
+  const token = cookies().get('aeo_access_token')?.value;
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/tenants/me/clients`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return NextResponse.json({ error: 'API unreachable' }, { status: 502 });
+  }
+
+  if (!res.ok) {
+    if (res.status >= 500) {
+      return NextResponse.json({ error: 'API error' }, { status: res.status });
+    }
+    let errorBody: unknown;
+    try {
+      errorBody = await res.json();
+    } catch {
+      const text = await res.text();
+      errorBody = { error: text || 'API error' };
+    }
+    return NextResponse.json(errorBody, { status: res.status });
+  }
+
+  const data = await res.json();
+  return NextResponse.json(data, { status: 201 });
+}
