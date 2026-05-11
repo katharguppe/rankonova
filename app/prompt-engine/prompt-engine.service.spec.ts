@@ -37,22 +37,22 @@ describe('PromptEngineService.triggerClientRun', () => {
 
   const mockClient = { id: 'c1', tenant_id: 'tenant1', vertical_id: 'v1' };
   const mockPrompts = [{ id: 'p1' }, { id: 'p2' }];
-  const DEFAULT_ENGINES = [AiEngine.chatgpt, AiEngine.perplexity, AiEngine.gemini, AiEngine.claude];
+  const DEFAULT_ENGINES = [AiEngine.chatgpt, AiEngine.perplexity, AiEngine.gemini, AiEngine.claude, AiEngine.cerebras];
 
-  it('enqueues all active prompts for the client across 4 default engines', async () => {
+  it('enqueues all active prompts for the client across 5 default engines (including Cerebras)', async () => {
     mockPrisma.client.findFirst.mockResolvedValue(mockClient);
     mockPrisma.prompt.findMany.mockResolvedValue(mockPrompts);
     mockQueue.enqueue
-      .mockResolvedValueOnce(['r1', 'r2', 'r3', 'r4'])
-      .mockResolvedValueOnce(['r5', 'r6', 'r7', 'r8']);
+      .mockResolvedValueOnce(['r1', 'r2', 'r3', 'r4', 'r5'])
+      .mockResolvedValueOnce(['r6', 'r7', 'r8', 'r9', 'r10']);
 
     const result = await service.triggerClientRun('c1', TENANT_USER);
 
     expect(mockQueue.enqueue).toHaveBeenCalledTimes(2);
     expect(mockQueue.enqueue).toHaveBeenCalledWith('p1', 'c1', 'tenant1', DEFAULT_ENGINES);
     expect(mockQueue.enqueue).toHaveBeenCalledWith('p2', 'c1', 'tenant1', DEFAULT_ENGINES);
-    expect(result.enqueued).toBe(8);
-    expect(result.runIds).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8']);
+    expect(result.enqueued).toBe(10);
+    expect(result.runIds).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10']);
   });
 
   it('queries prompts scoped to the client vertical including platform prompts', async () => {

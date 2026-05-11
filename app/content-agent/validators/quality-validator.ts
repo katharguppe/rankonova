@@ -188,7 +188,7 @@ export class QualityValidatorService {
       const a = answers[i];
       const label = `Answer ${i + 1} ("${a.question.slice(0, 50)}${a.question.length > 50 ? '…' : ''}")`;
 
-      if (a.wordCount > 100) {
+      if (a.wordCount > 90) {
         issues.push({
           rule: 'answer_too_long',
           message: `${label} has ${a.wordCount} words (max 90)`,

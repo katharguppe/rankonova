@@ -71,6 +71,13 @@ export class ContentAgentController {
     return this.contentAgentService.publishOutput(user.tenantId, id);
   }
 
+  @Patch('output/:id/reject')
+  @Roles(UserRole.super_admin, UserRole.tenant_admin, UserRole.client_manager)
+  reject(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as RequestUser;
+    return this.contentAgentService.rejectOutput(user.tenantId, id);
+  }
+
   // ── read ──────────────────────────────────────────────────────────────────────
 
   @Get('output/:id')

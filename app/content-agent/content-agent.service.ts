@@ -24,7 +24,7 @@ const BUYER_STAGE_LABELS: Record<string, string> = {
 
 // Valid state transitions for the approval workflow
 const VALID_TRANSITIONS: Partial<Record<ContentStatus, ContentStatus[]>> = {
-  [ContentStatus.draft]: [ContentStatus.approved, ContentStatus.revision_requested],
+  [ContentStatus.draft]: [ContentStatus.approved, ContentStatus.revision_requested, ContentStatus.rejected],
   [ContentStatus.approved]: [ContentStatus.published, ContentStatus.revision_requested],
 };
 
@@ -194,6 +194,16 @@ export class ContentAgentService {
         published_at: new Date(),
         follow_up_scheduled_at: followUpAt,
       },
+    });
+  }
+
+  async rejectOutput(tenantId: string, outputId: string): Promise<ContentOutput> {
+    const output = await this.loadOwnedOutput(tenantId, outputId);
+    this.assertValidTransition(outputId, output.status, ContentStatus.rejected);
+
+    return this.prisma.contentOutput.update({
+      where: { id: outputId },
+      data: { status: ContentStatus.rejected },
     });
   }
 
