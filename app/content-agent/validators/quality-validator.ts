@@ -48,6 +48,21 @@ const FILLER_OPENER_RES: RegExp[] = FILLER_OPENERS.map(
   (o) => new RegExp(`^${o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[^a-z]|$)`),
 );
 
+const BARE_SUPERLATIVES: Array<{ pattern: RegExp; suggestion: string }> = [
+  { pattern: /\bbest\b/i, suggestion: 'replace "best" with a specific ranked claim, e.g. "rated #1 by 3,000 customers"' },
+  { pattern: /\bfastest\b/i, suggestion: 'replace "fastest" with a measured time, e.g. "delivers in 2 hours"' },
+  { pattern: /\bcheapest\b/i, suggestion: 'replace "cheapest" with a specific price, e.g. "starting at ₹999"' },
+  { pattern: /\blowest prices?\b/i, suggestion: 'replace with an actual price range or price guarantee' },
+  { pattern: /\bmost affordable\b/i, suggestion: 'replace with a specific price claim, e.g. "starting at ₹X"' },
+  { pattern: /\bmost reliable\b/i, suggestion: 'replace with reliability data, e.g. "99.9% uptime"' },
+  { pattern: /\bmost popular\b/i, suggestion: 'replace with a count, e.g. "chosen by 10,000+ customers"' },
+  { pattern: /\bnumber one\b/i, suggestion: 'cite the source or replace with a specific metric' },
+  { pattern: /#1\b/, suggestion: 'cite the source or replace with a specific metric' },
+  { pattern: /\bunmatched\b/i, suggestion: 'remove or replace with a specific differentiator' },
+  { pattern: /\bunbeatable\b/i, suggestion: 'remove or replace with a specific price or quality claim' },
+  { pattern: /\bsecond to none\b/i, suggestion: 'remove or replace with a measurable claim' },
+];
+
 // Matches Indian-context numbers: digits with optional units (%, INR, Rs, ₹, lakh, crore, km, sq ft, /5, +, k)
 const NUMBER_RE =
   /\b\d[\d,]*(?:\.\d+)?\s*(?:%|INR|Rs\.?|₹|km|sq\.?\s*f[t.]?|lakh|crore|years?|months?|days?|hours?|k|\+|\/5|\/10|stars?)?\b/i;
@@ -79,6 +94,7 @@ export class QualityValidatorService {
     }
 
     this.checkBlockedPhrases(htmlContent, issues);
+    this.checkBareSuperlatives(htmlContent, issues);
 
     return {
       valid: !issues.some((i) => i.fatal),
@@ -305,6 +321,21 @@ export class QualityValidatorService {
         issues.push({
           rule: 'blocked_phrase',
           message: `Blocked phrase detected: "${phrase}"`,
+          suggestion,
+          fatal: false,
+        });
+      }
+    }
+  }
+
+  private checkBareSuperlatives(html: string, issues: ValidationIssue[]): void {
+    const plainText = this.stripTags(html);
+    for (const { pattern, suggestion } of BARE_SUPERLATIVES) {
+      const match = pattern.exec(plainText);
+      if (match) {
+        issues.push({
+          rule: 'bare_superlative',
+          message: `Unsupported superlative detected: "${match[0]}"`,
           suggestion,
           fatal: false,
         });

@@ -243,6 +243,30 @@ describe('QualityValidatorService', () => {
     });
   });
 
+  // ── bare_superlative ──────────────────────────────────────────────────────────
+
+  describe('bare_superlative', () => {
+    it('flags bare "best" as non-fatal warning', () => {
+      const result = svc.validate('Title', html('<p>We offer the best service in Bangalore.</p>'));
+      expect(result.issues.some((i) => i.rule === 'bare_superlative' && !i.fatal)).toBe(true);
+    });
+
+    it('flags bare "fastest" as non-fatal warning', () => {
+      const result = svc.validate('Title', html('<p>Our delivery is the fastest option available.</p>'));
+      expect(result.issues.some((i) => i.rule === 'bare_superlative' && !i.fatal)).toBe(true);
+    });
+
+    it('does not flag "bestseller" (word boundary respected)', () => {
+      const result = svc.validate('Title', html('<p>Our bestseller model ships in 2 days for ₹1,500.</p>'));
+      expect(result.issues.find((i) => i.rule === 'bare_superlative')).toBeUndefined();
+    });
+
+    it('does not flag content with no superlatives', () => {
+      const result = svc.validate('Title', html('<p>Rated 4.8/5 by 2,300 customers since 2019.</p>'));
+      expect(result.issues.find((i) => i.rule === 'bare_superlative')).toBeUndefined();
+    });
+  });
+
   // ── formatIssuesSummary ───────────────────────────────────────────────────
 
   describe('formatIssuesSummary', () => {
