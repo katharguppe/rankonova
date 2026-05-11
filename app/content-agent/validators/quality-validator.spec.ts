@@ -265,6 +265,16 @@ describe('QualityValidatorService', () => {
       const result = svc.validate('Title', html('<p>Rated 4.8/5 by 2,300 customers since 2019.</p>'));
       expect(result.issues.find((i) => i.rule === 'bare_superlative')).toBeUndefined();
     });
+
+    it('flags standalone "#1" as non-fatal warning', () => {
+      const result = svc.validate('Title', html('<p>We are #1 in customer satisfaction.</p>'));
+      expect(result.issues.some((i) => i.rule === 'bare_superlative' && !i.fatal)).toBe(true);
+    });
+
+    it('does not flag "product#1" code (word boundary respected)', () => {
+      const result = svc.validate('Title', html('<p>Order product#1 for ₹2,500 with 4.7/5 rating.</p>'));
+      expect(result.issues.find((i) => i.rule === 'bare_superlative')).toBeUndefined();
+    });
   });
 
   // ── formatIssuesSummary ───────────────────────────────────────────────────

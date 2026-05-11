@@ -49,7 +49,7 @@ const FILLER_OPENER_RES: RegExp[] = FILLER_OPENERS.map(
 );
 
 const BARE_SUPERLATIVES: Array<{ pattern: RegExp; suggestion: string }> = [
-  { pattern: /\bbest\b/i, suggestion: 'replace "best" with a specific ranked claim, e.g. "rated #1 by 3,000 customers"' },
+  { pattern: /\bbest\b/i, suggestion: 'replace "best" with a specific claim backed by data, e.g. "rated 4.8/5 by 3,000 verified customers"' },
   { pattern: /\bfastest\b/i, suggestion: 'replace "fastest" with a measured time, e.g. "delivers in 2 hours"' },
   { pattern: /\bcheapest\b/i, suggestion: 'replace "cheapest" with a specific price, e.g. "starting at ₹999"' },
   { pattern: /\blowest prices?\b/i, suggestion: 'replace with an actual price range or price guarantee' },
@@ -57,7 +57,7 @@ const BARE_SUPERLATIVES: Array<{ pattern: RegExp; suggestion: string }> = [
   { pattern: /\bmost reliable\b/i, suggestion: 'replace with reliability data, e.g. "99.9% uptime"' },
   { pattern: /\bmost popular\b/i, suggestion: 'replace with a count, e.g. "chosen by 10,000+ customers"' },
   { pattern: /\bnumber one\b/i, suggestion: 'cite the source or replace with a specific metric' },
-  { pattern: /#1\b/, suggestion: 'cite the source or replace with a specific metric' },
+  { pattern: /(?<!\w)#1\b/, suggestion: 'cite the source or replace with a specific metric' },
   { pattern: /\bunmatched\b/i, suggestion: 'remove or replace with a specific differentiator' },
   { pattern: /\bunbeatable\b/i, suggestion: 'remove or replace with a specific price or quality claim' },
   { pattern: /\bsecond to none\b/i, suggestion: 'remove or replace with a measurable claim' },
