@@ -43,6 +43,11 @@ const FILLER_OPENERS: string[] = [
   'in general',
 ];
 
+// Pre-compiled regexes for FILLER_OPENERS to avoid hot-loop recompilation
+const FILLER_OPENER_RES: RegExp[] = FILLER_OPENERS.map(
+  (o) => new RegExp(`^${o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[^a-z]|$)`),
+);
+
 // Matches Indian-context numbers: digits with optional units (%, INR, Rs, ₹, lakh, crore, km, sq ft, /5, +, k)
 const NUMBER_RE =
   /\b\d[\d,]*(?:\.\d+)?\s*(?:%|INR|Rs\.?|₹|km|sq\.?\s*f[t.]?|lakh|crore|years?|months?|days?|hours?|k|\+|\/5|\/10|stars?)?\b/i;
@@ -314,9 +319,8 @@ export class QualityValidatorService {
       const firstSentenceMatch = a.plainText.match(/^[^.!?]+[.!?]?/);
       if (!firstSentenceMatch) continue;
       const normalised = firstSentenceMatch[0].toLowerCase().trim();
-      for (const opener of FILLER_OPENERS) {
-        const escaped = opener.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp(`^${escaped}(?:[^a-z]|$)`, 'i').test(normalised)) {
+      for (let j = 0; j < FILLER_OPENER_RES.length; j++) {
+        if (FILLER_OPENER_RES[j].test(normalised)) {
           issues.push({
             rule: 'answer_indirect_opening',
             message: `${label} opens with filler phrase "${firstSentenceMatch[0].trim()}"`,
