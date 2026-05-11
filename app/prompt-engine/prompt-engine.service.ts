@@ -11,6 +11,7 @@ const DEFAULT_ENGINES: AiEngine[] = [
   AiEngine.perplexity,
   AiEngine.gemini,
   AiEngine.claude,
+  AiEngine.cerebras,
 ];
 
 @Injectable()
@@ -20,6 +21,35 @@ export class PromptEngineService {
     private readonly queue: PromptRunQueueService,
     private readonly costTracker: CostTrackerService,
   ) {}
+
+  async triggerClientRun(clientId: string, user: RequestUser): Promise<{ enqueued: number; runIds: string[] }> {
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: clientId,
+        is_active: true,
+        deleted_at: null,
+        ...(user.role !== 'super_admin' ? { tenant_id: user.tenantId } : {}),
+      },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    const prompts = await this.prisma.prompt.findMany({
+      where: {
+        vertical_id: client.vertical_id,
+        is_active: true,
+        OR: [{ tenant_id: null }, { tenant_id: client.tenant_id }],
+      },
+      select: { id: true },
+    });
+
+    const allRunIds: string[] = [];
+    for (const prompt of prompts) {
+      const runIds = await this.queue.enqueue(prompt.id, clientId, client.tenant_id, DEFAULT_ENGINES);
+      allRunIds.push(...runIds);
+    }
+
+    return { enqueued: allRunIds.length, runIds: allRunIds };
+  }
 
   async triggerRun(dto: TriggerRunDto, user: RequestUser): Promise<{ runIds: string[] }> {
     const client = await this.prisma.client.findFirst({
