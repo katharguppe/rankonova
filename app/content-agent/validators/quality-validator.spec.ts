@@ -215,6 +215,34 @@ describe('QualityValidatorService', () => {
     });
   });
 
+  // ── answer_indirect_opening ───────────────────────────────────────────────────────────
+
+  describe('answer_indirect_opening', () => {
+    it('flags "Of course" opener as non-fatal warning', () => {
+      const answer = 'Of course, the service costs ₹5,000 per month and covers 10 devices.';
+      const result = svc.validate('Title', faqHtml([{ q: 'What does it cost?', a: answer }]), ContentType.faq_page);
+      expect(result.issues.some((i) => i.rule === 'answer_indirect_opening' && !i.fatal)).toBe(true);
+    });
+
+    it('flags "Typically" opener as non-fatal warning', () => {
+      const answer = 'Typically, service takes 3 days and costs ₹2,000 for a standard 5-star package.';
+      const result = svc.validate('Title', faqHtml([{ q: 'How long does service take?', a: answer }]), ContentType.faq_page);
+      expect(result.issues.some((i) => i.rule === 'answer_indirect_opening' && !i.fatal)).toBe(true);
+    });
+
+    it('accepts answer opening with a direct factual statement', () => {
+      const answer = 'The Toyota Camry starts at ₹38 lakh ex-showroom and scores 5 stars in safety.';
+      const result = svc.validate('Title', faqHtml([{ q: 'What is the price?', a: answer }]), ContentType.faq_page);
+      expect(result.issues.find((i) => i.rule === 'answer_indirect_opening')).toBeUndefined();
+    });
+
+    it('does NOT apply to comparison_page type', () => {
+      const tableHtml = html('<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>B</td></tr></tbody></table>');
+      const result = svc.validate('Title', tableHtml, ContentType.comparison_page);
+      expect(result.issues.find((i) => i.rule === 'answer_indirect_opening')).toBeUndefined();
+    });
+  });
+
   // ── formatIssuesSummary ───────────────────────────────────────────────────
 
   describe('formatIssuesSummary', () => {

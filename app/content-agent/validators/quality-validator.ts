@@ -23,6 +23,26 @@ const BLOCKED_PHRASES: Array<{ phrase: string; suggestion: string }> = [
   { phrase: 'paradigm shift', suggestion: 'describe the specific change with data' },
 ];
 
+const FILLER_OPENERS: string[] = [
+  'great question',
+  "that's a great question",
+  'of course',
+  'absolutely',
+  'certainly',
+  'sure',
+  "i'm glad",
+  'it depends',
+  'well,',
+  'as we know',
+  "in today's",
+  'as you may know',
+  'believe it or not',
+  'there are many',
+  'typically',
+  'usually',
+  'in general',
+];
+
 // Matches Indian-context numbers: digits with optional units (%, INR, Rs, ₹, lakh, crore, km, sq ft, /5, +, k)
 const NUMBER_RE =
   /\b\d[\d,]*(?:\.\d+)?\s*(?:%|INR|Rs\.?|₹|km|sq\.?\s*f[t.]?|lakh|crore|years?|months?|days?|hours?|k|\+|\/5|\/10|stars?)?\b/i;
@@ -40,6 +60,7 @@ export class QualityValidatorService {
       const answers = this.extractFaqAnswers(htmlContent);
       if (answers.length > 0) {
         this.checkAnswerRules(answers, issues);
+        this.checkFirstSentence(answers, issues);
       }
     }
 
@@ -282,6 +303,28 @@ export class QualityValidatorService {
           suggestion,
           fatal: false,
         });
+      }
+    }
+  }
+
+  private checkFirstSentence(answers: FaqAnswer[], issues: ValidationIssue[]): void {
+    for (let i = 0; i < answers.length; i++) {
+      const a = answers[i];
+      const label = `Answer ${i + 1} ("${a.question.slice(0, 50)}${a.question.length > 50 ? '…' : ''}")`;
+      const firstSentenceMatch = a.plainText.match(/^[^.!?]+[.!?]?/);
+      if (!firstSentenceMatch) continue;
+      const normalised = firstSentenceMatch[0].toLowerCase().trim();
+      for (const opener of FILLER_OPENERS) {
+        const escaped = opener.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`^${escaped}(?:[^a-z]|$)`, 'i').test(normalised)) {
+          issues.push({
+            rule: 'answer_indirect_opening',
+            message: `${label} opens with filler phrase "${firstSentenceMatch[0].trim()}"`,
+            suggestion: 'Open with a direct, factual answer to the question',
+            fatal: false,
+          });
+          break;
+        }
       }
     }
   }
