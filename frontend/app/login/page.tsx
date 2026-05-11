@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
@@ -72,6 +73,11 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-slate-500 mt-4">
+          Don&#39;t have an account?{' '}
+          <Link href="/register" className="text-blue-600 hover:underline">Register</Link>
+        </p>
       </div>
     </div>
   );
