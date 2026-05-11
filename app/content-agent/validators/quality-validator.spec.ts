@@ -282,6 +282,34 @@ describe('QualityValidatorService', () => {
     });
   });
 
+  // ── wikidata_facts_missing ────────────────────────────────────────────────────
+
+  describe('wikidata_facts_missing', () => {
+    it('passes when entity page has a <table>', () => {
+      const h = html('<table><tr><th>Founded</th><td>1998</td></tr></table>');
+      const result = svc.validate('Title', h, ContentType.entity_authority_page);
+      expect(result.issues.find((i) => i.rule === 'wikidata_facts_missing')).toBeUndefined();
+    });
+
+    it('passes when entity page has a <dl> with <dt>', () => {
+      const h = html('<dl><dt>Founded</dt><dd>1998</dd><dt>CEO</dt><dd>Jane Smith</dd></dl>');
+      const result = svc.validate('Title', h, ContentType.entity_authority_page);
+      expect(result.issues.find((i) => i.rule === 'wikidata_facts_missing')).toBeUndefined();
+    });
+
+    it('flags missing facts block as fatal for entity_authority_page', () => {
+      const h = html('<p>This page describes the entity.</p>');
+      const result = svc.validate('Title', h, ContentType.entity_authority_page);
+      expect(result.issues.some((i) => i.rule === 'wikidata_facts_missing' && i.fatal)).toBe(true);
+      expect(result.valid).toBe(false);
+    });
+
+    it('does NOT apply to faq_page type', () => {
+      const result = svc.validate('Title', faqHtml([{ q: 'Q?', a: words(60) }]), ContentType.faq_page);
+      expect(result.issues.find((i) => i.rule === 'wikidata_facts_missing')).toBeUndefined();
+    });
+  });
+
   // ── bare_superlative ──────────────────────────────────────────────────────────────
 
   describe('bare_superlative', () => {

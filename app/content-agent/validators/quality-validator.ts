@@ -94,6 +94,10 @@ export class QualityValidatorService {
       this.checkHowToSchemaType(htmlContent, issues);
     }
 
+    if (contentType === ContentType.entity_authority_page) {
+      this.checkWikidataFactsBlock(htmlContent, issues);
+    }
+
     this.checkBlockedPhrases(htmlContent, issues);
     this.checkBareSuperlatives(htmlContent, issues);
 
@@ -326,6 +330,19 @@ export class QualityValidatorService {
           fatal: false,
         });
       }
+    }
+  }
+
+  private checkWikidataFactsBlock(html: string, issues: ValidationIssue[]): void {
+    const hasTable = /<table[\s>]/i.test(html);
+    const hasDl = /<dl[\s>]/i.test(html) && /<dt[\s>]/i.test(html);
+    if (!hasTable && !hasDl) {
+      issues.push({
+        rule: 'wikidata_facts_missing',
+        message: 'Entity authority page lacks a structured facts block (<table> or <dl>/<dt>)',
+        suggestion: 'Add a facts table or definition list with entity properties (founding date, location, CEO, etc.)',
+        fatal: true,
+      });
     }
   }
 
