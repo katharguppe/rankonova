@@ -48,6 +48,8 @@ const FILLER_OPENER_RES: RegExp[] = FILLER_OPENERS.map(
   (o) => new RegExp(`^${o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[^a-z]|$)`),
 );
 
+const ACCEPTED_SCHEMA_TYPES = new Set(['HowTo', 'Article', 'BlogPosting']);
+
 const BARE_SUPERLATIVES: Array<{ pattern: RegExp; suggestion: string }> = [
   { pattern: /\bbest\b/i, suggestion: 'replace "best" with a specific claim backed by data, e.g. "rated 4.8/5 by 3,000 verified customers"' },
   { pattern: /\bfastest\b/i, suggestion: 'replace "fastest" with a measured time, e.g. "delivers in 2 hours"' },
@@ -347,7 +349,6 @@ export class QualityValidatorService {
   }
 
   private checkHowToSchemaType(html: string, issues: ValidationIssue[]): void {
-    const ACCEPTED_TYPES = new Set(['HowTo', 'Article', 'BlogPosting']);
     const scriptMatches = [
       ...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi),
     ];
@@ -355,8 +356,8 @@ export class QualityValidatorService {
       try {
         const schema = JSON.parse(block) as Record<string, unknown>;
         const type = schema['@type'];
-        if (typeof type === 'string') return ACCEPTED_TYPES.has(type);
-        if (Array.isArray(type)) return (type as string[]).some((t) => ACCEPTED_TYPES.has(t));
+        if (typeof type === 'string') return ACCEPTED_SCHEMA_TYPES.has(type);
+        if (Array.isArray(type)) return (type as string[]).some((t) => ACCEPTED_SCHEMA_TYPES.has(t));
         return false;
       } catch {
         return false;
