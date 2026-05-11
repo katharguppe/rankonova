@@ -162,7 +162,7 @@ export class CommunityService {
     return this.toResponse(updated);
   }
 
-  // ── Reddit scanner (fetch-based) ─────────────────────────────────────────────
+  // ── Reddit scanner (fetch-based, Playwright fallback on block/429) ───────────
 
   private async scanReddit(
     client: { id: string; brand_name: string; city: string; tenant_id: string; vertical_id: string },
@@ -171,35 +171,94 @@ export class CommunityService {
     platform: CommunityPlatformConfig,
   ): Promise<CommunityThreadResponse[]> {
     const newThreads: CommunityThreadResponse[] = [];
+    let fallbackBrowser: Browser | null = null;
 
-    for (const identifier of platform.identifiers) {
-      const subreddit = identifier.replace(/^r\//, '');
+    try {
+      for (const identifier of platform.identifiers) {
+        const subreddit = identifier.replace(/^r\//, '');
 
-      for (const keyword of platform.keywords) {
-        await this.sleep(REDDIT_DELAY_MS);
+        for (const keyword of platform.keywords) {
+          await this.sleep(REDDIT_DELAY_MS);
 
-        const url =
-          `${REDDIT_BASE}/r/${subreddit}/search.json` +
-          `?q=${encodeURIComponent(keyword)}&restrict_sr=1&sort=new&limit=10`;
+          const url =
+            `${REDDIT_BASE}/r/${subreddit}/search.json` +
+            `?q=${encodeURIComponent(keyword)}&restrict_sr=1&sort=new&limit=10`;
 
-        let raw: RawThread[];
-        try {
-          raw = await this.fetchRedditSearch(url, subreddit);
-        } catch (err) {
-          this.logger.warn(`Reddit fetch failed [${subreddit}/${keyword}]: ${(err as Error).message}`);
-          continue;
-        }
+          let raw: RawThread[];
+          try {
+            raw = await this.fetchRedditSearch(url, subreddit);
+          } catch (err) {
+            this.logger.warn(
+              `Reddit fetch failed [${subreddit}/${keyword}]: ${(err as Error).message} — trying Playwright fallback`,
+            );
+            try {
+              if (!fallbackBrowser) {
+                fallbackBrowser = await chromium.launch({ headless: true });
+              }
+              raw = await this.fetchRedditViaPlaywright(fallbackBrowser, subreddit, keyword);
+            } catch (pwErr) {
+              this.logger.warn(
+                `Playwright Reddit fallback failed [${subreddit}/${keyword}]: ${(pwErr as Error).message}`,
+              );
+              continue;
+            }
+          }
 
-        for (const thread of raw) {
-          const persisted = await this.persistThread(
-            client, clientAliases, competitorMap, 'reddit', thread,
-          );
-          if (persisted) newThreads.push(persisted);
+          for (const thread of raw) {
+            const persisted = await this.persistThread(
+              client, clientAliases, competitorMap, 'reddit', thread,
+            );
+            if (persisted) newThreads.push(persisted);
+          }
         }
       }
+    } finally {
+      if (fallbackBrowser) await fallbackBrowser.close();
     }
 
     return newThreads;
+  }
+
+  private async fetchRedditViaPlaywright(
+    browser: Browser,
+    subreddit: string,
+    keyword: string,
+  ): Promise<RawThread[]> {
+    const context = await browser.newContext({
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    });
+    const page = await context.newPage();
+
+    try {
+      const searchUrl =
+        `https://www.google.com/search?q=` +
+        encodeURIComponent(`site:reddit.com/r/${subreddit} ${keyword}`);
+
+      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15_000 });
+      await page.waitForTimeout(1500);
+
+      const titles = await page.locator('h3').allTextContents().catch(() => [] as string[]);
+      const links = await page
+        .locator('a[href*="reddit.com"]')
+        .evaluateAll((els) => els.map((el) => (el as HTMLAnchorElement).href))
+        .catch(() => [] as string[]);
+
+      const results: RawThread[] = [];
+      for (let i = 0; i < Math.min(titles.length, links.length, 5); i++) {
+        if (titles[i] && links[i]) {
+          results.push({ url: links[i], title: titles[i], body: '', score: 0, subreddit });
+        }
+      }
+
+      this.logger.log(
+        `Playwright Reddit fallback: ${results.length} result(s) for [${subreddit}/${keyword}]`,
+      );
+      return results;
+    } finally {
+      await page.close();
+      await context.close();
+    }
   }
 
   private async fetchRedditSearch(url: string, subreddit: string): Promise<RawThread[]> {

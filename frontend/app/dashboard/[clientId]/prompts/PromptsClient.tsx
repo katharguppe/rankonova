@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
+import { toast } from 'sonner';
 import { proxyFetch } from '@/lib/api';
 import { fmt } from '@/lib/utils';
 import type { PromptAnalysis } from '@/lib/types';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Play } from 'lucide-react';
 
 interface Props {
   clientId: string;
@@ -30,13 +31,20 @@ export default function PromptsClient({ clientId, initial }: Props) {
 
   const [sortKey, setSortKey] = useState<SortKey>('citation_rate');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [running, setRunning] = useState(false);
 
-  if (isLoading && !data) {
-    return <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />;
-  }
-
-  if (!data || data.length === 0) {
-    return <p className="text-slate-400 text-sm">No prompt data yet.</p>;
+  async function handleRunPrompts() {
+    setRunning(true);
+    try {
+      const res = await fetch(`/api/prompt-engine/${clientId}/run`, { method: 'POST' });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const { enqueued } = await res.json() as { enqueued: number };
+      toast.success(`${enqueued} prompt run${enqueued !== 1 ? 's' : ''} queued`);
+    } catch {
+      toast.error('Failed to queue prompt runs — try again');
+    } finally {
+      setRunning(false);
+    }
   }
 
   function toggleSort(key: SortKey) {
@@ -48,12 +56,12 @@ export default function PromptsClient({ clientId, initial }: Props) {
     }
   }
 
-  const sorted = [...data].sort((a, b) => {
+  const sorted = data ? [...data].sort((a, b) => {
     const mul = sortDir === 'desc' ? -1 : 1;
     return (a[sortKey] - b[sortKey]) * mul;
-  });
+  }) : [];
 
-  const maxRate = Math.max(...data.map(p => p.citation_rate), 0.01);
+  const maxRate = data ? Math.max(...data.map(p => p.citation_rate), 0.01) : 0.01;
 
   function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <ChevronDown className="w-3 h-3 text-slate-300" />;
@@ -64,11 +72,30 @@ export default function PromptsClient({ clientId, initial }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">Prompt-Level Analysis</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Citation rate per prompt (last 30 days)</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Prompt-Level Analysis</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Citation rate per prompt (last 30 days)</p>
+        </div>
+        <button
+          onClick={handleRunPrompts}
+          disabled={running}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+        >
+          <Play size={14} className={running ? 'animate-pulse' : ''} />
+          {running ? 'Queueing…' : 'Run Prompts'}
+        </button>
       </div>
 
+      {isLoading && !data && (
+        <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />
+      )}
+
+      {!isLoading && (!data || data.length === 0) && (
+        <p className="text-slate-400 text-sm">No prompt data yet.</p>
+      )}
+
+      {data && data.length > 0 && (
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm min-w-[640px]">
           <thead>
@@ -123,6 +150,7 @@ export default function PromptsClient({ clientId, initial }: Props) {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ const SCHEDULED_ENGINES: AiEngine[] = [
   AiEngine.perplexity,
   AiEngine.gemini,
   AiEngine.claude,
+  AiEngine.cerebras,
 ];
 
 @Injectable()

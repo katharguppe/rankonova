@@ -15,6 +15,7 @@ import { createHash, randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { AuthEventsService } from './auth-events.service';
 import { EncryptionService } from './encryption.service';
 import { LockoutService } from './lockout.service';
@@ -43,6 +44,7 @@ export class AuthService {
     private readonly lockout: LockoutService,
     private readonly authEvents: AuthEventsService,
     private readonly encryption: EncryptionService,
+    private readonly mail: MailService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
@@ -70,7 +72,7 @@ export class AuthService {
     await this.redis.setex(`email_verify:${verificationToken}`, EMAIL_VERIFY_TTL, user.id);
     await this.redis.setex(`user_unverified:${user.id}`, EMAIL_VERIFY_TTL, '1');
 
-    // TODO Phase 11: send verification email via SendGrid
+    await this.mail.sendVerificationEmail(user.email, verificationToken);
     return { message: 'Registration successful. Check your email to verify your account.', verificationToken };
   }
 

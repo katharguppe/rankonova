@@ -13,6 +13,12 @@ import { PromptEngineService } from './prompt-engine.service';
 export class PromptEngineController {
   constructor(private readonly service: PromptEngineService) {}
 
+  @Post('clients/:clientId/run-all')
+  @Roles(UserRole.super_admin, UserRole.tenant_admin)
+  triggerClientRun(@Param('clientId') clientId: string, @Req() req: Request) {
+    return this.service.triggerClientRun(clientId, req.user as RequestUser);
+  }
+
   @Post('run')
   @Roles(UserRole.super_admin, UserRole.tenant_admin)
   trigger(@Body() dto: TriggerRunDto, @Req() req: Request) {

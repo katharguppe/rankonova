@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import Redis from 'ioredis';
 
 import { PrismaModule } from '../prisma/prisma.module';
+import { MailService } from '../mail/mail.service';
 import { AuthController } from './auth.controller';
 import { AuthEventsService } from './auth-events.service';
 import { AuthService } from './auth.service';
@@ -32,6 +33,7 @@ import { LockoutService } from './lockout.service';
   controllers: [AuthController],
   providers: [
     AuthService,
+    MailService,
     AuthEventsService,
     EncryptionService,
     JwtStrategy,

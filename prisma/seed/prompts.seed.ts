@@ -433,12 +433,6 @@ const HEALTHCARE: PromptSeed[] = [
 ];
 
 export async function seedPrompts(prisma: PrismaClient) {
-  const existing = await prisma.prompt.count({ where: { tenant_id: null } });
-  if (existing >= 300) {
-    console.log('  Platform prompts already seeded, skipping');
-    return;
-  }
-
   const verticals = await prisma.vertical.findMany({
     where: { slug: { in: ['automotive', 'real-estate', 'hr-services', 'gcc-advisory', 'healthcare'] } },
     select: { id: true, slug: true },
@@ -453,6 +447,39 @@ export async function seedPrompts(prisma: PrismaClient) {
     ['gcc-advisory', GCC_ADVISORY],
     ['healthcare', HEALTHCARE],
   ];
+
+  // Backfill: prompts seeded before vertical_id was added land with vertical_id=null.
+  // Detect and repair by matching exact text — safe regardless of insertion order.
+  const nullVerticalCount = await prisma.prompt.count({
+    where: { tenant_id: null, vertical_id: null },
+  });
+
+  if (nullVerticalCount > 0) {
+    console.log(`  Backfilling vertical_id on ${nullVerticalCount} platform prompts with null vertical...`);
+    let fixed = 0;
+    for (const [slug, seeds] of SEED_MAP) {
+      const verticalId = verticalIdBySlug[slug];
+      if (!verticalId) {
+        console.warn(`  Vertical '${slug}' not found — skipping backfill`);
+        continue;
+      }
+      for (const s of seeds) {
+        const { count } = await prisma.prompt.updateMany({
+          where: { text: s.text, tenant_id: null, vertical_id: null },
+          data: { vertical_id: verticalId },
+        });
+        fixed += count;
+      }
+    }
+    console.log(`  Backfilled ${fixed} prompts`);
+    return;
+  }
+
+  const existing = await prisma.prompt.count({ where: { tenant_id: null } });
+  if (existing >= 300) {
+    console.log('  Platform prompts already seeded, skipping');
+    return;
+  }
 
   let total = 0;
   for (const [slug, seeds] of SEED_MAP) {
