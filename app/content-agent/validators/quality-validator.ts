@@ -349,7 +349,7 @@ export class QualityValidatorService {
       issues.push({
         rule: 'howto_schema_missing',
         message: 'Segment article lacks a HowTo, Article, or BlogPosting JSON-LD block',
-        suggestion: 'Add a JSON-LD block with "@type": "HowTo" or "@type": "Article"',
+        suggestion: 'Add a JSON-LD block with "@type": "HowTo", "Article", or "BlogPosting"',
         fatal: false,
       });
     }

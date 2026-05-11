@@ -264,6 +264,12 @@ describe('QualityValidatorService', () => {
       expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
     });
 
+    it('passes when segment article has array @type containing HowTo', () => {
+      const h = html('', `${ld({ '@type': ['HowTo', 'WebPage'], name: 'Guide' })}${SECONDARY_LD}`);
+      const result = svc.validate('Title', h, ContentType.segment_article);
+      expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
+    });
+
     it('warns when segment article has no HowTo/Article/BlogPosting schema', () => {
       const h = html('', `${ld({ '@type': 'LocalBusiness', name: 'My Business' })}${SECONDARY_LD}`);
       const result = svc.validate('Title', h, ContentType.segment_article);
