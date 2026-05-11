@@ -7,6 +7,7 @@ import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 
 import { AppModule } from '../app/app.module';
+import { MailService } from '../app/mail/mail.service';
 import { PrismaService } from '../app/prisma/prisma.service';
 
 // ── Test RS256 key pair (generated once, set before any module loads) ─────────
@@ -50,6 +51,7 @@ describe('Auth (e2e)', () => {
       // Bypass rate limiting for the main suite — the rate-limit test uses its own app
       builder = builder.overrideGuard(ThrottlerGuard).useValue({ canActivate: () => true });
     }
+    builder = builder.overrideProvider(MailService).useValue({ sendVerificationEmail: jest.fn() });
     const fixture: TestingModule = await builder.compile();
     const a = fixture.createNestApplication();
     a.use(cookieParser());
