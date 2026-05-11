@@ -344,6 +344,19 @@ describe('QualityValidatorService', () => {
     });
   });
 
+  // ── multi-rule interaction ────────────────────────────────────────────────────────────────
+
+  describe('multi-rule interaction', () => {
+    it('fires blocked_phrase and bare_superlative together without deduplication', () => {
+      const result = svc.validate('Title', html('<p>We are the best and truly industry-leading provider.</p>'));
+      const blocked = result.issues.filter((i) => i.rule === 'blocked_phrase');
+      const superlative = result.issues.filter((i) => i.rule === 'bare_superlative');
+      expect(blocked.length).toBeGreaterThanOrEqual(1);
+      expect(superlative.length).toBeGreaterThanOrEqual(1);
+      expect(result.valid).toBe(true);
+    });
+  });
+
   // ── formatIssuesSummary ───────────────────────────────────────────────────
 
   describe('formatIssuesSummary', () => {
