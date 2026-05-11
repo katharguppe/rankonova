@@ -91,6 +91,7 @@ export class QualityValidatorService {
     if (contentType === ContentType.segment_article) {
       this.checkSegmentArticleWordCount(htmlContent, issues);
       this.checkSegmentArticleHeadings(htmlContent, issues);
+      this.checkHowToSchemaType(htmlContent, issues);
     }
 
     this.checkBlockedPhrases(htmlContent, issues);
@@ -325,6 +326,32 @@ export class QualityValidatorService {
           fatal: false,
         });
       }
+    }
+  }
+
+  private checkHowToSchemaType(html: string, issues: ValidationIssue[]): void {
+    const ACCEPTED_TYPES = new Set(['HowTo', 'Article', 'BlogPosting']);
+    const scriptMatches = [
+      ...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi),
+    ];
+    const hasAcceptedType = scriptMatches.some(([, block]) => {
+      try {
+        const schema = JSON.parse(block) as Record<string, unknown>;
+        const type = schema['@type'];
+        if (typeof type === 'string') return ACCEPTED_TYPES.has(type);
+        if (Array.isArray(type)) return (type as string[]).some((t) => ACCEPTED_TYPES.has(t));
+        return false;
+      } catch {
+        return false;
+      }
+    });
+    if (!hasAcceptedType) {
+      issues.push({
+        rule: 'howto_schema_missing',
+        message: 'Segment article lacks a HowTo, Article, or BlogPosting JSON-LD block',
+        suggestion: 'Add a JSON-LD block with "@type": "HowTo" or "@type": "Article"',
+        fatal: false,
+      });
     }
   }
 

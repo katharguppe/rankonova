@@ -243,7 +243,40 @@ describe('QualityValidatorService', () => {
     });
   });
 
-  // ── bare_superlative ──────────────────────────────────────────────────────────
+  // ── howto_schema_missing ──────────────────────────────────────────────────────────
+
+  describe('howto_schema_missing', () => {
+    it('passes when segment article has HowTo JSON-LD', () => {
+      const h = html('', `${ld({ '@type': 'HowTo', name: 'How To Service Your Car' })}${SECONDARY_LD}`);
+      const result = svc.validate('Title', h, ContentType.segment_article);
+      expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
+    });
+
+    it('passes when segment article has Article JSON-LD', () => {
+      const h = html('', `${ld({ '@type': 'Article', name: 'Car Maintenance Guide' })}${SECONDARY_LD}`);
+      const result = svc.validate('Title', h, ContentType.segment_article);
+      expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
+    });
+
+    it('passes when segment article has BlogPosting JSON-LD', () => {
+      const h = html('', `${ld({ '@type': 'BlogPosting', name: 'Guide to Car Care' })}${SECONDARY_LD}`);
+      const result = svc.validate('Title', h, ContentType.segment_article);
+      expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
+    });
+
+    it('warns when segment article has no HowTo/Article/BlogPosting schema', () => {
+      const h = html('', `${ld({ '@type': 'LocalBusiness', name: 'My Business' })}${SECONDARY_LD}`);
+      const result = svc.validate('Title', h, ContentType.segment_article);
+      expect(result.issues.some((i) => i.rule === 'howto_schema_missing' && !i.fatal)).toBe(true);
+    });
+
+    it('does NOT apply to faq_page type', () => {
+      const result = svc.validate('Title', faqHtml([{ q: 'Q?', a: words(60) }]), ContentType.faq_page);
+      expect(result.issues.find((i) => i.rule === 'howto_schema_missing')).toBeUndefined();
+    });
+  });
+
+  // ── bare_superlative ──────────────────────────────────────────────────────────────
 
   describe('bare_superlative', () => {
     it('flags bare "best" as non-fatal warning', () => {
