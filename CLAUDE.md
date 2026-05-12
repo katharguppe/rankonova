@@ -6,7 +6,7 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 
 ## Current Phase: 8 (complete) — next: Phase 9
 
-## Phase 8 Handoff (2026-05-05, main HEAD: 1de9d951)
+## Phase 8 Handoff (2026-05-05, main HEAD: cfbcd23e — checkpoint 2026-05-12)
   All 5 Offsite modules shipped under app\offsite\:
 
   Module A — Aggregator Profile Monitor
@@ -42,6 +42,15 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 
   JWT fix   : scripts/fix-jwt-keys.js — generates + verifies matched RS256-2048 pair, writes to .env
   Vertical  : news_rss_feeds Json? added; Automotive + Healthcare seeded with RSS feeds
+
+  Post-Phase-8 cleanup (merged to main 2026-05-11/12):
+    Mail service      : app\mail\mail.service.ts — nodemailer SMTP (SMTP_HOST/PORT/USER/PASS/FROM), sendVerificationEmail; wired to auth module
+    Run Prompts UI    : POST /prompt-engine/clients/:clientId/run-all + frontend PromptsClient.tsx "Run Prompts" button + sonner Toaster
+    Cerebras engines  : AiEngine.cerebras added to DEFAULT_ENGINES + SCHEDULED_ENGINES (was missing from daily batch)
+    Seed fix          : prompts.seed.ts backfills null vertical_id for 320 platform prompts (root cause: vertical lookup ran after insert)
+    TASK-007 validators: answer_indirect_opening, bare_superlative (11 patterns), howto_schema_missing, wikidata_facts_missing, blocked_phrase (11 phrases), FILLER_OPENER_RES pre-compiled
+    State machine     : rejectOutput added (draft→rejected); PATCH /content/output/:id/reject endpoint; 58 unit specs total
+    TASK-007 open     : "segment_article mentions client naturally" (prompt-level only) + UI Generate button (/dashboard/[clientId]/content)
 
 ## Phase 7 Handoff (2026-05-04, main HEAD: ebb71cd8)
   Content generators  : Cerebras (CEREBRAS_API_KEY), model llama3.1-8b, baseURL https://api.cerebras.ai/v1
