@@ -42,11 +42,30 @@ export class DownstreamTrigger {
         LIMIT 3
       `;
 
-      for (const { prompt_id } of worstPrompts) {
+      const generatePromises = worstPrompts.map(({ prompt_id }) => {
         this.logger.log(`Triggering content draft for prompt ${prompt_id} (worst performer)`);
-        // TODO: Call ContentAgent service when available
-        // await this.contentAgentService.generateDraft(clientId, prompt_id);
-      }
+        return this.contentAgentService.generateContent(tenantId, {
+          clientId,
+          contentType: 'faq_page' as const,
+          targetPromptId: prompt_id,
+        });
+      });
+
+      const results = await Promise.allSettled(generatePromises);
+
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const prompt_id = worstPrompts[index].prompt_id;
+          this.logger.error(
+            `Failed to generate content draft for prompt ${prompt_id}: ${result.reason.message}`,
+          );
+        } else {
+          const prompt_id = worstPrompts[index].prompt_id;
+          this.logger.log(
+            `Content draft generated successfully for prompt ${prompt_id}, output ID: ${result.value.id}`,
+          );
+        }
+      });
     } catch (err) {
       this.logger.error(`Failed to trigger content drafts: ${(err as Error).message}`);
     }
