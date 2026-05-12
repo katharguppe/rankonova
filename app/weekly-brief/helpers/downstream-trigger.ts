@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ContentAgentService } from '../../content-agent/content-agent.service';
 
 @Injectable()
 export class DownstreamTrigger {
   private readonly logger = new Logger(DownstreamTrigger.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contentAgentService: ContentAgentService,
+  ) {}
 
   async triggerGapReportIfNeeded(clientId: string, citationDelta: number): Promise<void> {
     if (citationDelta >= 0) return;
@@ -19,7 +23,7 @@ export class DownstreamTrigger {
     }
   }
 
-  async triggerContentDraftsForWorstPrompts(clientId: string): Promise<void> {
+  async triggerContentDraftsForWorstPrompts(clientId: string, tenantId: string): Promise<void> {
     try {
       // Find 3 prompts with lowest citation rate in past 30 days
       const worstPrompts = await this.prisma.$queryRaw<

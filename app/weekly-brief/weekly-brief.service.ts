@@ -160,7 +160,7 @@ export class WeeklyBriefService {
     await this.downstreamTrigger.triggerGapReportIfNeeded(clientId, citationDelta);
 
     // Step 9: Auto-generate content drafts for worst prompts
-    await this.downstreamTrigger.triggerContentDraftsForWorstPrompts(clientId);
+    await this.downstreamTrigger.triggerContentDraftsForWorstPrompts(clientId, tenantId);
   }
 
   private getMonday(date: Date): Date {
