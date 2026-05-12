@@ -13,7 +13,6 @@ import {
 
 const REDDIT_BASE = 'https://www.reddit.com';
 const REDDIT_DELAY_MS = 500;
-const URGENT_CITATION_THRESHOLD = 5;
 
 @Injectable()
 export class CommunityService {

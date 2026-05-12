@@ -139,17 +139,26 @@ export class DiagnosticsCrawlerService {
           })
           .filter(Boolean),
       ),
+      // eslint-disable-next-line no-undef
       page.evaluate(() => (document.body?.innerText ?? '').replace(/\s+/g, ' ').trim()),
+       
       page.evaluate(
         (): HeadingStructure => ({
+          // eslint-disable-next-line no-undef
           h1: document.querySelectorAll('h1').length,
+          // eslint-disable-next-line no-undef
           h2: document.querySelectorAll('h2').length,
+          // eslint-disable-next-line no-undef
           h3: document.querySelectorAll('h3').length,
+          // eslint-disable-next-line no-undef
           h4: document.querySelectorAll('h4').length,
+          // eslint-disable-next-line no-undef
           h5: document.querySelectorAll('h5').length,
+          // eslint-disable-next-line no-undef
           h6: document.querySelectorAll('h6').length,
         }),
       ),
+       
       page.evaluate((): string | null => {
         const selectors = [
           'meta[property="article:published_time"]',
@@ -159,6 +168,7 @@ export class DiagnosticsCrawlerService {
           'time[datetime]',
         ];
         for (const sel of selectors) {
+          // eslint-disable-next-line no-undef
           const el = document.querySelector(sel);
           if (el) return el.getAttribute('content') ?? el.getAttribute('datetime') ?? null;
         }

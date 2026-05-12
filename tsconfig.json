@@ -18,5 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "strict": true
-  }
+  },
+  "include": ["app/**/*", "test/**/*"],
+  "exclude": ["frontend", "node_modules", "dist"]
 }

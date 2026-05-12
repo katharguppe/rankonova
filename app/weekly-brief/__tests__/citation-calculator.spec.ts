@@ -55,7 +55,6 @@ describe('CitationCalculator', () => {
   it('should calculate citation delta between two weeks', async () => {
     const clientId = 'test-client-123';
     const thisMonday = new Date('2026-05-12T00:00:00Z');
-    const prevMonday = new Date('2026-05-05T00:00:00Z');
 
     (prisma.brandMention.count as jest.Mock)
       .mockResolvedValueOnce(5) // this week
