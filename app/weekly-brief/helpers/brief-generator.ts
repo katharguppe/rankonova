@@ -40,7 +40,7 @@ export class BriefGenerator {
     }
   }
 
-  async briefToHtml(brief: GeneratedBrief, clientId: string): Promise<string> {
+  async briefToHtml(brief: GeneratedBrief, _clientId: string): Promise<string> {
     const sectionsHtml = brief.sections
       .map(
         (s) => `

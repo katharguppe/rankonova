@@ -28,6 +28,7 @@ describe('BriefGenerator', () => {
     generator = module.get<BriefGenerator>(BriefGenerator);
 
     // Setup the mock for Anthropic API calls
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anthropic = (generator as any).anthropic;
     mockAnthropicCreate = anthropic.messages.create;
   });
