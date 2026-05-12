@@ -87,8 +87,9 @@ export class WeeklyBriefService {
       actions: selectedActions,
     });
 
-    // Convert to HTML
+    // Convert to HTML and Markdown
     const briefHtml = await this.briefGenerator.briefToHtml(brief, clientId);
+    const briefMarkdown = BriefGenerator.briefToMarkdown(brief);
 
     // Step 5: Store WeeklyBrief in DB
     const actionItems: ActionItemForBrief[] = selectedActions.map((a) => ({
@@ -108,6 +109,8 @@ export class WeeklyBriefService {
         citation_delta: citationDelta,
         action_items: actionItems as any,
         platform_actions_log: {},
+        brief_html: briefHtml,
+        brief_markdown: briefMarkdown,
         generated_at: new Date(),
       },
     });

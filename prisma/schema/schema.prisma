@@ -703,6 +703,8 @@ model WeeklyBrief {
   citation_delta       Float     // vs previous week
   action_items         Json      // max 3: { type, priority, estimated_impact, draft_id, deep_link, time_estimate }[]
   platform_actions_log Json      // automated actions taken this week
+  brief_html           String?   // generated HTML brief
+  brief_markdown       String?   // generated markdown brief
   email_sent_at        DateTime?
   actions_completed    Int       @default(0)
   generated_at         DateTime
