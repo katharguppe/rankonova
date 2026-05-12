@@ -4,9 +4,39 @@
 ## Stack
 NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Router, shadcn/ui, Tailwind, Docker
 
-## Current Phase: 9 (in progress)
+## Current Phase: 10 (blocked on Razorpay API keys from Sir)
 
-## Phase 8 Handoff (2026-05-05, main HEAD: cfbcd23e — checkpoint 2026-05-12)
+## Phases 0-9 Complete ✅ (2026-05-12)
+  All phases from initial setup through Phase 9 have been merged to main.
+  main HEAD: 4e768b4f
+  
+## Phase 9 Complete (2026-05-12, main HEAD: 4e768b4f)
+  Weekly Brief Pipeline Step 9 — Content Draft Auto-Generation merged and CI fixed:
+  
+  TASK-009 Implementation:
+    Feature branch   : feature/TASK-009 (merged to main 2026-05-12)
+    Commits          : c2dd6b0c..4e768b4f (6 total, including CI fix)
+    
+    Step 9 Auto-Gen  : DownstreamTrigger.triggerContentDraftsForWorstPrompts()
+    Identify         : 3 worst-performing prompts by citation rate (past 30 days)
+    Generate         : 1 FAQ page per prompt via ContentAgentService.generateContent()
+    Parallel exec    : Promise.allSettled() — all 3 run concurrently
+    Error handling   : Log failures per prompt, don't break pipeline (resilient)
+    Thread tenantId  : WeeklyBriefService → DownstreamTrigger → ContentAgentService
+    
+    Test status      : 103/103 passing (24/24 weekly-brief suite, 8 suites total)
+    Code review      : Approved — spec compliant, no regressions
+    Build status     : ✅ Production build succeeds
+    CI fixes         : tsconfig.json + lint errors resolved; all CI steps passing
+    
+## Phase 10 Blockers (Pending — requires Razorpay API keys from Sir)
+  Billing Module Integration:
+    Razorpay API Key (live) : awaiting from Sir
+    Razorpay API Secret     : awaiting from Sir
+    Callback webhook setup  : pending keys
+    Session -> billing module wiring: ready to implement once keys provided
+
+## Phase 8 Complete (2026-05-05, merged to main 2026-05-11/12)
   All 5 Offsite modules shipped under app\offsite\:
 
   Module A — Aggregator Profile Monitor
@@ -51,26 +81,6 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
     TASK-007 validators: answer_indirect_opening, bare_superlative (11 patterns), howto_schema_missing, wikidata_facts_missing, blocked_phrase (11 phrases), FILLER_OPENER_RES pre-compiled
     State machine     : rejectOutput added (draft→rejected); PATCH /content/output/:id/reject endpoint; 58 unit specs total
     TASK-007 open     : "segment_article mentions client naturally" (prompt-level only) + UI Generate button (/dashboard/[clientId]/content)
-
-## Phase 9 Handoff (2026-05-12, feature/TASK-009 — pending PR merge to main)
-  Weekly Brief Pipeline Step 9 — Content Draft Auto-Generation:
-  
-  TASK-009 Implementation (5 commits on feature/TASK-009):
-    Feature branch   : feature/TASK-009 (commits c2dd6b0c..b65d506e)
-    PR status        : Awaiting merge to main
-    
-    Step 9 Auto-Gen  : DownstreamTrigger.triggerContentDraftsForWorstPrompts()
-    Identify         : 3 worst-performing prompts by citation rate (past 30 days)
-    Generate         : 1 FAQ page per prompt via ContentAgentService.generateContent()
-    Parallel exec    : Promise.allSettled() — all 3 run concurrently
-    Error handling   : Log failures per prompt, don't break pipeline (resilient)
-    Thread tenantId  : WeeklyBriefService → DownstreamTrigger → ContentAgentService
-    
-    Test status      : 103/103 passing (24/24 weekly-brief suite, 8 suites total)
-    Code review      : Approved — spec compliant, no regressions
-    Build status     : ✅ Production build succeeds
-    
-    Next actions     : Merge feature/TASK-009 to main → verify merge → Phase 9 complete
 
 ## Phase 7 Handoff (2026-05-04, main HEAD: ebb71cd8)
   Content generators  : Cerebras (CEREBRAS_API_KEY), model llama3.1-8b, baseURL https://api.cerebras.ai/v1
