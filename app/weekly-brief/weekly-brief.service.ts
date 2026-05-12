@@ -77,15 +77,21 @@ export class WeeklyBriefService {
       return null;
     }
 
-    // Step 4: Generate brief via Haiku
-    const brief = await this.briefGenerator.generateBrief({
-      client_id: clientId,
-      client_name: clientName || 'Client',
-      week_of: weekMonday,
-      citation_score: citationScore,
-      citation_delta: citationDelta,
-      actions: selectedActions,
-    });
+    // Step 4: Generate brief (with fallback if API fails)
+    let brief;
+    try {
+      brief = await this.briefGenerator.generateBrief({
+        client_id: clientId,
+        client_name: clientName || 'Client',
+        week_of: weekMonday,
+        citation_score: citationScore,
+        citation_delta: citationDelta,
+        actions: selectedActions,
+      });
+    } catch (err) {
+      this.logger.error(`Failed to generate brief for ${clientId}: ${(err as Error).message}`);
+      throw err;
+    }
 
     // Convert to HTML and Markdown
     const briefHtml = await this.briefGenerator.briefToHtml(brief, clientId);
@@ -101,19 +107,25 @@ export class WeeklyBriefService {
       effort_minutes: a.effort_minutes,
     }));
 
-    const weeklyBrief = await this.prisma.weeklyBrief.create({
-      data: {
-        client_id: clientId,
-        week_of: weekMonday,
-        citation_score: citationScore,
-        citation_delta: citationDelta,
-        action_items: actionItems as any,
-        platform_actions_log: {},
-        brief_html: briefHtml,
-        brief_markdown: briefMarkdown,
-        generated_at: new Date(),
-      },
-    });
+    let weeklyBrief;
+    try {
+      weeklyBrief = await this.prisma.weeklyBrief.create({
+        data: {
+          client_id: clientId,
+          week_of: weekMonday,
+          citation_score: citationScore,
+          citation_delta: citationDelta,
+          action_items: actionItems as any,
+          platform_actions_log: {},
+          brief_html: briefHtml,
+          brief_markdown: briefMarkdown,
+          generated_at: new Date(),
+        },
+      });
+    } catch (err) {
+      this.logger.error(`Failed to save brief for ${clientId}: ${(err as Error).message}`);
+      throw err;
+    }
 
     this.logger.log(`WeeklyBrief created: ${weeklyBrief.id}`);
 

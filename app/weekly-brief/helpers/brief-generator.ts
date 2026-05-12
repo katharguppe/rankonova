@@ -14,6 +14,11 @@ export class BriefGenerator {
   }
 
   async generateBrief(input: BriefGenerationInput): Promise<GeneratedBrief> {
+    if (!process.env['ANTHROPIC_API_KEY']) {
+      this.logger.warn('ANTHROPIC_API_KEY not set; using fallback brief generation');
+      return this.generateFallbackBrief(input);
+    }
+
     const prompt = this.buildPrompt(input);
 
     try {
@@ -35,8 +40,8 @@ export class BriefGenerator {
 
       return this.parseHaikuResponse(content.text, input);
     } catch (err) {
-      this.logger.error(`BriefGenerator failed for client ${input.client_id}: ${(err as Error).message}`);
-      throw err;
+      this.logger.warn(`BriefGenerator API failed for client ${input.client_id}: ${(err as Error).message}; using fallback`);
+      return this.generateFallbackBrief(input);
     }
   }
 
@@ -168,19 +173,23 @@ Format output as JSON with keys: headline, intro, sections (array of {title, wha
       };
     } catch (err) {
       this.logger.warn(`Failed to parse Haiku JSON, using fallback structure: ${(err as Error).message}`);
-      return {
-        headline: `Your AEO Weekly Brief — ${input.week_of.toLocaleDateString()}`,
-        intro: `Your citation score this week: ${input.citation_score.toFixed(1)} (${input.citation_delta > 0 ? '↑' : '↓'}${Math.abs(input.citation_delta).toFixed(1)} from last week)`,
-        sections: input.actions.map((a) => ({
-          title: a.title,
-          what_to_do: `Review and ${a.action_type.replace('_', ' ')}`,
-          expected_outcome: `Boost citation score by ${a.weight}x impact factor`,
-          effort: `~${a.effort_minutes} min`,
-        })),
-        cta: 'Log in to your dashboard to action these recommendations',
-        footer: 'Unsubscribe link',
-      };
+      return this.generateFallbackBrief(input);
     }
+  }
+
+  private generateFallbackBrief(input: BriefGenerationInput): GeneratedBrief {
+    return {
+      headline: `Your AEO Weekly Brief — ${input.week_of.toLocaleDateString()}`,
+      intro: `Your citation score this week: ${input.citation_score.toFixed(1)} (${input.citation_delta > 0 ? '↑' : '↓'}${Math.abs(input.citation_delta).toFixed(1)} from last week)`,
+      sections: input.actions.map((a) => ({
+        title: a.title,
+        what_to_do: `Review and ${a.action_type.replace(/_/g, ' ')}`,
+        expected_outcome: `Boost citation score by ${a.weight}x impact factor`,
+        effort: `~${a.effort_minutes} min`,
+      })),
+      cta: 'Log in to your dashboard to action these recommendations',
+      footer: 'Powered by AEO Suite',
+    };
   }
 }
 
