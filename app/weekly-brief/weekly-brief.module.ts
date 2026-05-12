@@ -9,9 +9,10 @@ import { BriefGenerator } from './helpers/brief-generator';
 import { EmailSender } from './helpers/email-sender';
 import { NotificationTrigger } from './helpers/notification-trigger';
 import { DownstreamTrigger } from './helpers/downstream-trigger';
+import { ContentAgentModule } from '../content-agent/content-agent.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot()],
+  imports: [ScheduleModule.forRoot(), ContentAgentModule],
   controllers: [WeeklyBriefController],
   providers: [
     WeeklyBriefService,
