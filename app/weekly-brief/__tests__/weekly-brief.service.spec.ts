@@ -7,6 +7,7 @@ import { EmailSender } from '../helpers/email-sender';
 import { NotificationTrigger } from '../helpers/notification-trigger';
 import { DownstreamTrigger } from '../helpers/downstream-trigger';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ContentAgentService } from '../../content-agent/content-agent.service';
 
 describe('WeeklyBriefService', () => {
   let service: WeeklyBriefService;
@@ -34,6 +35,7 @@ describe('WeeklyBriefService', () => {
             client: {
               findMany: jest.fn(),
               findFirst: jest.fn(),
+              findUnique: jest.fn(),
             },
             tenant: {
               findFirst: jest.fn(),
@@ -66,6 +68,13 @@ describe('WeeklyBriefService', () => {
             notification: {
               create: jest.fn(),
             },
+            $queryRaw: jest.fn(),
+          },
+        },
+        {
+          provide: ContentAgentService,
+          useValue: {
+            generateContent: jest.fn(),
           },
         },
       ],
@@ -167,6 +176,8 @@ describe('WeeklyBriefService', () => {
       jest.spyOn(citationCalculator, 'calculateCitationDelta').mockResolvedValue(0);
 
       jest.spyOn(actionRanker, 'rankActions').mockResolvedValue([]);
+
+      (prisma.client.findUnique as jest.Mock).mockResolvedValue({ tenant_id: 'tenant-1' });
 
       const result = await service.generateBriefForClient(clientId, monday);
 

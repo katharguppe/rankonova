@@ -58,6 +58,20 @@ export class WeeklyBriefService {
     clientName?: string,
     tenantId?: string,
   ): Promise<void | null> {
+    // Ensure tenantId is available (fetch from DB if not provided)
+    let resolvedTenantId = tenantId;
+    if (!resolvedTenantId) {
+      const client = await this.prisma.client.findUnique({
+        where: { id: clientId },
+        select: { tenant_id: true },
+      });
+      resolvedTenantId = client?.tenant_id;
+      if (!resolvedTenantId) {
+        this.logger.error(`Client ${clientId}: tenant_id not found; cannot generate brief`);
+        return null;
+      }
+    }
+
     // Step 1: Compute citation scores
     const citationScore = await this.citationCalculator.calculateCitationScore(clientId, weekMonday);
     const citationDelta = await this.citationCalculator.calculateCitationDelta(clientId, weekMonday);
@@ -160,7 +174,7 @@ export class WeeklyBriefService {
     await this.downstreamTrigger.triggerGapReportIfNeeded(clientId, citationDelta);
 
     // Step 9: Auto-generate content drafts for worst prompts
-    await this.downstreamTrigger.triggerContentDraftsForWorstPrompts(clientId, tenantId);
+    await this.downstreamTrigger.triggerContentDraftsForWorstPrompts(clientId, resolvedTenantId);
   }
 
   private getMonday(date: Date): Date {
