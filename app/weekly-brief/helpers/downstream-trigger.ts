@@ -35,7 +35,7 @@ export class DownstreamTrigger {
         FROM prompts p
         JOIN prompt_runs pr ON p.id = pr.prompt_id
         LEFT JOIN brand_mentions bm ON pr.id = bm.run_id
-        WHERE p.client_id = ${clientId}
+        WHERE pr.client_id = ${clientId}
           AND pr.ran_at >= NOW() - INTERVAL '30 days'
         GROUP BY p.id
         ORDER BY citation_rate ASC
