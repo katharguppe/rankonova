@@ -6,7 +6,10 @@ interface SendGridPayload {
   }>;
   from: string | { email: string; name?: string };
   subject: string;
-  html: string;
+  content: Array<{
+    type: string;
+    value: string;
+  }>;
 }
 
 @Injectable()
@@ -17,11 +20,12 @@ export class EmailSender {
 
   constructor() {
     this.apiKey = process.env['SENDGRID_API_KEY'] || '';
-    this.fromEmail = process.env['SENDGRID_FROM_EMAIL'] || 'briefs@aeo-suite.local';
+    this.fromEmail = process.env['SENDGRID_FROM_EMAIL'] || 'noreply@aeo-suite.local';
 
     if (!this.apiKey) {
       this.logger.warn('SENDGRID_API_KEY not set; email sending will fail');
     }
+    this.logger.log(`Using sender email: ${this.fromEmail}`);
   }
 
   async sendBrief(clientEmail: string, clientName: string, htmlContent: string): Promise<{ id: string }> {
@@ -36,7 +40,12 @@ export class EmailSender {
         name: 'AEO Suite',
       },
       subject: `Your AEO Weekly Brief - ${this.getCurrentWeekLabel()}`,
-      html: htmlContent,
+      content: [
+        {
+          type: 'text/html',
+          value: htmlContent,
+        },
+      ],
     };
 
     return this.sendViaApi(payload);
