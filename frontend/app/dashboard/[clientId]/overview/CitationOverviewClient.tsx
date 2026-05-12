@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import useSWR from 'swr';
 import { proxyFetch } from '@/lib/api';
 import { fmt } from '@/lib/utils';
@@ -24,6 +25,23 @@ interface Props {
 const ENGINE_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
 
 export default function CitationOverviewClient({ clientId, initial }: Props) {
+  const [running, setRunning] = useState(false);
+  const [runMsg, setRunMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function handleRunPrompts() {
+    setRunning(true);
+    setRunMsg(null);
+    try {
+      const res = await fetch(`/api/prompt-engine/${clientId}`, { method: 'POST' });
+      if (!res.ok) throw new Error(`${res.status}`);
+      setRunMsg({ ok: true, text: 'Prompts queued successfully!' });
+    } catch {
+      setRunMsg({ ok: false, text: 'Failed to queue prompts. Please try again.' });
+    } finally {
+      setRunning(false);
+    }
+  }
+
   const { data, isLoading } = useSWR<CitationOverview>(
     ['citation-overview', clientId],
     () => proxyFetch<CitationOverview>(clientId, 'citation-overview'),
@@ -54,9 +72,30 @@ export default function CitationOverviewClient({ clientId, initial }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">Citation Overview</h1>
-        <p className="text-sm text-slate-500 mt-0.5">How often your brand appears in AI responses</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Citation Overview</h1>
+          <p className="text-sm text-slate-500 mt-0.5">How often your brand appears in AI responses</p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <button
+            onClick={handleRunPrompts}
+            disabled={running}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {running ? (
+              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <span>&#9654;</span>
+            )}
+            Run Prompts
+          </button>
+          {runMsg && (
+            <p className={`text-xs font-medium ${runMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}>
+              {runMsg.text}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Top KPI row */}
