@@ -51,8 +51,8 @@ describe('RazorpayStubService', () => {
           // expected
         }
       }
-      expect(successes).toBeGreaterThanOrEqual(40);
-      expect(successes).toBeLessThanOrEqual(100);
+      expect(successes).toBeGreaterThanOrEqual(55);
+      expect(successes).toBeLessThanOrEqual(85);
     });
   });
 
@@ -122,8 +122,8 @@ describe('RazorpayStubService', () => {
           // expected
         }
       }
-      expect(successes).toBeGreaterThanOrEqual(30);
-      expect(successes).toBeLessThanOrEqual(90);
+      expect(successes).toBeGreaterThanOrEqual(45);
+      expect(successes).toBeLessThanOrEqual(75);
     });
   });
 
