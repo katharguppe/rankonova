@@ -31,6 +31,11 @@ seedDevKeys();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Raw body parser for Razorpay webhook HMAC verification — must come before JSON parser
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { raw: expressRaw } = require('express') as typeof import('express');
+  app.use('/billing/webhook/razorpay', expressRaw({ type: 'application/json' }));
+
   app.use(helmet());
   app.use(cookieParser());
 

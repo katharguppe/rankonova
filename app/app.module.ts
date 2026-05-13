@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -21,6 +22,8 @@ import { ContentAgentModule } from './content-agent/content-agent.module';
 import { OffsiteModule } from './offsite/offsite.module';
 import { WeeklyBriefModule } from './weekly-brief/weekly-brief.module';
 import { BillingModule } from './billing/billing.module';
+import { BillingGuard } from './billing/billing.guard';
+import { PlanEnforcementService } from './billing/plan-enforcement.service';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 
@@ -50,6 +53,14 @@ import { AdminModule } from './admin/admin.module';
     BillingModule,
     NotificationsModule,
     AdminModule,
+  ],
+  providers: [
+    BillingGuard,
+    PlanEnforcementService,
+    {
+      provide: APP_GUARD,
+      useClass: BillingGuard,
+    },
   ],
 })
 export class AppModule {}
