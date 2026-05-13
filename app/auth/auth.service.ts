@@ -15,6 +15,7 @@ import { createHash, randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { BillingService } from '../billing/billing.service';
 import { MailService } from '../mail/mail.service';
 import { AuthEventsService } from './auth-events.service';
 import { EncryptionService } from './encryption.service';
@@ -45,6 +46,7 @@ export class AuthService {
     private readonly authEvents: AuthEventsService,
     private readonly encryption: EncryptionService,
     private readonly mail: MailService,
+    private readonly billing: BillingService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
@@ -68,6 +70,8 @@ export class AuthService {
         data: { tenant_id: tenant.id, email: dto.email, password_hash: passwordHash, role: 'tenant_admin' },
       });
     });
+
+    await this.billing.startTrial(user.tenant_id);
 
     await this.redis.setex(`email_verify:${verificationToken}`, EMAIL_VERIFY_TTL, user.id);
     await this.redis.setex(`user_unverified:${user.id}`, EMAIL_VERIFY_TTL, '1');

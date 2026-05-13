@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import Redis from 'ioredis';
 
 import { PrismaModule } from '../prisma/prisma.module';
+import { BillingModule } from '../billing/billing.module';
 import { MailService } from '../mail/mail.service';
 import { AuthController } from './auth.controller';
 import { AuthEventsService } from './auth-events.service';
@@ -17,6 +18,7 @@ import { LockoutService } from './lockout.service';
 @Module({
   imports: [
     PrismaModule,
+    BillingModule,
     PassportModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     JwtModule.registerAsync({
