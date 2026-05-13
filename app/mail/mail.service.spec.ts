@@ -61,4 +61,48 @@ describe('MailService', () => {
       'SMTP connection refused',
     );
   });
+
+  describe('sendTrialReminder', () => {
+    it('sends trial reminder email with days remaining', async () => {
+      await service.sendTrialReminder('user@example.com', 7);
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      const call = mockSendMail.mock.calls[0][0];
+      expect(call.to).toBe('user@example.com');
+      expect(call.subject).toContain('trial');
+      expect(call.html).toContain('7 days');
+    });
+  });
+
+  describe('sendTrialWarning', () => {
+    it('sends trial warning email with days remaining', async () => {
+      await service.sendTrialWarning('user@example.com', 2);
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      const call = mockSendMail.mock.calls[0][0];
+      expect(call.to).toBe('user@example.com');
+      expect(call.html).toContain('2 days');
+    });
+  });
+
+  describe('sendTrialEnd', () => {
+    it('sends trial ended email', async () => {
+      await service.sendTrialEnd('user@example.com');
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      const call = mockSendMail.mock.calls[0][0];
+      expect(call.to).toBe('user@example.com');
+      expect(call.subject).toContain('ended');
+    });
+  });
+
+  describe('sendInvoiceEmail', () => {
+    it('sends invoice email with PDF attachment', async () => {
+      const pdf = Buffer.from('pdf-data');
+      await service.sendInvoiceEmail('user@example.com', 'pay_abc123', 500000, pdf);
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      const call = mockSendMail.mock.calls[0][0];
+      expect(call.to).toBe('user@example.com');
+      expect(call.attachments).toHaveLength(1);
+      expect(call.attachments[0].content).toBe(pdf);
+      expect(call.html).toContain('5000.00');
+    });
+  });
 });
