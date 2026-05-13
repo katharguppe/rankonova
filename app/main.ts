@@ -13,6 +13,11 @@ import { getQueueToken } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { AppModule } from './app.module';
 import { PROMPT_RUNS_QUEUE } from './prompt-engine/prompt-engine.constants';
+import {
+  BILLING_TRIAL_QUEUE,
+  BILLING_RETRY_QUEUE,
+  BILLING_PURGE_QUEUE,
+} from './billing/billing.constants';
 
 function seedDevKeys(): void {
   if (process.env['JWT_PUBLIC_KEY']) return;
@@ -61,7 +66,12 @@ async function bootstrap() {
   const bullBoardAdapter = new ExpressAdapter();
   bullBoardAdapter.setBasePath('/admin/queues');
   createBullBoard({
-    queues: [new BullAdapter(app.get<Queue>(getQueueToken(PROMPT_RUNS_QUEUE)))],
+    queues: [
+      new BullAdapter(app.get<Queue>(getQueueToken(PROMPT_RUNS_QUEUE))),
+      new BullAdapter(app.get<Queue>(getQueueToken(BILLING_TRIAL_QUEUE))),
+      new BullAdapter(app.get<Queue>(getQueueToken(BILLING_RETRY_QUEUE))),
+      new BullAdapter(app.get<Queue>(getQueueToken(BILLING_PURGE_QUEUE))),
+    ],
     serverAdapter: bullBoardAdapter,
   });
   app.use('/admin/queues', (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
