@@ -149,6 +149,7 @@ model Tenant {
   plan_tier                PlanTier  @default(starter)
   billing_email            String
   is_active                Boolean   @default(true)
+  billing_suspended        Boolean   @default(false)
   prompt_quota_daily       Int       @default(500)
   trial_ends_at            DateTime?
   razorpay_subscription_id String?
