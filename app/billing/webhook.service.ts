@@ -1,5 +1,5 @@
-import { createHmac } from 'crypto';
-import { HttpException, Injectable } from '@nestjs/common';
+import { createHmac, timingSafeEqual } from 'crypto';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,6 +12,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class WebhookService {
+  private readonly logger = new Logger(WebhookService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly invoiceService: InvoiceService,
@@ -20,21 +22,27 @@ export class WebhookService {
   ) {}
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
-    const secret = process.env['RAZORPAY_WEBHOOK_SECRET'] ?? '';
+    const secret = process.env['RAZORPAY_WEBHOOK_SECRET'];
+    if (!secret) throw new HttpException('RAZORPAY_WEBHOOK_SECRET not configured', 500);
     const digest = createHmac('sha256', secret).update(rawBody).digest('hex');
-    if (digest !== signature) {
+    const isValid = timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(signature ?? '', 'hex'));
+    if (!isValid) {
       throw new HttpException('Invalid webhook signature', 400);
     }
     const payload: RazorpayWebhookPayload = JSON.parse(rawBody.toString()) as RazorpayWebhookPayload;
-    switch (payload.event) {
-      case 'payment.captured':
-        return this.onPaymentCaptured(payload);
-      case 'subscription.halted':
-        return this.onSubscriptionHalted(payload);
-      case 'subscription.cancelled':
-        return this.onSubscriptionCancelled(payload);
-      default:
-        return;
+    try {
+      switch (payload.event) {
+        case 'payment.captured':
+          return await this.onPaymentCaptured(payload);
+        case 'subscription.halted':
+          return await this.onSubscriptionHalted(payload);
+        case 'subscription.cancelled':
+          return await this.onSubscriptionCancelled(payload);
+        default:
+          return;
+      }
+    } catch (err) {
+      this.logger.error(`Webhook handler failed for event ${payload.event}: ${(err as Error).message}`);
     }
   }
 

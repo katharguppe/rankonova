@@ -38,8 +38,9 @@ describe('WebhookService', () => {
 
   it('throws 400 when signature is invalid', async () => {
     const body = makePayload('payment.captured', {});
-    await expect(service.handleWebhook(body, 'bad-sig')).rejects.toThrow(HttpException);
-    const err = await service.handleWebhook(body, 'bad-sig').catch((e: unknown) => e) as HttpException;
+    const badSig = 'a'.repeat(64); // 64 hex chars = valid format, wrong value
+    await expect(service.handleWebhook(body, badSig)).rejects.toThrow(HttpException);
+    const err = (await service.handleWebhook(body, badSig).catch((e: unknown) => e)) as HttpException;
     expect(err.getStatus()).toBe(400);
   });
 
