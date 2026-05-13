@@ -5,6 +5,7 @@
 NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Router, shadcn/ui, Tailwind, Docker
 
 ## Current Phase: 10 Complete ✅ (2026-05-13, pending live Razorpay API keys from Sir)
+  Final commit: e3114ba3 — trial auto-start wired to AuthService.register (Phase 10 exit criterion met)
 
 ## Prompt Library (2026-05-13)
   Platform prompts trimmed to 10 per vertical (was 64) as per Sir's instruction.
@@ -37,12 +38,12 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
     Build status     : ✅ Production build succeeds
     CI fixes         : tsconfig.json + lint errors resolved; all CI steps passing
     
-## Phase 10 Complete ✅ (2026-05-13, main HEAD: 0a9e1642)
-  Billing Module — all 17 tasks done, 166/166 jest passing, 0 tsc errors:
+## Phase 10 Complete ✅ (2026-05-13, main HEAD: e3114ba3)
+  Billing Module — all 17 tasks done + trial auto-start on registration, 166/166 jest passing, 0 tsc errors:
 
   TASK-010 Implementation:
     Branch           : main (committed directly)
-    Final commit     : 0a9e1642
+    Final commit     : e3114ba3 (trial wired to registration — Phase 10 exit criterion)
     Test status      : 166/166 passing (21 suites, includes 7 new billing E2E tests)
 
   Services shipped  : PlanEnforcementService, SubscriptionService, TrialService,
