@@ -6,6 +6,14 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 
 ## Current Phase: 10 Complete ✅ (2026-05-13, pending live Razorpay API keys from Sir)
 
+## Prompt Library (2026-05-13)
+  Platform prompts trimmed to 10 per vertical (was 64) as per Sir's instruction.
+  Selection: 8 × priority=10 (one per intent type, decision stage) + 2 × priority=9 (purchase_intent + comparison).
+  Seed file  : prisma/seed/prompts.seed.ts — skip guard updated to >= 50
+  DB script  : scripts/trim-prompts.ts — cascade-deletes brand_mentions → prompt_runs → prompts for removed rows
+  Commit     : fe528bf0
+  Totals     : 50 platform prompts (5 verticals × 10), 270 deleted
+
 ## Phases 0-9 Complete ✅ (2026-05-12)
   All phases from initial setup through Phase 9 have been merged to main.
   main HEAD: 4e768b4f
