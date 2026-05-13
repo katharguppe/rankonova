@@ -25,7 +25,10 @@ export class WebhookService {
     const secret = process.env['RAZORPAY_WEBHOOK_SECRET'];
     if (!secret) throw new HttpException('RAZORPAY_WEBHOOK_SECRET not configured', 500);
     const digest = createHmac('sha256', secret).update(rawBody).digest('hex');
-    const isValid = timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(signature ?? '', 'hex'));
+    if (!signature || signature.length !== 64) {
+      throw new HttpException('Invalid webhook signature', 400);
+    }
+    const isValid = timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(signature, 'hex'));
     if (!isValid) {
       throw new HttpException('Invalid webhook signature', 400);
     }
