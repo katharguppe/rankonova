@@ -29,12 +29,28 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
     Build status     : ✅ Production build succeeds
     CI fixes         : tsconfig.json + lint errors resolved; all CI steps passing
     
-## Phase 10 Blockers (Pending — requires Razorpay API keys from Sir)
-  Billing Module Integration:
-    Razorpay API Key (live) : awaiting from Sir
-    Razorpay API Secret     : awaiting from Sir
-    Callback webhook setup  : pending keys
-    Session -> billing module wiring: ready to implement once keys provided
+## Phase 10 Complete ✅ (2026-05-13, main HEAD: 0a9e1642)
+  Billing Module — all 17 tasks done, 166/166 jest passing, 0 tsc errors:
+
+  TASK-010 Implementation:
+    Branch           : main (committed directly)
+    Final commit     : 0a9e1642
+    Test status      : 166/166 passing (21 suites, includes 7 new billing E2E tests)
+
+  Services shipped  : PlanEnforcementService, SubscriptionService, TrialService,
+                      InvoiceService, WebhookService, BillingService (orchestrator)
+  Guard             : BillingGuard (global, 402 on suspended tenants)
+  Processors        : trial.processor, payment-retry.processor, tenant-purge.processor
+  Controller        : 6 endpoints (subscribe, cancel, plan, trial/start, status, webhook/razorpay)
+  E2E tests         : app/billing/__tests__/billing.e2e.spec.ts — 3 scenarios, 7 assertions
+  Webhook           : timing-safe HMAC, payment.captured / subscription.halted / subscription.cancelled
+  Invoice           : pdfkit PDF emailed on payment success
+  Trial             : 14-day Growth, D+7/D+12/D+14 email sequence, ends → Starter
+  Failed payment    : retry D+1/D+3/D+7, suspend tenant on D+7 no recovery
+  Cancellation      : self-serve, billing_suspended=true, 90-day purge job scheduled
+
+  Remaining blocker : Razorpay live API keys from Sir (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
+                      RAZORPAY_WEBHOOK_SECRET) to flip RAZORPAY_STUB=false and run full cycle
 
 ## Phase 8 Complete (2026-05-05, merged to main 2026-05-11/12)
   All 5 Offsite modules shipped under app\offsite\:
