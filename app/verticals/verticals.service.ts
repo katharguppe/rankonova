@@ -5,13 +5,17 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PromptsService } from '../prompts/prompts.service';
 import { CreateVerticalDto } from './dto/create-vertical.dto';
 import { UpdateVerticalDto } from './dto/update-vertical.dto';
 import { CloneVerticalDto } from './dto/clone-vertical.dto';
 
 @Injectable()
 export class VerticalsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly promptsService: PromptsService,
+  ) {}
 
   findAll() {
     return this.prisma.vertical.findMany({
@@ -32,7 +36,7 @@ export class VerticalsService {
     const existing = await this.prisma.vertical.findUnique({ where: { slug: dto.slug } });
     if (existing) throw new ConflictException(`Slug '${dto.slug}' already taken`);
 
-    return this.prisma.vertical.create({
+    const vertical = await this.prisma.vertical.create({
       data: {
         name: dto.name,
         slug: dto.slug,
@@ -47,6 +51,13 @@ export class VerticalsService {
         review_platforms: dto.reviewPlatforms as Prisma.InputJsonValue,
       },
     });
+
+    await this.promptsService.seedDefaultPrompts(
+      vertical.id,
+      (dto.intentCategories ?? []) as string[],
+    );
+
+    return vertical;
   }
 
   async update(id: string, dto: UpdateVerticalDto, userId: string) {
