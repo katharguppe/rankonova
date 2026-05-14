@@ -35,12 +35,30 @@ export class ExtractionResolverService {
     let partialComp = this.findPartialMatch(normalized, competitors);
     if (partialComp) return { is_client_brand: false, competitor_id: partialComp };
 
+    // Try fuzzy matches fourth (conservative fallback only)
+    if (this.fuzzyMatch(normalized, client.brand_name, client.aliases)) {
+      return { is_client_brand: true, competitor_id: null };
+    }
+    let fuzzyComp = this.findFuzzyMatch(normalized, competitors);
+    if (fuzzyComp) return { is_client_brand: false, competitor_id: fuzzyComp };
+
     return { is_client_brand: false, competitor_id: null };
   }
 
   private getTerms(name: string, aliases: unknown): string[] {
     const terms = [name, ...(Array.isArray(aliases) ? aliases : [])];
-    return terms.filter(t => typeof t === 'string').map(t => (t as string).toLowerCase().trim());
+    const normalized = terms.filter(t => typeof t === 'string').map(t => (t as string).toLowerCase().trim());
+
+    // For fuzzy matching, also include individual words from multi-word names
+    const withWords: string[] = [...normalized];
+    for (const term of normalized) {
+      const words = term.split(/\s+/).filter(w => w.length > 0);
+      if (words.length > 1) {
+        withWords.push(...words);
+      }
+    }
+
+    return withWords;
   }
 
   private exactMatch(normalized: string, name: string, aliases: unknown): boolean {
@@ -141,5 +159,49 @@ export class ExtractionResolverService {
     }
 
     return dp[m][n];
+  }
+
+  /**
+   * Fuzzy match using Levenshtein distance with conservative threshold.
+   * Only matches if distance is VERY small relative to term length (20% max).
+   * Prevents false positives (e.g., "Car" shouldn't match "Bus").
+   * @param normalized Search term (already normalized)
+   * @param name Competitor name
+   * @param aliases Competitor aliases
+   * @returns true if fuzzy match found
+   */
+  private fuzzyMatch(normalized: string, name: string, aliases: unknown): boolean {
+    const terms = this.getTerms(name, aliases);
+
+    // Conservative threshold: distance must be <= 20% of the longer string
+    const FUZZY_THRESHOLD_PERCENT = 0.2;
+
+    for (const term of terms) {
+      const distance = this.levenshteinDistance(normalized, term);
+      const maxAllowed = Math.ceil(Math.max(normalized.length, term.length) * FUZZY_THRESHOLD_PERCENT);
+
+      // Require minimum length to prevent "a" matching "cat"
+      if (normalized.length >= 3 && term.length >= 3 && distance <= maxAllowed) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Find first competitor matching via fuzzy match (Levenshtein distance).
+   * Conservative fallback only — used when exact/substring/partial all fail.
+   */
+  private findFuzzyMatch(
+    normalized: string,
+    competitors: { id: string; name: string; aliases: unknown }[],
+  ): string | null {
+    for (const comp of competitors) {
+      if (this.fuzzyMatch(normalized, comp.name, comp.aliases)) {
+        return comp.id;
+      }
+    }
+    return null;
   }
 }

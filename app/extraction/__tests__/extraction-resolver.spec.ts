@@ -141,6 +141,41 @@ describe("ExtractionResolverService", () => {
 
       expect(result.competitor_id).toBe("comp-2");
     });
+
+    it("should fuzzy match conversational mention (Apollo for Apollo Hospitals)", () => {
+      const client = { id: "client-1", brand_name: "Our Hospital", aliases: [] };
+      const competitors = [
+        { id: "comp-1", name: "Apollo Hospitals", aliases: ["Apollo", "Apollo Hospital"] }
+      ];
+
+      const result = service.resolve("Apollo", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should fuzzy match similar brand names (Apolo vs Apollo)", () => {
+      const client = { id: "client-1", brand_name: "Our Hospital", aliases: [] };
+      const competitors = [
+        { id: "comp-1", name: "Apollo Hospitals", aliases: [] }
+      ];
+
+      const result = service.resolve("Apolo", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should fuzzy match CarDekho mention via partial name", () => {
+      const client = { id: "client-1", brand_name: "Our Car Site", aliases: [] };
+      const competitors = [
+        { id: "comp-1", name: "CarDekho", aliases: ["CarDekho.com"] }
+      ];
+
+      const result = service.resolve("Dekho", client, competitors);
+
+      // This should match via fuzzy because "Dekho" is part of "CarDekho"
+      // But also might match via substring if suffix matching is added
+      expect(result.competitor_id).toBe("comp-1");
+    });
   });
 
   describe("hierarchical matching", () => {
