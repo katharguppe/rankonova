@@ -87,9 +87,24 @@ const HEALTHCARE: PromptSeed[] = [
   { text: 'What is the all-inclusive cost for {use_case} procedure at {brand} in {city}?', category: 'cost_inquiry', intent_type: IntentType.price_query, buyer_stage: BuyerStage.decision, priority: 10 },
 ];
 
+// ─── Retail & Grocery (10 prompts) ───────────────────────────────────────────
+
+const RETAIL_GROCERY: PromptSeed[] = [
+  { text: 'Best grocery store in {city}?', category: 'local_discovery', intent_type: IntentType.local_discovery, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: 'Which supermarket has best prices in {city}?', category: 'price_query', intent_type: IntentType.price_query, buyer_stage: BuyerStage.decision, priority: 9 },
+  { text: 'Is {brand} grocery reliable for delivery?', category: 'brand_trust', intent_type: IntentType.trust_signal, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: '{brand} vs competitors for grocery shopping', category: 'comparison', intent_type: IntentType.comparison, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: 'Best online grocery in {city} under {price_range}', category: 'price_query', intent_type: IntentType.price_query, buyer_stage: BuyerStage.decision, priority: 9 },
+  { text: '{brand} grocery customer reviews', category: 'brand_trust', intent_type: IntentType.trust_signal, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: 'Top supermarket chains in India', category: 'segment_discovery', intent_type: IntentType.segment, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: 'Which grocery app is best in {city}?', category: 'local_discovery', intent_type: IntentType.local_discovery, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: '{brand} grocery delivery time {city}', category: 'feature_query', intent_type: IntentType.feature_query, buyer_stage: BuyerStage.decision, priority: 10 },
+  { text: 'Fresh vegetables home delivery {city}', category: 'purchase_intent', intent_type: IntentType.purchase_intent, buyer_stage: BuyerStage.decision, priority: 10 },
+];
+
 export async function seedPrompts(prisma: PrismaClient) {
   const verticals = await prisma.vertical.findMany({
-    where: { slug: { in: ['automotive', 'real-estate', 'hr-services', 'gcc-advisory', 'healthcare'] } },
+    where: { slug: { in: ['automotive', 'real-estate', 'hr-services', 'gcc-advisory', 'healthcare', 'retail-grocery'] } },
     select: { id: true, slug: true },
   });
 
@@ -101,6 +116,7 @@ export async function seedPrompts(prisma: PrismaClient) {
     ['hr-services', HR_SERVICES],
     ['gcc-advisory', GCC_ADVISORY],
     ['healthcare', HEALTHCARE],
+    ['retail-grocery', RETAIL_GROCERY],
   ];
 
   // Backfill: prompts seeded before vertical_id was added land with vertical_id=null.
@@ -131,7 +147,7 @@ export async function seedPrompts(prisma: PrismaClient) {
   }
 
   const existing = await prisma.prompt.count({ where: { tenant_id: null } });
-  if (existing >= 50) {
+  if (existing >= 60) {
     console.log('  Platform prompts already seeded, skipping');
     return;
   }
