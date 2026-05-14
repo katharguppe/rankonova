@@ -28,8 +28,10 @@ In-app and email notifications across all severity tiers. Rate-limited (same typ
 ## PDCA Log
 
 ### Cycle 1
-**Plan:**
-**Approved:** Pending
+**Plan:** 
+Brainstorming completed 2026-05-14. Design: event-driven (EventEmitter2), event handlers route by severity, Critical=immediate email, High=daily digest cron @9AM IST, Medium=weekly brief only. Rate limit (Redis): 4h per type/client, Critical bypasses. In-app: SWR polling /notifications/unread-count every 30s. Nodemailer/SMTP (SendGrid relay). Full design saved to memory/project_task011_brainstorm.md.
+
+**Approved:** Pending (user approval on 5 design sections before spec writing)
 **Do:**
 **Check:**
 **Act:**
