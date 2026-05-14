@@ -283,6 +283,79 @@ describe("ExtractionResolverService", () => {
     });
   });
 
+  describe("fuzzy matching edge cases", () => {
+    it("should NOT fuzzy match single character (minimum 3 chars)", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "XyZ", aliases: [] }];
+
+      const result = service.resolve("a", client, competitors);
+
+      // Should NOT match because "a" is only 1 char, below 3-char minimum for fuzzy
+      // "a" is not a substring of "xyz", so substring match fails, then fuzzy fails on length check
+      expect(result.competitor_id).toBeNull();
+    });
+
+    it("should NOT fuzzy match two character words (minimum 3 chars)", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "CarDekho", aliases: [] }];
+
+      const result = service.resolve("CD", client, competitors);
+
+      expect(result.competitor_id).toBeNull();
+    });
+
+    it("should fuzzy match 3-char typo (Apolo vs Apollo)", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Apollo", aliases: [] }];
+
+      const result = service.resolve("Apolo", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should fuzzy match transposition (alipay vs aLibay)", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Alipay", aliases: [] }];
+
+      const result = service.resolve("aLibay", client, competitors);
+
+      // Levenshtein distance = 1, length = 6, threshold = 20% of 6 = 1.2, so 1 <= 1.2 ✓
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should NOT fuzzy match very different strings (Car vs Bus)", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Bus Company", aliases: [] }];
+
+      const result = service.resolve("Car", client, competitors);
+
+      // Levenshtein("car", "bus") = 3, length = 3, threshold = 20% of 3 = 0.6, so 3 > 0.6 ✗
+      expect(result.competitor_id).toBeNull();
+    });
+
+    it("should NOT fuzzy match across different lengths beyond threshold", () => {
+      const client = { id: "client-1", brand_name: "Our Brand", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "SuperLongCompanyName", aliases: [] }];
+
+      const result = service.resolve("Short", client, competitors);
+
+      expect(result.competitor_id).toBeNull();
+    });
+
+    it("should prioritize exact/substring/partial over fuzzy", () => {
+      const client = { id: "client-1", brand_name: "Nandi Toyota", aliases: [] };
+      const competitors = [
+        { id: "comp-1", name: "CarDekho", aliases: [] },
+        { id: "comp-2", name: "Car", aliases: [] },
+      ];
+
+      const result = service.resolve("Car", client, competitors);
+
+      // Should match comp-2 via exact match before trying fuzzy on comp-1
+      expect(result.competitor_id).toBe("comp-2");
+    });
+  });
+
   describe("Levenshtein distance utility", () => {
     it("should calculate exact match distance as 0", () => {
       const distance = service["levenshteinDistance"]("CardDekho", "CardDekho");
