@@ -216,6 +216,73 @@ describe("ExtractionResolverService", () => {
     });
   });
 
+  describe("conversational mentions (real-world cases)", () => {
+    it("should match Apollo for Apollo Hospitals", () => {
+      const client = { id: "client-1", brand_name: "Our Hospital", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Apollo Hospitals", aliases: ["Apollo", "Apollo Hospital"] }];
+
+      const result = service.resolve("Apollo", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match Honda for Honda Cars", () => {
+      const client = { id: "client-1", brand_name: "Nandi Toyota", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Honda Motor", aliases: ["Honda"] }];
+
+      const result = service.resolve("Honda", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match Max for Max Healthcare", () => {
+      const client = { id: "client-1", brand_name: "Our Hospital", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Max Healthcare", aliases: ["Max Health", "Max"] }];
+
+      const result = service.resolve("Max", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match Infosys for Infosys BPO", () => {
+      const client = { id: "client-1", brand_name: "Our Firm", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Infosys BPO", aliases: ["Infosys", "Infosys Services"] }];
+
+      const result = service.resolve("Infosys", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match EY for Ernst & Young", () => {
+      const client = { id: "client-1", brand_name: "Our Firm", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "EY", aliases: ["Ernst & Young"] }];
+
+      const result = service.resolve("Ernst Young", client, competitors);
+
+      // Should match via substring (Ernst & Young contains "Ernst Young" partially)
+      // or via fuzzy if substring doesn't catch it
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match housing.com with Housing", () => {
+      const client = { id: "client-1", brand_name: "Our Real Estate", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Housing.com", aliases: ["Housing.com", "Housing"] }];
+
+      const result = service.resolve("Housing", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+
+    it("should match Naukri with just Naukri (exact)", () => {
+      const client = { id: "client-1", brand_name: "Our Job Site", aliases: [] };
+      const competitors = [{ id: "comp-1", name: "Naukri", aliases: ["Naukri.com", "Naukri"] }];
+
+      const result = service.resolve("Naukri", client, competitors);
+
+      expect(result.competitor_id).toBe("comp-1");
+    });
+  });
+
   describe("Levenshtein distance utility", () => {
     it("should calculate exact match distance as 0", () => {
       const distance = service["levenshteinDistance"]("CardDekho", "CardDekho");
