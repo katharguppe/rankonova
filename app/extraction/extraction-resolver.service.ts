@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface ResolvedMention {
   is_client_brand: boolean;
@@ -7,6 +7,8 @@ export interface ResolvedMention {
 
 @Injectable()
 export class ExtractionResolverService {
+  private readonly logger = new Logger(ExtractionResolverService.name);
+
   resolve(
     brand: string,
     client: { id: string; brand_name: string; aliases: unknown },
@@ -16,32 +18,49 @@ export class ExtractionResolverService {
 
     // Try exact matches first
     if (this.exactMatch(normalized, client.brand_name, client.aliases)) {
+      this.logger.debug(`[resolve] exact match: "${brand}" → client brand`);
       return { is_client_brand: true, competitor_id: null };
     }
     let exactComp = this.findExactMatch(normalized, competitors);
-    if (exactComp) return { is_client_brand: false, competitor_id: exactComp };
+    if (exactComp) {
+      this.logger.debug(`[resolve] exact match: "${brand}" → competitor ${exactComp}`);
+      return { is_client_brand: false, competitor_id: exactComp };
+    }
 
     // Try substring matches second
     if (this.substringMatch(normalized, client.brand_name, client.aliases)) {
+      this.logger.debug(`[resolve] substring match: "${brand}" → client brand`);
       return { is_client_brand: true, competitor_id: null };
     }
     let substringComp = this.findSubstringMatch(normalized, competitors);
-    if (substringComp) return { is_client_brand: false, competitor_id: substringComp };
+    if (substringComp) {
+      this.logger.debug(`[resolve] substring match: "${brand}" → competitor ${substringComp}`);
+      return { is_client_brand: false, competitor_id: substringComp };
+    }
 
     // Try partial matches third
     if (this.partialMatch(normalized, client.brand_name, client.aliases)) {
+      this.logger.debug(`[resolve] partial match: "${brand}" → client brand`);
       return { is_client_brand: true, competitor_id: null };
     }
     let partialComp = this.findPartialMatch(normalized, competitors);
-    if (partialComp) return { is_client_brand: false, competitor_id: partialComp };
+    if (partialComp) {
+      this.logger.debug(`[resolve] partial match: "${brand}" → competitor ${partialComp}`);
+      return { is_client_brand: false, competitor_id: partialComp };
+    }
 
     // Try fuzzy matches fourth (conservative fallback only)
     if (this.fuzzyMatch(normalized, client.brand_name, client.aliases)) {
+      this.logger.debug(`[resolve] fuzzy match: "${brand}" → client brand`);
       return { is_client_brand: true, competitor_id: null };
     }
     let fuzzyComp = this.findFuzzyMatch(normalized, competitors);
-    if (fuzzyComp) return { is_client_brand: false, competitor_id: fuzzyComp };
+    if (fuzzyComp) {
+      this.logger.debug(`[resolve] fuzzy match: "${brand}" → competitor ${fuzzyComp}`);
+      return { is_client_brand: false, competitor_id: fuzzyComp };
+    }
 
+    this.logger.warn(`[resolve] no match found: "${brand}"`);
     return { is_client_brand: false, competitor_id: null };
   }
 
