@@ -180,4 +180,31 @@ describe("ExtractionResolverService", () => {
       expect(result.competitor_id).toBe("comp-1");
     });
   });
+
+  describe("Levenshtein distance utility", () => {
+    it("should calculate exact match distance as 0", () => {
+      const distance = service["levenshteinDistance"]("CardDekho", "CardDekho");
+      expect(distance).toBe(0);
+    });
+
+    it("should calculate single character difference", () => {
+      const distance = service["levenshteinDistance"]("Car", "Bar");
+      expect(distance).toBe(1);
+    });
+
+    it("should calculate transposition distance", () => {
+      const distance = service["levenshteinDistance"]("Apollo", "Apolo");
+      expect(distance).toBe(1);
+    });
+
+    it("should calculate partial word distance", () => {
+      const distance = service["levenshteinDistance"]("Toyota", "Toy");
+      expect(distance).toBe(3);
+    });
+
+    it("should handle empty strings", () => {
+      const distance = service["levenshteinDistance"]("", "Car");
+      expect(distance).toBe(3);
+    });
+  });
 });

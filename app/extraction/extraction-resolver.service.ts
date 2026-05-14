@@ -99,4 +99,47 @@ export class ExtractionResolverService {
     if (minLength < 3) return false;
     return normalized.substring(0, minLength) === term.substring(0, minLength);
   }
+
+  /**
+   * Calculate Levenshtein distance between two strings.
+   * Used for fuzzy matching as conservative fallback (only when distance <= threshold).
+   * @param a First string (normalized)
+   * @param b Second string (normalized)
+   * @returns Edit distance (0 = identical, higher = more different)
+   * @example
+   * levenshteinDistance("Apollo", "Apolo") // 1 (transposition)
+   * levenshteinDistance("Car", "CarDekho") // 6 (insertions)
+   */
+  private levenshteinDistance(a: string, b: string): number {
+    const m = a.length;
+    const n = b.length;
+
+    // Base cases: if one string is empty, distance = other's length
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    // Create DP table: dp[i][j] = distance between a[0..i-1] and b[0..j-1]
+    const dp: number[][] = Array(m + 1)
+      .fill(null)
+      .map(() => Array(n + 1).fill(0));
+
+    // Initialize base cases
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    // Fill DP table
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (a[i - 1] === b[j - 1]) {
+          // Characters match, no operation needed
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          // Take minimum of three operations: insert, delete, substitute
+          dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+    }
+
+    return dp[m][n];
+  }
 }
