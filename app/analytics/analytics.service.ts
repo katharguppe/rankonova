@@ -39,6 +39,13 @@ export class AnalyticsService {
     return this.anomaly.detectAnomalies(clientId, tenantId);
   }
 
+  async invalidateClientCache(clientId: string): Promise<void> {
+    await Promise.all([
+      this.citation.invalidateClientCache(clientId),
+      this.dashboard.invalidateClientCache(clientId),
+    ]);
+  }
+
   async getSentiment(clientId: string): Promise<SentimentAnalysis> {
     return this.dashboard.getSentiment(clientId);
   }

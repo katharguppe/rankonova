@@ -35,7 +35,7 @@ export class AnalyticsCitationService {
       byEngine,
       byIntent,
     };
-    await this.redis.setex(`citation:${clientId}:overview`, TTL, JSON.stringify(overview));
+    this.redis.setex(`citation:${clientId}:overview`, TTL, JSON.stringify(overview)).catch(() => undefined);
     return overview;
   }
 
@@ -44,7 +44,7 @@ export class AnalyticsCitationService {
     if (cached !== null) return parseFloat(cached);
 
     const rate = await this.computeRateInHourRange(clientId, 24, 0);
-    await this.redis.setex(`citation:${clientId}:24h`, TTL, rate.toString());
+    this.redis.setex(`citation:${clientId}:24h`, TTL, rate.toString()).catch(() => undefined);
     return rate;
   }
 
@@ -53,7 +53,7 @@ export class AnalyticsCitationService {
     if (cached !== null) return parseFloat(cached);
 
     const rate = await this.computeRateInHourRange(clientId, 48, 24);
-    await this.redis.setex(`citation:${clientId}:24h:prev`, TTL, rate.toString());
+    this.redis.setex(`citation:${clientId}:24h:prev`, TTL, rate.toString()).catch(() => undefined);
     return rate;
   }
 
@@ -62,7 +62,7 @@ export class AnalyticsCitationService {
     if (cached !== null) return parseFloat(cached);
 
     const rate = await this.computeCompetitorRateInHourRange(clientId, competitorId, 24, 0);
-    await this.redis.setex(`citation:${clientId}:comp:${competitorId}:24h`, TTL, rate.toString());
+    this.redis.setex(`citation:${clientId}:comp:${competitorId}:24h`, TTL, rate.toString()).catch(() => undefined);
     return rate;
   }
 
@@ -71,8 +71,18 @@ export class AnalyticsCitationService {
     if (cached !== null) return parseFloat(cached);
 
     const rate = await this.computeCompetitorRateInHourRange(clientId, competitorId, 48, 24);
-    await this.redis.setex(`citation:${clientId}:comp:${competitorId}:24h:prev`, TTL, rate.toString());
+    this.redis.setex(`citation:${clientId}:comp:${competitorId}:24h:prev`, TTL, rate.toString()).catch(() => undefined);
     return rate;
+  }
+
+  async invalidateClientCache(clientId: string): Promise<void> {
+    await this.redis
+      .del(
+        `citation:${clientId}:overview`,
+        `citation:${clientId}:24h`,
+        `citation:${clientId}:24h:prev`,
+      )
+      .catch(() => undefined);
   }
 
   async computeWindowRate(clientId: string, days: number): Promise<number> {

@@ -107,7 +107,7 @@ export class AnalyticsDashboardService {
       snippets: snippetRows.map(r => ({ text: r.text, sentiment: r.sentiment, brand_name: r.brand_name })),
     };
 
-    await this.redis.setex(`analytics:${clientId}:sentiment`, TTL, JSON.stringify(result));
+    this.redis.setex(`analytics:${clientId}:sentiment`, TTL, JSON.stringify(result)).catch(() => undefined);
     return result;
   }
 
@@ -152,7 +152,7 @@ export class AnalyticsDashboardService {
       };
     });
 
-    await this.redis.setex(`analytics:${clientId}:prompts`, TTL, JSON.stringify(result));
+    this.redis.setex(`analytics:${clientId}:prompts`, TTL, JSON.stringify(result)).catch(() => undefined);
     return result;
   }
 
@@ -191,7 +191,7 @@ export class AnalyticsDashboardService {
       };
     });
 
-    await this.redis.setex(`analytics:${clientId}:engines`, TTL, JSON.stringify(result));
+    this.redis.setex(`analytics:${clientId}:engines`, TTL, JSON.stringify(result)).catch(() => undefined);
     return result;
   }
 
@@ -220,7 +220,7 @@ export class AnalyticsDashboardService {
       .map(r => ({ url: r.url, domain: this.extractDomain(r.url), mention_count: parseInt(r.mention_count, 10) }))
       .filter(r => r.url && r.url !== 'null' && r.domain !== '');
 
-    await this.redis.setex(`analytics:${clientId}:sources`, TTL, JSON.stringify(result));
+    this.redis.setex(`analytics:${clientId}:sources`, TTL, JSON.stringify(result)).catch(() => undefined);
     return result;
   }
 
@@ -260,8 +260,20 @@ export class AnalyticsDashboardService {
       };
     });
 
-    await this.redis.setex(`analytics:${clientId}:geo`, TTL, JSON.stringify(result));
+    this.redis.setex(`analytics:${clientId}:geo`, TTL, JSON.stringify(result)).catch(() => undefined);
     return result;
+  }
+
+  async invalidateClientCache(clientId: string): Promise<void> {
+    await this.redis
+      .del(
+        `analytics:${clientId}:sentiment`,
+        `analytics:${clientId}:prompts`,
+        `analytics:${clientId}:engines`,
+        `analytics:${clientId}:sources`,
+        `analytics:${clientId}:geo`,
+      )
+      .catch(() => undefined);
   }
 
   private extractDomain(url: string): string {

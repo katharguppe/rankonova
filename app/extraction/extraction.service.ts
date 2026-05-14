@@ -93,6 +93,10 @@ export class ExtractionService {
     await this.writer.upsertMany(toWrite);
 
     this.analyticsService
+      .invalidateClientCache(clientId)
+      .catch((err: Error) => this.logger.error(`cache invalidation failed for ${clientId}: ${err.message}`));
+
+    this.analyticsService
       .detectAnomalies(clientId, tenantId)
       .catch((err: Error) => this.logger.error(`anomaly detection failed for ${clientId}: ${err.message}`));
 
