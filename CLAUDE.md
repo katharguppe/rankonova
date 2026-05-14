@@ -7,6 +7,28 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
 ## Current Phase: 10 Complete ✅ (2026-05-13, pending live Razorpay API keys from Sir)
   Final commit: e3114ba3 — trial auto-start wired to AuthService.register (Phase 10 exit criterion met)
 
+## Competitor Extraction Pipeline ✅ (2026-05-14)
+  TASK-004 follow-up: Full CRUD, seeding, hierarchical matching for competitor resolution
+  
+  Commit           : 87facba1 (main)
+  Completion date  : 2026-05-14
+  
+  CompetitorsService    : Full CRUD (create, list, update, soft-delete) + idempotent seeding
+  CompetitorsController : REST endpoints with tenant scoping & role-based access (POST/GET/PATCH/DELETE)
+  Seed data             : 50 baseline competitors, 10 per vertical (automotive, real_estate, hr_services, gcc_advisory, healthcare)
+  ExtractionResolver    : Hierarchical matching (exact → substring → partial alias) for robust brand resolution
+  Modules               : CompetitorsModule imports PrismaModule; VerticalsModule imports CompetitorsModule
+  
+  Test coverage         : 15 service unit tests + 17 resolver unit tests + 6 integration tests (38 total)
+  Test results          : 204/204 passing (all suites, no regressions)
+  Build status          : ✅ Production build succeeds (0 tsc errors)
+  
+  Key features:
+    - Competitors auto-resolve during extraction via hierarchical matching
+    - Tenant-scoped CRUD with authorization (super_admin, tenant_admin, client_manager)
+    - Resilient seeding: continues on partial failure, skips if 10+ competitors exist
+    - Real-world test cases: automotive, real estate, HR, healthcare brands
+
 ## Prompt Library (2026-05-13)
   Platform prompts trimmed to 10 per vertical (was 64) as per Sir's instruction.
   Selection: 8 × priority=10 (one per intent type, decision stage) + 2 × priority=9 (purchase_intent + comparison).
