@@ -18,7 +18,7 @@ export class CompetitorsService {
    * @throws ForbiddenException if cross-tenant access
    * @throws NotFoundException if vertical not found
    * @throws ConflictException if duplicate or max competitors reached
-   * @throws BadRequestException if invalid aliases
+   * @throws BadRequestException if invalid aliases or empty name
    */
   async create(
     tenantId: string,
@@ -27,6 +27,11 @@ export class CompetitorsService {
     aliases?: string[],
     websiteUrl?: string,
   ) {
+    // Validate name is not empty or whitespace-only
+    if (!name?.trim()) {
+      throw new BadRequestException('Competitor name cannot be empty');
+    }
+
     // Verify vertical exists and belongs to system
     const vertical = await this.prisma.vertical.findFirst({
       where: { id: verticalId, is_active: true },
@@ -110,12 +115,7 @@ export class CompetitorsService {
     },
   ) {
     // Verify ownership
-    const competitor = await this.prisma.competitor.findFirst({
-      where: { id, tenant_id: tenantId },
-    });
-    if (!competitor) {
-      throw new ForbiddenException('Competitor not found or access denied');
-    }
+    await this.findCompetitorByIdAndTenant(id, tenantId);
 
     // Validate aliases if provided
     let cleanedAliases: string[] | undefined;
@@ -142,12 +142,7 @@ export class CompetitorsService {
    */
   async delete(id: string, tenantId: string) {
     // Verify ownership
-    const competitor = await this.prisma.competitor.findFirst({
-      where: { id, tenant_id: tenantId },
-    });
-    if (!competitor) {
-      throw new ForbiddenException('Competitor not found or access denied');
-    }
+    await this.findCompetitorByIdAndTenant(id, tenantId);
 
     return this.prisma.competitor.update({
       where: { id },
@@ -245,6 +240,22 @@ export class CompetitorsService {
       `[CompetitorsService.seed] Seeded ${created.length}/${baseline.length} competitors for vertical ${verticalId}`,
     );
     return created;
+  }
+
+  /**
+   * Helper: find competitor by id and verify tenant ownership
+   * @throws ForbiddenException if competitor not found or tenant mismatch
+   */
+  private async findCompetitorByIdAndTenant(
+    id: string,
+    tenantId: string,
+  ): Promise<void> {
+    const competitor = await this.prisma.competitor.findFirst({
+      where: { id, tenant_id: tenantId },
+    });
+    if (!competitor) {
+      throw new ForbiddenException('Competitor not found or access denied');
+    }
   }
 
   /**
