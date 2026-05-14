@@ -1,288 +1,272 @@
-// app/competitors/seed/competitors.seed.ts
-// Baseline competitor data for all verticals
-
-export const BASELINE_COMPETITORS: Record<
+﻿export const BASELINE_COMPETITORS: Record<
   string,
-  Array<{
-    name: string;
-    aliases: string[];
-    websiteUrl?: string;
-  }>
+  Array<{ name: string; aliases: string[]; websiteUrl?: string }>
 > = {
   automotive: [
     {
       name: 'CarDekho',
-      aliases: ['Car Dekho', 'cardekho.com'],
+      aliases: ['CarDekho.com', 'CarDekho'],
       websiteUrl: 'https://www.cardekho.com',
     },
     {
       name: 'ZigWheels',
-      aliases: ['Zigwheels', 'zigwheels.com'],
+      aliases: ['ZigWheels.com', 'ZigWheels'],
       websiteUrl: 'https://www.zigwheels.com',
     },
     {
       name: 'Team-BHP',
-      aliases: ['TeamBHP', 'team bhp', 'teambhp.com'],
-      websiteUrl: 'https://www.team-bhp.com',
+      aliases: ['TeamBHP', 'Team BHP'],
+      websiteUrl: 'https://www.teambhp.com',
     },
     {
       name: 'CarWale',
-      aliases: ['Car Wale', 'carwale.com'],
+      aliases: ['CarWale.com', 'CarWale'],
       websiteUrl: 'https://www.carwale.com',
     },
     {
       name: 'Cars24',
-      aliases: ['CARS24', 'cars24.com'],
+      aliases: ['Cars24.com', 'Cars24'],
       websiteUrl: 'https://www.cars24.com',
     },
     {
       name: 'Spinny',
-      aliases: ['Spinny.com', 'spinny car'],
+      aliases: ['Spinny.com', 'Spinny'],
       websiteUrl: 'https://www.spinny.com',
     },
     {
       name: 'OLX',
-      aliases: ['OLX India', 'olx.in'],
+      aliases: ['OLX.in', 'OLX India'],
       websiteUrl: 'https://www.olx.in',
     },
     {
       name: 'AutocarIndia',
-      aliases: ['Autocar India', 'autocarindia.com'],
+      aliases: ['Autocar India', 'Autocar'],
       websiteUrl: 'https://www.autocarindia.com',
     },
     {
       name: 'BikePC',
-      aliases: ['Bike PC', 'bikepc.com'],
+      aliases: ['BikePC.com', 'BikePC'],
       websiteUrl: 'https://www.bikepc.com',
     },
     {
       name: 'Vroom',
-      aliases: ['Vroom India', 'vroom.com'],
+      aliases: ['Vroom.com', 'Vroom'],
       websiteUrl: 'https://www.vroom.com',
     },
   ],
-  'real-estate': [
+  real_estate: [
     {
       name: '99acres',
-      aliases: ['99Acres', '99 acres', '99acres.com'],
+      aliases: ['99acres.com', '99 Acres'],
       websiteUrl: 'https://www.99acres.com',
     },
     {
       name: 'MagicBricks',
-      aliases: ['Magic Bricks', 'magicbricks.com'],
+      aliases: ['MagicBricks.com', 'Magic Bricks'],
       websiteUrl: 'https://www.magicbricks.com',
     },
     {
       name: 'Housing.com',
-      aliases: ['Housing', 'housing.com'],
+      aliases: ['Housing.com', 'Housing'],
       websiteUrl: 'https://www.housing.com',
     },
     {
       name: 'NoBroker',
-      aliases: ['No Broker', 'nobroker.in'],
+      aliases: ['NoBroker.in', 'NoBroker'],
       websiteUrl: 'https://www.nobroker.in',
     },
     {
       name: 'CommonFloor',
-      aliases: ['Common Floor', 'commonfloor.com'],
+      aliases: ['CommonFloor.com', 'CommonFloor'],
       websiteUrl: 'https://www.commonfloor.com',
     },
     {
       name: 'Squareyards',
-      aliases: ['Square Yards', 'squareyards.com'],
+      aliases: ['Squareyards.com', 'Squareyards'],
       websiteUrl: 'https://www.squareyards.com',
     },
     {
       name: 'PropTiger',
-      aliases: ['Prop Tiger', 'proptiger.com'],
+      aliases: ['PropTiger.com', 'PropTiger'],
       websiteUrl: 'https://www.proptiger.com',
     },
     {
       name: 'Makaan',
-      aliases: ['Makaan.com', 'makaan property'],
+      aliases: ['Makaan.com', 'Makaan'],
       websiteUrl: 'https://www.makaan.com',
     },
     {
       name: 'Sulekha',
-      aliases: ['Sulekha.com', 'sulekha property'],
+      aliases: ['Sulekha.com', 'Sulekha'],
       websiteUrl: 'https://www.sulekha.com',
     },
     {
       name: 'IndiaProperty',
-      aliases: ['India Property', 'indiaproperty.com'],
+      aliases: ['IndiaProperty.com', 'India Property'],
       websiteUrl: 'https://www.indiaproperty.com',
     },
   ],
-  'hr-services': [
+  hr_services: [
     {
       name: 'Naukri',
-      aliases: ['Naukri.com', 'naukri jobs'],
+      aliases: ['Naukri.com', 'Naukri'],
       websiteUrl: 'https://www.naukri.com',
     },
     {
       name: 'LinkedIn',
-      aliases: ['LinkedIn Jobs', 'linkedin.com'],
+      aliases: ['LinkedIn.com', 'LinkedIn Jobs'],
       websiteUrl: 'https://www.linkedin.com',
     },
     {
       name: 'AmbitionBox',
-      aliases: ['Ambition Box', 'ambitionbox.com'],
+      aliases: ['AmbitionBox.com', 'AmbitionBox'],
       websiteUrl: 'https://www.ambitionbox.com',
     },
     {
       name: 'Glassdoor',
-      aliases: ['Glassdoor India', 'glassdoor.co.in'],
-      websiteUrl: 'https://www.glassdoor.co.in',
+      aliases: ['Glassdoor.com', 'Glassdoor'],
+      websiteUrl: 'https://www.glassdoor.com',
     },
     {
       name: 'Indeed',
-      aliases: ['Indeed Jobs', 'indeed.co.in'],
-      websiteUrl: 'https://www.indeed.co.in',
+      aliases: ['Indeed.com', 'Indeed'],
+      websiteUrl: 'https://www.indeed.com',
     },
     {
       name: 'TeamLease',
-      aliases: ['Team Lease', 'teamlease.com'],
+      aliases: ['TeamLease.com', 'TeamLease'],
       websiteUrl: 'https://www.teamlease.com',
     },
     {
       name: 'Randstad',
-      aliases: ['Randstad India', 'randstad.co.in'],
-      websiteUrl: 'https://www.randstad.co.in',
+      aliases: ['Randstad.in', 'Randstad'],
+      websiteUrl: 'https://www.randstad.in',
     },
     {
       name: 'Quess',
-      aliases: ['Quess Corp', 'quesstalent.com'],
-      websiteUrl: 'https://www.quesstalent.com',
+      aliases: ['Quess.com', 'Quess Corp'],
+      websiteUrl: 'https://www.quess.com',
     },
     {
       name: 'Manpower',
-      aliases: ['Manpower Group', 'manpower.co.in'],
-      websiteUrl: 'https://www.manpower.co.in',
+      aliases: ['Manpower.com', 'Manpower Group'],
+      websiteUrl: 'https://www.manpower.com',
     },
     {
       name: 'ABC Consultants',
-      aliases: ['ABC Consultants India', 'abc-consultants.com'],
-      websiteUrl: 'https://www.abc-consultants.com',
+      aliases: ['ABC Consultants', 'ABC Consulting'],
+      websiteUrl: 'https://www.abcconsultants.com',
     },
   ],
-  'gcc-advisory': [
+  gcc_advisory: [
     {
       name: 'NASSCOM',
-      aliases: ['NASSCOM India', 'nasscom.in'],
+      aliases: ['NASSCOM.in', 'NASSCOM India'],
       websiteUrl: 'https://www.nasscom.in',
     },
     {
       name: 'Zinnov',
-      aliases: ['Zinnov India', 'zinnov.com'],
+      aliases: ['Zinnov.com', 'Zinnov'],
       websiteUrl: 'https://www.zinnov.com',
     },
     {
       name: 'Everest Group',
-      aliases: ['Everest Group Research', 'everestgrp.com'],
+      aliases: ['EverestGroup.com', 'Everest'],
       websiteUrl: 'https://www.everestgrp.com',
     },
     {
       name: 'ANSR',
-      aliases: ['ANSR Consulting', 'ansr.com'],
+      aliases: ['ANSR.com', 'ANSR Research'],
       websiteUrl: 'https://www.ansr.com',
     },
     {
       name: 'Deloitte',
-      aliases: ['Deloitte India', 'deloitte.com'],
+      aliases: ['Deloitte.com', 'Deloitte India'],
       websiteUrl: 'https://www.deloitte.com',
     },
     {
       name: 'EY',
-      aliases: ['Ernst & Young', 'ey.com'],
+      aliases: ['EY.com', 'Ernst & Young'],
       websiteUrl: 'https://www.ey.com',
     },
     {
       name: 'KPMG',
-      aliases: ['KPMG India', 'kpmg.com'],
+      aliases: ['KPMG.com', 'KPMG India'],
       websiteUrl: 'https://www.kpmg.com',
     },
     {
       name: 'PwC',
-      aliases: ['PricewaterhouseCoopers', 'pwc.in'],
-      websiteUrl: 'https://www.pwc.in',
+      aliases: ['PwC.com', 'PricewaterhouseCoopers'],
+      websiteUrl: 'https://www.pwc.com',
     },
     {
       name: 'Accenture',
-      aliases: ['Accenture India', 'accenture.com'],
+      aliases: ['Accenture.com', 'Accenture India'],
       websiteUrl: 'https://www.accenture.com',
     },
     {
       name: 'Infosys BPO',
-      aliases: ['Infosys', 'infosys.com'],
+      aliases: ['Infosys', 'Infosys BPO'],
       websiteUrl: 'https://www.infosys.com',
     },
   ],
   healthcare: [
     {
       name: 'Apollo Hospitals',
-      aliases: ['Apollo', 'apollohospitals.com'],
+      aliases: ['Apollo', 'Apollo Hospital'],
       websiteUrl: 'https://www.apollohospitals.com',
     },
     {
       name: 'Max Healthcare',
-      aliases: ['Max Health', 'maxhealthcare.in'],
+      aliases: ['Max Health', 'Max'],
       websiteUrl: 'https://www.maxhealthcare.in',
     },
     {
       name: 'Fortis',
-      aliases: ['Fortis Hospital', 'fortis.com'],
-      websiteUrl: 'https://www.fortis.com',
+      aliases: ['Fortis Health', 'Fortis Hospitals'],
+      websiteUrl: 'https://www.fortishealth.com',
     },
     {
       name: 'Columbia Asia',
-      aliases: ['Columbia', 'columbiaasiahospitals.com'],
-      websiteUrl: 'https://www.columbiaasiahospitals.com',
+      aliases: ['Columbia', 'Columbia Asia Hospitals'],
+      websiteUrl: 'https://www.columbiaasia.com',
     },
     {
       name: 'Manipal',
-      aliases: ['Manipal Hospital', 'manipalhospitals.com'],
+      aliases: ['Manipal Hospitals', 'Manipal Health'],
       websiteUrl: 'https://www.manipalhospitals.com',
     },
     {
       name: 'Narayana Health',
-      aliases: ['Narayana', 'narayanahealth.org'],
+      aliases: ['Narayana', 'Narayana Hospitals'],
       websiteUrl: 'https://www.narayanahealth.org',
     },
     {
       name: 'Medanta',
-      aliases: ['Medanta Hospital', 'medanta.org'],
+      aliases: ['Medanta Hospitals', 'Medanta'],
       websiteUrl: 'https://www.medanta.org',
     },
     {
       name: 'Aster',
-      aliases: ['Aster Hospitals', 'asterdm.com'],
+      aliases: ['Aster Hospitals', 'Aster DM'],
       websiteUrl: 'https://www.asterdm.com',
     },
     {
       name: 'BLK',
-      aliases: ['BLK Hospital', 'blkhospital.com'],
+      aliases: ['BLK Hospital', 'BLK Super Specialty'],
       websiteUrl: 'https://www.blkhospital.com',
     },
     {
       name: 'Lilavati',
-      aliases: ['Lilavati Hospital', 'lilavati.co.in'],
+      aliases: ['Lilavati Hospital', 'Lilavati'],
       websiteUrl: 'https://www.lilavati.co.in',
     },
   ],
 };
 
-/**
- * Look up baseline competitors for a given vertical
- * @param verticalName - vertical slug (e.g., "automotive", "real-estate")
- * @returns array of competitors or empty array if vertical not found
- */
 export function getBaselineCompetitorsForVertical(
   verticalName: string,
-): Array<{
-  name: string;
-  aliases: string[];
-  websiteUrl?: string;
-}> {
-  const normalizedName = verticalName.toLowerCase().trim();
-  return BASELINE_COMPETITORS[normalizedName] ?? [];
+): Array<{ name: string; aliases: string[]; websiteUrl?: string }> {
+  const key = verticalName.toLowerCase().replace(/\s+/g, '_');
+  return BASELINE_COMPETITORS[key] || [];
 }

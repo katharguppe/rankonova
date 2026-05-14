@@ -6,6 +6,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PromptsService } from '../prompts/prompts.service';
+import { CompetitorsService } from '../competitors/competitors.service';
 import { CreateVerticalDto } from './dto/create-vertical.dto';
 import { UpdateVerticalDto } from './dto/update-vertical.dto';
 import { CloneVerticalDto } from './dto/clone-vertical.dto';
@@ -15,6 +16,7 @@ export class VerticalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly promptsService: PromptsService,
+    private readonly competitorsService: CompetitorsService,
   ) {}
 
   findAll() {
