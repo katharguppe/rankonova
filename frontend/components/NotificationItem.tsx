@@ -79,15 +79,6 @@ export function NotificationItem(props: NotificationItemProps) {
             <time className="text-xs text-slate-400">
               {formatTime(props.notification.createdAt)}
             </time>
-            {props.notification.deepLink && (
-              <a
-                href={props.notification.deepLink}
-                className="text-xs text-blue-600 font-medium hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                View
-              </a>
-            )}
           </div>
         </div>
 
