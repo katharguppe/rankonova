@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
+import { PrismaService } from '../prisma/prisma.service';
 import { NotificationResponseDto, DigestEmailPayload } from '../notifications/notifications.types';
 
 @Injectable()
@@ -9,7 +10,7 @@ export class MailService {
   private readonly appUrl: string;
   private readonly logger = new Logger(MailService.name);
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.transporter = createTransport({
       host: process.env['SMTP_HOST'],
       port: parseInt(process.env['SMTP_PORT'] ?? '587'),
@@ -94,24 +95,39 @@ export class MailService {
    */
   async sendNotificationEmail(
     notification: NotificationResponseDto,
-    _tenantId: string,
+    tenantId: string,
   ): Promise<void> {
-    // In a production system, would fetch tenant branding and client email here
-    // For now, using placeholder email from notification
-    const to = 'support@aeo-suite.local'; // TODO: Get from client profile
-
-    const html = this.renderNotificationEmail(notification);
-
-    await this.transporter.sendMail({
-      from: this.from,
-      to,
-      subject: notification.title,
-      html,
+    // Fetch tenant for billing email and branding
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
     });
 
-    this.logger.log(
-      `Sent notification email: type=${notification.type}, to=${to}`,
-    );
+    if (!tenant) {
+      this.logger.warn(`Tenant ${tenantId} not found for notification email`);
+      return;
+    }
+
+    const to = tenant.billing_email;
+
+    const html = this.renderNotificationEmail(notification, tenant);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject: notification.title,
+        html,
+      });
+
+      this.logger.log(
+        `Sent notification email: type=${notification.type}, severity=${notification.severity}, to=${to}`,
+      );
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : JSON.stringify(err);
+      this.logger.error(`Failed to send notification email: ${errorMessage}`);
+      throw err;
+    }
   }
 
   /**
@@ -120,28 +136,50 @@ export class MailService {
    * Groups multiple notifications per client into a single email
    */
   async sendDigestEmail(payload: DigestEmailPayload): Promise<void> {
-    // In a production system, would fetch client email and tenant branding here
-    const to = 'support@aeo-suite.local'; // TODO: Get from client profile
+    const { clientId, tenantId, notifications, sentAt } = payload;
 
-    const html = this.renderDigestEmail(payload);
-
-    await this.transporter.sendMail({
-      from: this.from,
-      to,
-      subject: `AEO Suite Daily Digest — ${payload.notifications.length} notifications`,
-      html,
+    // Fetch tenant for billing email and branding
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
     });
 
-    this.logger.log(
-      `Sent digest email: clientId=${payload.clientId}, tenantId=${payload.tenantId}, notifications=${payload.notifications.length}`,
-    );
+    if (!tenant) {
+      this.logger.warn(`Tenant ${tenantId} not found for digest email`);
+      return;
+    }
+
+    const to = tenant.billing_email;
+
+    const html = this.renderDigestEmail(notifications, tenant, sentAt);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject: `AEO Suite Daily Digest — ${sentAt.toDateString()}`,
+        html,
+      });
+
+      this.logger.log(
+        `Sent digest email: clientId=${clientId}, tenantId=${tenantId}, notifications=${notifications.length}, to=${to}`,
+      );
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : JSON.stringify(err);
+      this.logger.error(`Failed to send digest email: ${errorMessage}`);
+      throw err;
+    }
   }
 
   /**
    * Render HTML email for digest batch
    */
-  private renderDigestEmail(payload: DigestEmailPayload): string {
-    const notifItems = payload.notifications
+  private renderDigestEmail(
+    notifications: NotificationResponseDto[],
+    tenant: any,
+    sentAt: Date,
+  ): string {
+    const notifItems = notifications
       .map(
         (n) => `
       <div style="border-left: 4px solid #f57c00; padding: 15px; margin: 10px 0; background-color: #fafafa;">
@@ -169,12 +207,12 @@ export class MailService {
           <div class="container">
             <div class="header">
               <h1>Your Daily Digest</h1>
-              <p class="digest-count">${payload.notifications.length} notification${payload.notifications.length > 1 ? 's' : ''}</p>
+              <p class="digest-count">${notifications.length} notification${notifications.length > 1 ? 's' : ''}</p>
             </div>
             <div style="padding: 20px;">
               ${notifItems}
               <div class="footer">
-                <p>This digest was sent on ${payload.sentAt.toLocaleString()}.</p>
+                <p>This digest was sent on ${sentAt.toLocaleString()}.</p>
                 <p><a href="${this.appUrl}/notifications" style="color: #0066cc;">View all notifications →</a></p>
               </div>
             </div>
@@ -187,7 +225,10 @@ export class MailService {
   /**
    * Render HTML email for a notification
    */
-  private renderNotificationEmail(notification: NotificationResponseDto): string {
+  private renderNotificationEmail(
+    notification: NotificationResponseDto,
+    tenant: any,
+  ): string {
     return `
       <html>
         <head>
