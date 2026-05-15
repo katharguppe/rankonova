@@ -6,7 +6,7 @@ export async function fetchNotifications(
   offset: number = 0
 ): Promise<NotificationsResponse> {
   const res = await fetch(
-    `/api/notifications?clientId=${encodeURIComponent(clientId)}&limit=${limit}&offset=${offset}`
+    `/api/notifications?clientId=${encodeURIComponent(clientId)}`
   );
   if (!res.ok) throw new Error(`Fetch notifications failed: ${res.status}`);
   return res.json();

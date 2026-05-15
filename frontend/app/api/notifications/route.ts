@@ -9,14 +9,11 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
-  const limit = searchParams.get('limit') ?? '50';
-  const offset = searchParams.get('offset') ?? '0';
-
   if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 });
 
   try {
     const res = await fetch(
-      `${API_URL}/notifications?clientId=${encodeURIComponent(clientId)}&limit=${limit}&offset=${offset}`,
+      `${API_URL}/notifications?clientId=${encodeURIComponent(clientId)}`,
       {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',

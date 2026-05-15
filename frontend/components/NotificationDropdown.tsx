@@ -86,14 +86,6 @@ export function NotificationDropdown(props: NotificationDropdownProps) {
           )}
         </div>
 
-        {/* Footer */}
-        {(data?.total ?? 0) > 0 && (
-          <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 rounded-b-xl text-center">
-            <button className="text-sm text-blue-600 font-medium hover:text-blue-700">
-              View All ({data?.total || 0})
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
