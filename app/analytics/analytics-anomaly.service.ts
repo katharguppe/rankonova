@@ -62,11 +62,11 @@ export class AnalyticsAnomalyService {
 
     this.logger.warn(`[anomaly] citation_drop clientId=${clientId} delta=${delta.toFixed(1)}`);
 
-    this.eventEmitter.emit('analytics.citation_drop', {
+    this.eventEmitter.emit('citation.drop', {
       clientId,
       tenantId,
-      delta,
-    } satisfies CitationDropEvent);
+      citationDropPoints: Math.abs(delta),
+    });
   }
 
   private async checkCompetitorSpikes(clientId: string, tenantId: string): Promise<void> {
@@ -118,6 +118,13 @@ export class AnalyticsAnomalyService {
     });
 
     this.logger.warn(`[anomaly] competitor_spike clientId=${clientId} competitor=${competitorName} delta=+${delta.toFixed(1)}`);
+
+    this.eventEmitter.emit('competitor.spike', {
+      clientId,
+      tenantId,
+      spikePoints: delta,
+      competitorName,
+    });
   }
 
   private async setNotifRateLimit(clientId: string, type: string): Promise<boolean> {

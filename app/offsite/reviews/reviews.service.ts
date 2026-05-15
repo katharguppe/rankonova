@@ -119,6 +119,29 @@ export class ReviewsService {
       });
     }
 
+    // Check for unanswered negative reviews >24h old
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const oldNegativeReviews = await this.prisma.reviewSnapshot.findFirst({
+      where: {
+        client_id: clientId,
+        is_negative: true,
+        response_status: ResponseStatus.pending,
+        detected_at: {
+          lt: twentyFourHoursAgo,
+        },
+      },
+      orderBy: { detected_at: 'asc' },
+    });
+
+    if (oldNegativeReviews) {
+      this.eventEmitter.emit('review.negative.24h', {
+        clientId,
+        tenantId: client.tenant_id,
+        snapshotId: oldNegativeReviews.id,
+        timestamp: new Date(),
+      });
+    }
+
     return audits;
   }
 
