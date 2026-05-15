@@ -3,15 +3,17 @@
  * - CRITICAL: Sent immediately via email + in-app
  * - HIGH: Batched in daily digest at 9 AM IST
  * - MEDIUM: Routed to weekly brief only
+ * - LOW: Low-priority informational notifications
  */
 export enum NotificationSeverity {
   CRITICAL = 'critical',
   HIGH = 'high',
   MEDIUM = 'medium',
+  LOW = 'low',
 }
 
 /**
- * Notification types - 12 total across three severity levels
+ * Notification types - 13 total across three severity levels
  *
  * CRITICAL (5 types):
  * - CITATION_DROP: Citation rate drops >10 points in 24h
@@ -53,30 +55,30 @@ export enum NotificationType {
 
 /**
  * DTO for creating a notification
- * Required: clientId, type, severity, title
- * Optional: body, deepLink
+ * Required: type, severity, title, body
+ * Optional: clientId, deepLink
  */
 export interface CreateNotificationDto {
-  clientId: string;
+  clientId?: string;
   type: NotificationType;
   severity: NotificationSeverity;
   title: string;
-  body?: string;
+  body: string;
   deepLink?: string;
 }
 
 /**
  * Response DTO matching Prisma Notification model
- * Represents a single notification record with all fields
+ * Represents a single notification record with all fields in camelCase
  */
-export interface NotificationResponse {
+export interface NotificationResponseDto {
   id: string;
   tenantId: string;
-  clientId: string;
-  type: string;
-  severity: string;
+  clientId?: string;
+  type: NotificationType;
+  severity: NotificationSeverity;
   title: string;
-  body?: string;
+  body: string;
   deepLink?: string;
   isRead: boolean;
   emailSent: boolean;
@@ -85,13 +87,28 @@ export interface NotificationResponse {
 }
 
 /**
- * List response for notifications endpoint
- * Includes pagination metadata and unread count
+ * Query DTO for finding notifications
+ * Required: clientId
+ * Optional: limit, offset for pagination
  */
-export interface NotificationListResponse {
-  data: NotificationResponse[];
-  total: number;
+export interface FindNotificationsQueryDto {
+  clientId: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Response DTO for unread count
+ */
+export interface UnreadCountResponseDto {
   unreadCount: number;
+}
+
+/**
+ * DTO for marking notification as read/unread
+ */
+export interface MarkAsReadDto {
+  isRead: boolean;
 }
 
 /**
@@ -99,16 +116,18 @@ export interface NotificationListResponse {
  * - allowed: whether the notification can be sent
  * - secondsUntilNext: (optional) seconds until next notification of same type is allowed
  */
-export interface RateLimitResult {
+export interface RateLimitCheckResult {
   allowed: boolean;
   secondsUntilNext?: number;
 }
 
 /**
- * Grouping for digest batch processing
- * Groups notifications by client for batch email generation
+ * Payload for digest email batch processing
+ * Contains notifications grouped by client for batch email generation
  */
-export interface DigestNotificationGroup {
+export interface DigestEmailPayload {
   clientId: string;
-  notifications: NotificationResponse[];
+  tenantId: string;
+  notifications: NotificationResponseDto[];
+  sentAt: Date;
 }
