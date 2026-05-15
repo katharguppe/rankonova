@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Daily Notification Digest</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+      .notifications { padding: 20px; border: 1px solid #ddd; }
+      ul { list-style: none; padding: 0; }
+      li { padding: 10px 0; border-bottom: 1px solid #eee; }
+      .footer { padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; }
+      .cta { display: inline-block; background-color: #0066cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Daily Notification Digest</h1>
+        <p>You have {{notificationCount}} new alerts today</p>
+      </div>
+      <div class="notifications">
+        <ul>
+          {{#each notifications}}
+            <li>
+              <strong>{{this.title}}</strong>
+              <p>{{this.body}}</p>
+            </li>
+          {{/each}}
+        </ul>
+        <p><a href="{{dashboardUrl}}" class="cta">View All Notifications</a></p>
+      </div>
+      <div class="footer">
+        <p>This digest was sent on {{sentAt}}.</p>
+      </div>
+    </div>
+  </body>
+</html>

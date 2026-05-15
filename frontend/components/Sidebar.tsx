@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from './NotificationBell';
 import {
   BarChart2,
   PieChart,
@@ -33,25 +35,49 @@ const sections = [
 interface SidebarProps {
   clientId: string;
   brandName?: string;
+  unreadCount?: number;
 }
 
-export default function Sidebar({ clientId, brandName }: SidebarProps) {
+export default function Sidebar({ clientId, brandName, unreadCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [notificationBellOpen, setNotificationBellOpen] = useState(false);
+  const [currentUnreadCount, setCurrentUnreadCount] = useState(unreadCount);
 
   async function handleLogout() {
     await fetch('/api/auth', { method: 'DELETE' });
     router.push('/login');
   }
 
+  const handleMarkReadComplete = async () => {
+    try {
+      const res = await fetch(`/api/notifications/unread-count?clientId=${encodeURIComponent(clientId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUnreadCount(data.unreadCount ?? 0);
+      }
+    } catch (err) {
+      console.error('Failed to refresh unread count', err);
+    }
+  }
+
   return (
     <aside className="w-14 md:w-56 shrink-0 flex flex-col h-screen bg-white border-r border-slate-200">
-      <div className="px-3 md:px-4 py-5 border-b border-slate-100">
-        <p className="hidden md:block text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
-        <p className="hidden md:block text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
-        <div className="md:hidden flex justify-center">
-          <span className="text-xs font-bold text-blue-600">A</span>
+      <div className="px-3 md:px-4 py-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex-1">
+          <p className="hidden md:block text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
+          <p className="hidden md:block text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
+          <div className="md:hidden flex justify-center">
+            <span className="text-xs font-bold text-blue-600">A</span>
+          </div>
         </div>
+        <NotificationBell
+          clientId={clientId}
+          unreadCount={currentUnreadCount}
+          isOpen={notificationBellOpen}
+          onToggle={() => setNotificationBellOpen(!notificationBellOpen)}
+          onMarkReadComplete={handleMarkReadComplete}
+        />
       </div>
 
       <nav className="flex-1 px-1 md:px-2 py-3 space-y-0.5 overflow-y-auto">

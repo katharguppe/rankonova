@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { AnalyticsCitationService, CitationOverview } from './analytics-citation.service';
 import { AnalyticsSovService, SovEntry } from './analytics-sov.service';
@@ -20,6 +21,7 @@ export class AnalyticsService {
     private readonly sov: AnalyticsSovService,
     private readonly anomaly: AnalyticsAnomalyService,
     private readonly dashboard: AnalyticsDashboardService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getCitationOverview(clientId: string): Promise<CitationOverview> {

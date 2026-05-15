@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { ExtractionHaikuService } from './extraction-haiku.service';
@@ -23,6 +24,7 @@ export class ExtractionService {
     private readonly resolver: ExtractionResolverService,
     private readonly writer: ExtractionWriterService,
     private readonly analyticsService: AnalyticsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async runForPromptRun(promptRunId: string): Promise<number> {
@@ -91,6 +93,28 @@ export class ExtractionService {
     });
 
     await this.writer.upsertMany(toWrite);
+
+    // Emit competitor domain found event for new competitor citations
+    for (const mention of toWrite) {
+      if (mention.competitor_id && mention.cited_url) {
+        const competitor = competitors.find(c => c.id === mention.competitor_id);
+        if (competitor) {
+          try {
+            const url = new URL(mention.cited_url);
+            this.eventEmitter?.emit?.('competitor.domain.found', {
+              clientId,
+              tenantId,
+              competitorId: mention.competitor_id,
+              competitorName: competitor.name,
+              domain: url.hostname,
+              citedUrl: mention.cited_url,
+            });
+          } catch (err) {
+            // Invalid URL, skip event
+          }
+        }
+      }
+    }
 
     this.analyticsService
       .invalidateClientCache(clientId)

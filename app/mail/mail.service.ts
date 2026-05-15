@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
+import { PrismaService } from '../prisma/prisma.service';
+import { NotificationResponseDto, DigestEmailPayload } from '../notifications/notifications.types';
 
 @Injectable()
 export class MailService {
   private readonly transporter: Transporter;
   private readonly from: string;
   private readonly appUrl: string;
+  private readonly logger = new Logger(MailService.name);
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.transporter = createTransport({
       host: process.env['SMTP_HOST'],
       port: parseInt(process.env['SMTP_PORT'] ?? '587'),
@@ -84,5 +87,176 @@ export class MailService {
         },
       ],
     });
+  }
+
+  /**
+   * Send a notification email for Critical severity notifications
+   * Renders HTML email with notification details and deep link
+   */
+  async sendNotificationEmail(
+    notification: NotificationResponseDto,
+    tenantId: string,
+  ): Promise<void> {
+    // Fetch tenant for billing email and branding
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+    });
+
+    if (!tenant) {
+      this.logger.warn(`Tenant ${tenantId} not found for notification email`);
+      return;
+    }
+
+    const to = tenant.billing_email;
+
+    const html = this.renderNotificationEmail(notification, tenant);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject: notification.title,
+        html,
+      });
+
+      this.logger.log(
+        `Sent notification email: type=${notification.type}, severity=${notification.severity}, to=${to}`,
+      );
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : JSON.stringify(err);
+      this.logger.error(`Failed to send notification email: ${errorMessage}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Send a digest email with batched HIGH severity notifications
+   * Called by DigestCronJob daily at 9 AM IST
+   * Groups multiple notifications per client into a single email
+   */
+  async sendDigestEmail(payload: DigestEmailPayload): Promise<void> {
+    const { clientId, tenantId, notifications, sentAt } = payload;
+
+    // Fetch tenant for billing email and branding
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+    });
+
+    if (!tenant) {
+      this.logger.warn(`Tenant ${tenantId} not found for digest email`);
+      return;
+    }
+
+    const to = tenant.billing_email;
+
+    const html = this.renderDigestEmail(notifications, tenant, sentAt);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject: `AEO Suite Daily Digest — ${sentAt.toDateString()}`,
+        html,
+      });
+
+      this.logger.log(
+        `Sent digest email: clientId=${clientId}, tenantId=${tenantId}, notifications=${notifications.length}, to=${to}`,
+      );
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : JSON.stringify(err);
+      this.logger.error(`Failed to send digest email: ${errorMessage}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Render HTML email for digest batch
+   */
+  private renderDigestEmail(
+    notifications: NotificationResponseDto[],
+    tenant: any,
+    sentAt: Date,
+  ): string {
+    const notifItems = notifications
+      .map(
+        (n) => `
+      <div style="border-left: 4px solid #f57c00; padding: 15px; margin: 10px 0; background-color: #fafafa;">
+        <h3 style="margin: 0 0 10px 0; color: #333;">${n.title}</h3>
+        <p style="margin: 0 0 10px 0; color: #666;">${n.body || 'No additional details.'}</p>
+        ${n.deepLink ? `<a href="${this.appUrl}${n.deepLink}" style="color: #0066cc; text-decoration: none; font-weight: bold;">View Details →</a>` : ''}
+      </div>
+    `,
+      )
+      .join('');
+
+    return `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+            .digest-count { font-size: 14px; opacity: 0.9; }
+            .footer { padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Your Daily Digest</h1>
+              <p class="digest-count">${notifications.length} notification${notifications.length > 1 ? 's' : ''}</p>
+            </div>
+            <div style="padding: 20px;">
+              ${notifItems}
+              <div class="footer">
+                <p>This digest was sent on ${sentAt.toLocaleString()}.</p>
+                <p><a href="${this.appUrl}/notifications" style="color: #0066cc;">View all notifications →</a></p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  /**
+   * Render HTML email for a notification
+   */
+  private renderNotificationEmail(
+    notification: NotificationResponseDto,
+    tenant: any,
+  ): string {
+    return `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; border: 1px solid #ddd; }
+            .severity-critical { border-left: 4px solid #d32f2f; }
+            .severity-high { border-left: 4px solid #f57c00; }
+            .severity-medium { border-left: 4px solid #fbc02d; }
+            .cta { display: inline-block; background-color: #0066cc; color: white; padding: 10px 20px; text-decoration: none; margin-top: 10px; border-radius: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>${notification.title}</h1>
+              <p>Severity: ${notification.severity.toUpperCase()}</p>
+            </div>
+            <div class="content severity-${notification.severity}">
+              <p>${notification.body || 'No additional details.'}</p>
+              ${notification.deepLink ? `<a href="${this.appUrl}${notification.deepLink}" class="cta">View Details</a>` : ''}
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
   }
 }

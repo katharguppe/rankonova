@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GapReport } from '@prisma/client';
 import { CitationDropEvent } from '../analytics/analytics-anomaly.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -25,6 +26,7 @@ export class DiagnosticsService {
     private readonly crawler: DiagnosticsCrawlerService,
     private readonly diff: DiagnosticsDiffService,
     private readonly summary: DiagnosticsSummaryService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ── event listener ─────────────────────────────────────────────────────────
@@ -139,6 +141,16 @@ export class DiagnosticsService {
     const [report] = await Promise.all(createOps) as [GapReport, ...unknown[]];
 
     this.logger.log(`Gap report v${version} stored for client ${clientId}`);
+
+    // Emit gap.report.generated event for notification
+    this.eventEmitter.emit('gap.report.generated', {
+      clientId,
+      tenantId: client.tenant_id,
+      reportId: report.id,
+      version: report.version,
+      timestamp: new Date(),
+    });
+
     return report;
   }
 

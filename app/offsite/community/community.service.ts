@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationSeverity, ResponseStatus } from '@prisma/client';
 import { chromium, Browser } from 'playwright';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import OpenAI from 'openai';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -19,7 +20,10 @@ export class CommunityService {
   private readonly logger = new Logger(CommunityService.name);
   private readonly cerebras: OpenAI;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {
     this.cerebras = new OpenAI({
       apiKey: process.env['CEREBRAS_API_KEY'] ?? '',
       baseURL: 'https://api.cerebras.ai/v1',
@@ -415,6 +419,16 @@ export class CommunityService {
       `Saved thread [${platformName}]: "${thread.title.slice(0, 60)}" ` +
         `client=${signals.is_client_mentioned} comp=${signals.is_competitor_recommended}`,
     );
+
+    // Emit community.thread event for notification
+    this.eventEmitter.emit('community.thread', {
+      clientId: client.id,
+      tenantId: client.tenant_id,
+      threadUrl: thread.url,
+      mentions: 1, // We just found this thread
+      platform: platformName,
+      timestamp: new Date(),
+    });
 
     return this.toResponse(saved);
   }
