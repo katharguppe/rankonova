@@ -1,5 +1,6 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AiEngine } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RequestUser } from '../auth/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { PromptRunQueueService } from './queue/prompt-run.queue';
@@ -16,10 +17,13 @@ const DEFAULT_ENGINES: AiEngine[] = [
 
 @Injectable()
 export class PromptEngineService {
+  private readonly logger = new Logger(PromptEngineService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly queue: PromptRunQueueService,
     private readonly costTracker: CostTrackerService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async triggerClientRun(clientId: string, user: RequestUser): Promise<{ enqueued: number; runIds: string[] }> {
@@ -47,6 +51,9 @@ export class PromptEngineService {
       const runIds = await this.queue.enqueue(prompt.id, clientId, client.tenant_id, DEFAULT_ENGINES);
       allRunIds.push(...runIds);
     }
+
+    // Check failure rate and emit alert if needed
+    await this.checkFailureRate(clientId, client.tenant_id);
 
     return { enqueued: allRunIds.length, runIds: allRunIds };
   }
@@ -93,5 +100,43 @@ export class PromptEngineService {
   async getDailyCost(user: RequestUser, date?: string) {
     const tenantId = user.role === 'super_admin' ? user.tenantId : user.tenantId;
     return { costUsd: await this.costTracker.getDailyCostUsd(tenantId, date) };
+  }
+
+  private async checkFailureRate(clientId: string, tenantId: string): Promise<void> {
+    // Check failure rate in the past hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    const [totalCount, failureCount] = await Promise.all([
+      this.prisma.promptRun.count({
+        where: {
+          client_id: clientId,
+          ran_at: { gte: oneHourAgo },
+        },
+      }),
+      this.prisma.promptRun.count({
+        where: {
+          client_id: clientId,
+          ran_at: { gte: oneHourAgo },
+          status: 'failed',
+        },
+      }),
+    ]);
+
+    if (totalCount < 10) return; // Only check if we have sufficient samples
+
+    const failurePercentage = (failureCount / totalCount) * 100;
+    if (failurePercentage > 20) {
+      this.eventEmitter.emit('prompt.failure.rate', {
+        clientId,
+        tenantId,
+        failurePercentage: Math.round(failurePercentage),
+        failureCount,
+        totalCount,
+        timestamp: new Date(),
+      });
+      this.logger.warn(
+        `Prompt failure rate alert: clientId=${clientId}, failurePercentage=${failurePercentage.toFixed(1)}%`,
+      );
+    }
   }
 }

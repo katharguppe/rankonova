@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ContentOutput, ContentStatus, ContentType, NotificationSeverity } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { FaqPageGeneratorService } from './generators/faq-page.generator';
 import { ComparisonPageGeneratorService } from './generators/comparison-page.generator';
@@ -39,6 +40,7 @@ export class ContentAgentService {
     private readonly entityAuthorityGenerator: EntityAuthorityPageGeneratorService,
     private readonly segmentArticleGenerator: SegmentArticleGeneratorService,
     private readonly validator: QualityValidatorService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ── generate ─────────────────────────────────────────────────────────────────
@@ -399,6 +401,15 @@ export class ContentAgentService {
           body: `A new ${contentType.replace(/_/g, ' ')} draft is ready for your review and approval.`,
           deep_link: `/content/output/${outputId}`,
         },
+      });
+
+      // Emit content.draft.ready event for notification handler
+      this.eventEmitter.emit('content.draft.ready', {
+        clientId,
+        tenantId,
+        draftId: outputId,
+        draftType: contentType,
+        timestamp: new Date(),
       });
     } catch (err) {
       this.logger.warn(`Failed to create draft notification for output ${outputId}: ${(err as Error).message}`);

@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationSeverity, PrSignalStatus } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import { chromium } from 'playwright';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import OpenAI from 'openai';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -61,7 +62,10 @@ export class PrService {
     cdataPropName: '__cdata',
   });
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {
     this.cerebras = new OpenAI({
       apiKey: process.env['CEREBRAS_API_KEY'] ?? '',
       baseURL: 'https://api.cerebras.ai/v1',
@@ -187,6 +191,16 @@ export class PrService {
           deep_link: `/offsite/pr/${clientId}/signals`,
         },
       }).catch((err: Error) => this.logger.warn(`Notification failed: ${err.message}`));
+
+      // Emit pr.opportunity event for notification handler
+      this.eventEmitter.emit('pr.opportunity', {
+        clientId: clientId,
+        tenantId: client.tenant_id,
+        prTitle: item.title.slice(0, 100),
+        domain: item.source,
+        prUrl: item.url,
+        timestamp: new Date(),
+      });
 
       created.push(this.toResponse(signal));
       this.logger.log(`PR signal created: "${item.title.slice(0, 60)}" score=${score.toFixed(2)}`);

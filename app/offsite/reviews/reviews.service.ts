@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationSeverity, ResponseStatus } from '@prisma/client';
 import { chromium, Browser } from 'playwright';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import OpenAI from 'openai';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -28,7 +29,10 @@ export class ReviewsService {
   private readonly logger = new Logger(ReviewsService.name);
   private readonly cerebras: OpenAI;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {
     this.cerebras = new OpenAI({
       apiKey: process.env['CEREBRAS_API_KEY'] ?? '',
       baseURL: 'https://api.cerebras.ai/v1',
@@ -97,6 +101,24 @@ export class ReviewsService {
       const audit = await this.crawlAndAudit(client, platform);
       if (audit) audits.push(audit);
     }
+
+    // Check for review backlog and emit event
+    const unansweredReviews = await this.prisma.reviewSnapshot.count({
+      where: {
+        client_id: clientId,
+        response_status: ResponseStatus.pending,
+      },
+    });
+
+    if (unansweredReviews > 20) {
+      this.eventEmitter.emit('review.backlog', {
+        clientId,
+        tenantId: client.tenant_id,
+        backlogCount: unansweredReviews,
+        timestamp: new Date(),
+      });
+    }
+
     return audits;
   }
 

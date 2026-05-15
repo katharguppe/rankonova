@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { InvoiceService } from './invoice.service';
 import { PlanEnforcementService } from './plan-enforcement.service';
@@ -19,6 +20,7 @@ export class WebhookService {
     private readonly invoiceService: InvoiceService,
     private readonly planEnforcement: PlanEnforcementService,
     @InjectQueue(BILLING_RETRY_QUEUE) private readonly retryQueue: Queue,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
@@ -57,9 +59,20 @@ export class WebhookService {
   private async onSubscriptionHalted(payload: RazorpayWebhookPayload): Promise<void> {
     const sub = (payload.payload['subscription'] as { entity: { notes: { tenant_id: string } } }).entity;
     const tenantId = sub.notes.tenant_id;
+
     await this.prisma.billingEvent.create({
       data: { tenant_id: tenantId, event_type: 'payment_failed' },
     });
+
+    // Emit payment.failed event for notification
+    this.eventEmitter.emit('payment.failed', {
+      clientId: undefined, // Will be populated from tenant context
+      tenantId: tenantId,
+      amount: 0,
+      currency: 'INR',
+      timestamp: new Date(),
+    });
+
     await this.retryQueue.add('retry-d1', { tenantId }, { delay: 1 * DAY_MS });
     await this.retryQueue.add('retry-d3', { tenantId }, { delay: 3 * DAY_MS });
     await this.retryQueue.add('retry-d7', { tenantId }, { delay: 7 * DAY_MS });

@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationSeverity } from '@prisma/client';
 import { createHash } from 'crypto';
 import { chromium, Browser } from 'playwright';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   AggregatorPlatformConfig,
@@ -34,7 +35,10 @@ const FIELD_SUGGESTIONS: Record<ProfileField, string> = {
 export class AggregatorService {
   private readonly logger = new Logger(AggregatorService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   // ── Scheduled weekly crawl ──────────────────────────────────────────────────
 
@@ -170,6 +174,17 @@ export class AggregatorService {
     this.logger.log(
       `${platform.name} snapshot saved for ${client.brand_name}: score=${completenessScore.toFixed(1)}, hash=${contentHash.slice(0, 8)}`,
     );
+
+    // Emit aggregator.score.low event if score is below threshold
+    if (completenessScore < 60) {
+      this.eventEmitter.emit('aggregator.score.low', {
+        clientId: client.id,
+        tenantId: client.tenant_id,
+        aggregatorScore: completenessScore,
+        aggregatorName: platform.name,
+        timestamp: new Date(),
+      });
+    }
 
     return this.toResponse(snapshot);
   }
