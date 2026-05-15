@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
+import { NotificationResponseDto } from '../notifications/notifications.types';
 
 @Injectable()
 export class MailService {
   private readonly transporter: Transporter;
   private readonly from: string;
   private readonly appUrl: string;
+  private readonly logger = new Logger(MailService.name);
 
   constructor() {
     this.transporter = createTransport({
@@ -84,5 +86,66 @@ export class MailService {
         },
       ],
     });
+  }
+
+  /**
+   * Send a notification email for Critical severity notifications
+   * Renders HTML email with notification details and deep link
+   */
+  async sendNotificationEmail(
+    notification: NotificationResponseDto,
+    _tenantId: string,
+  ): Promise<void> {
+    // In a production system, would fetch tenant branding and client email here
+    // For now, using placeholder email from notification
+    const to = 'support@aeo-suite.local'; // TODO: Get from client profile
+
+    const html = this.renderNotificationEmail(notification);
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: notification.title,
+      html,
+    });
+
+    this.logger.log(
+      `Sent notification email: type=${notification.type}, to=${to}`,
+    );
+  }
+
+  /**
+   * Render HTML email for a notification
+   */
+  private renderNotificationEmail(notification: NotificationResponseDto): string {
+    return `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; border: 1px solid #ddd; }
+            .severity-critical { border-left: 4px solid #d32f2f; }
+            .severity-high { border-left: 4px solid #f57c00; }
+            .severity-medium { border-left: 4px solid #fbc02d; }
+            .cta { display: inline-block; background-color: #0066cc; color: white; padding: 10px 20px; text-decoration: none; margin-top: 10px; border-radius: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>${notification.title}</h1>
+              <p>Severity: ${notification.severity.toUpperCase()}</p>
+            </div>
+            <div class="content severity-${notification.severity}">
+              <p>${notification.body || 'No additional details.'}</p>
+              ${notification.deepLink ? `<a href="${this.appUrl}${notification.deepLink}" class="cta">View Details</a>` : ''}
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
   }
 }
