@@ -131,3 +131,95 @@ export interface DigestEmailPayload {
   notifications: NotificationResponseDto[];
   sentAt: Date;
 }
+
+/**
+ * Event interfaces for notification handlers
+ */
+
+export interface CitationDropEvent {
+  clientId: string;
+  tenantId: string;
+  citationDropPoints: number;
+}
+
+export interface CompetitorSpikeEvent {
+  clientId: string;
+  tenantId: string;
+  spikePoints: number;
+}
+
+export interface NegativeReview24hEvent {
+  clientId: string;
+  tenantId: string;
+  reviewCount: number;
+}
+
+export interface PaymentFailedEvent {
+  clientId: string;
+  tenantId: string;
+  reason?: string;
+  amount?: number;
+  currency?: string;
+}
+
+export interface PromptFailureRateEvent {
+  clientId: string;
+  tenantId: string;
+  failureRate?: number;
+  failurePercentage?: number;
+  failureCount?: number;
+  totalCount?: number;
+}
+
+export interface CommunityThreadEvent {
+  clientId: string;
+  tenantId: string;
+  threadTitle: string;
+  threadUrl?: string;
+}
+
+export interface ContentDraftReadyEvent {
+  clientId: string;
+  tenantId: string;
+  contentType?: string;
+  draftId?: string;
+}
+
+export interface GapReportEvent {
+  clientId: string;
+  tenantId: string;
+  gapCount: number;
+}
+
+export interface CompetitorDomainEvent {
+  clientId: string;
+  tenantId: string;
+  domainName: string;
+}
+
+export interface AggregatorScoreEvent {
+  clientId: string;
+  tenantId: string;
+  currentScore?: number;
+  aggregatorScore?: number;
+}
+
+export interface ReviewBacklogEvent {
+  clientId: string;
+  tenantId: string;
+  backlogCount: number;
+}
+
+export interface PrOpportunityEvent {
+  clientId: string;
+  tenantId: string;
+  opportunityTitle: string;
+}
+
+/**
+ * Request user payload from JWT token
+ */
+export interface JwtPayload {
+  tenantId: string;
+  userId?: string;
+}

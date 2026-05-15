@@ -16,6 +16,7 @@ import {
   MarkAsReadDto,
   FindNotificationsQueryDto,
   NotificationResponseDto,
+  JwtPayload,
 } from './notifications.types';
 
 @Controller('notifications')
@@ -46,7 +47,8 @@ export class NotificationsController {
     }
 
     // Extract tenantId from JWT token (set by AuthGuard)
-    const tenantId = (req.user as any)?.tenantId;
+    const jwtPayload = req.user as JwtPayload;
+    const tenantId = jwtPayload?.tenantId;
     if (!tenantId) {
       throw new BadRequestException('tenantId not found in token');
     }
@@ -73,7 +75,8 @@ export class NotificationsController {
       throw new BadRequestException('clientId is required');
     }
 
-    const tenantId = (req.user as any)?.tenantId;
+    const jwtPayload = req.user as JwtPayload;
+    const tenantId = jwtPayload?.tenantId;
     if (!tenantId) {
       throw new BadRequestException('tenantId not found in token');
     }

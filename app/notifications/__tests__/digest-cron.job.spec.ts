@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DigestCronJob } from '../digest-cron.job';
 import { NotificationsService } from '../notifications.service';
 import { MailService } from '../../mail/mail.service';
-import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationType, NotificationSeverity, NotificationResponseDto } from '../notifications.types';
 
 describe('DigestCronJob', () => {

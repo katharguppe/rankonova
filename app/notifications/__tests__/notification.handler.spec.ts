@@ -9,7 +9,6 @@ import { MailService } from '../../mail/mail.service';
 
 describe('NotificationHandler', () => {
   let handler: NotificationHandler;
-  let service: NotificationsService;
   let rateLimiter: RateLimiterService;
   let prisma: PrismaService;
   let mailService: MailService;
@@ -56,7 +55,6 @@ describe('NotificationHandler', () => {
     }).compile();
 
     handler = module.get<NotificationHandler>(NotificationHandler);
-    service = module.get<NotificationsService>(NotificationsService);
     rateLimiter = module.get<RateLimiterService>(RateLimiterService);
     prisma = module.get<PrismaService>(PrismaService);
     mailService = module.get<MailService>(MailService);

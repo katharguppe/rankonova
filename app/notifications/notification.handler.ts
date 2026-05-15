@@ -2,7 +2,22 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService } from './notifications.service';
 import { RateLimiterService } from './rate-limiter.service';
-import { NotificationType, NotificationSeverity } from './notifications.types';
+import {
+  NotificationType,
+  NotificationSeverity,
+  CitationDropEvent,
+  CompetitorSpikeEvent,
+  NegativeReview24hEvent,
+  PaymentFailedEvent,
+  PromptFailureRateEvent,
+  CommunityThreadEvent,
+  ContentDraftReadyEvent,
+  GapReportEvent,
+  CompetitorDomainEvent,
+  AggregatorScoreEvent,
+  ReviewBacklogEvent,
+  PrOpportunityEvent,
+} from './notifications.types';
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
@@ -18,7 +33,7 @@ export class NotificationHandler {
   // ============= CRITICAL EVENTS =============
 
   @OnEvent('citation.drop')
-  async onCitationDrop(event: any) {
+  async onCitationDrop(event: CitationDropEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -31,7 +46,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('competitor.spike')
-  async onCompetitorSpike(event: any) {
+  async onCompetitorSpike(event: CompetitorSpikeEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -44,7 +59,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('review.negative.24h')
-  async onNegativeReview24h(event: any) {
+  async onNegativeReview24h(event: NegativeReview24hEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -57,7 +72,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('payment.failed')
-  async onPaymentFailed(event: any) {
+  async onPaymentFailed(event: PaymentFailedEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -70,14 +85,15 @@ export class NotificationHandler {
   }
 
   @OnEvent('prompt.failure.rate')
-  async onPromptFailureRate(event: any) {
+  async onPromptFailureRate(event: PromptFailureRateEvent) {
+    const rate = event.failureRate ?? event.failurePercentage ?? 0;
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
       type: NotificationType.PROMPT_FAILURE_RATE,
       severity: NotificationSeverity.CRITICAL,
       title: 'High Prompt Failure Rate',
-      body: `Your prompts are failing at a rate of ${event.failurePercentage}% in the last hour.`,
+      body: `Your prompts are failing at a rate of ${rate}% in the last hour.`,
       deepLink: '/dashboard/prompts',
     });
   }
@@ -85,7 +101,7 @@ export class NotificationHandler {
   // ============= HIGH EVENTS =============
 
   @OnEvent('community.thread')
-  async onCommunityThread(event: any) {
+  async onCommunityThread(event: CommunityThreadEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -98,7 +114,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('content.draft.ready')
-  async onContentDraftReady(event: any) {
+  async onContentDraftReady(event: ContentDraftReadyEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -111,7 +127,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('gap.report.generated')
-  async onGapReport(event: any) {
+  async onGapReport(event: GapReportEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -124,7 +140,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('competitor.domain.found')
-  async onCompetitorDomain(event: any) {
+  async onCompetitorDomain(event: CompetitorDomainEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -139,20 +155,21 @@ export class NotificationHandler {
   // ============= MEDIUM EVENTS =============
 
   @OnEvent('aggregator.score.low')
-  async onAggregatorScore(event: any) {
+  async onAggregatorScore(event: AggregatorScoreEvent) {
+    const score = event.currentScore ?? event.aggregatorScore;
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
       type: NotificationType.AGGREGATOR_SCORE,
       severity: NotificationSeverity.MEDIUM,
       title: 'Low Aggregator Score',
-      body: 'Your aggregator score dropped below 60.',
+      body: `Your aggregator score dropped below 60${score ? ` (current: ${score})` : ''}.`,
       deepLink: '/dashboard/offsite/aggregators',
     });
   }
 
   @OnEvent('review.backlog')
-  async onReviewBacklog(event: any) {
+  async onReviewBacklog(event: ReviewBacklogEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,
@@ -165,7 +182,7 @@ export class NotificationHandler {
   }
 
   @OnEvent('pr.opportunity')
-  async onPrOpportunity(event: any) {
+  async onPrOpportunity(event: PrOpportunityEvent) {
     await this.handleEvent({
       clientId: event.clientId,
       tenantId: event.tenantId,

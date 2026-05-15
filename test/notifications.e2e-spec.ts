@@ -21,11 +21,8 @@ describe('Notifications E2E', () => {
   let prisma: PrismaService;
   let eventEmitter: EventEmitter2;
   let notificationsService: NotificationsService;
-  let mailService: MailService;
 
   const TEST_TENANT_ID = 'test-tenant-e2e-notif';
-  const TEST_CLIENT_ID = 'test-client-e2e-notif';
-  const TEST_CLIENT_ID_2 = 'test-client-e2e-notif-2';
 
   // Note: For E2E tests, we'll test without real clients to avoid complex setup.
   // In production, notifications.service.ts validates FK constraints at DB level.
@@ -50,7 +47,6 @@ describe('Notifications E2E', () => {
     notificationsService = moduleFixture.get<NotificationsService>(
       NotificationsService,
     );
-    mailService = moduleFixture.get<MailService>(MailService);
 
     // Pre-cleanup: Remove any leftover test data
     const existingTenant = await prisma.tenant.findUnique({
@@ -187,16 +183,16 @@ describe('Notifications E2E', () => {
       expect(batchable.length).toBeGreaterThanOrEqual(5);
 
       // All should be HIGH severity
-      const ourNotifs = batchable.filter((n: any) =>
+      const ourNotifs = batchable.filter((n) =>
         notificationIds.includes(n.id),
       );
       expect(ourNotifs.length).toBe(5);
-      expect(ourNotifs.every((n: any) => n.severity === NotificationSeverity.HIGH)).toBe(
+      expect(ourNotifs.every((n) => n.severity === NotificationSeverity.HIGH)).toBe(
         true,
       );
 
       // Mark digest as sent
-      await notificationsService.markDigestSent(ourNotifs.map((n: any) => n.id));
+      await notificationsService.markDigestSent(ourNotifs.map((n) => n.id));
 
       // Verify all are marked as email_sent
       const updated = await prisma.notification.findMany({
@@ -205,7 +201,7 @@ describe('Notifications E2E', () => {
         },
       });
 
-      expect(updated.every((n: any) => n.email_sent)).toBe(true);
+      expect(updated.every((n) => n.email_sent)).toBe(true);
       expect(updated.length).toBe(5);
     });
   });
@@ -248,9 +244,9 @@ describe('Notifications E2E', () => {
       expect(result.length).toBeGreaterThanOrEqual(3);
 
       // All our created notifications should be unread
-      const ourNotifs = result.filter((n: any) => createdIds.includes(n.id));
+      const ourNotifs = result.filter((n) => createdIds.includes(n.id));
       expect(ourNotifs.length).toBe(3);
-      expect(ourNotifs.every((n: any) => n.is_read === false)).toBe(true);
+      expect(ourNotifs.every((n) => n.is_read === false)).toBe(true);
     });
 
     it('should decrement unread count when marked as read', async () => {
