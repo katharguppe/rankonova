@@ -16,6 +16,7 @@ import {
   Globe,
   LogOut,
 } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
 const sections = [
   { href: 'overview',       label: 'Citation Overview',   icon: TrendingUp  },
@@ -47,10 +48,15 @@ export default function Sidebar({ clientId, brandName }: SidebarProps) {
   return (
     <aside className="w-14 md:w-56 shrink-0 flex flex-col h-screen bg-white border-r border-slate-200">
       <div className="px-3 md:px-4 py-5 border-b border-slate-100">
-        <p className="hidden md:block text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
-        <p className="hidden md:block text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
-        <div className="md:hidden flex justify-center">
-          <span className="text-xs font-bold text-blue-600">A</span>
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="hidden md:block text-xs font-semibold text-slate-400 uppercase tracking-wider">AEO Suite</p>
+            <p className="hidden md:block text-sm font-medium text-slate-900 mt-0.5 truncate">{brandName ?? clientId}</p>
+            <div className="md:hidden flex justify-center">
+              <span className="text-xs font-bold text-blue-600">A</span>
+            </div>
+          </div>
+          <NotificationBell clientId={clientId} />
         </div>
       </div>
 
