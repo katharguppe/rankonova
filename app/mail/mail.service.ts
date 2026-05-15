@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
-import { NotificationResponseDto } from '../notifications/notifications.types';
+import { NotificationResponseDto, DigestEmailPayload } from '../notifications/notifications.types';
 
 @Injectable()
 export class MailService {
@@ -112,6 +112,76 @@ export class MailService {
     this.logger.log(
       `Sent notification email: type=${notification.type}, to=${to}`,
     );
+  }
+
+  /**
+   * Send a digest email with batched HIGH severity notifications
+   * Called by DigestCronJob daily at 9 AM IST
+   * Groups multiple notifications per client into a single email
+   */
+  async sendDigestEmail(payload: DigestEmailPayload): Promise<void> {
+    // In a production system, would fetch client email and tenant branding here
+    const to = 'support@aeo-suite.local'; // TODO: Get from client profile
+
+    const html = this.renderDigestEmail(payload);
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: `AEO Suite Daily Digest — ${payload.notifications.length} notifications`,
+      html,
+    });
+
+    this.logger.log(
+      `Sent digest email: clientId=${payload.clientId}, tenantId=${payload.tenantId}, notifications=${payload.notifications.length}`,
+    );
+  }
+
+  /**
+   * Render HTML email for digest batch
+   */
+  private renderDigestEmail(payload: DigestEmailPayload): string {
+    const notifItems = payload.notifications
+      .map(
+        (n) => `
+      <div style="border-left: 4px solid #f57c00; padding: 15px; margin: 10px 0; background-color: #fafafa;">
+        <h3 style="margin: 0 0 10px 0; color: #333;">${n.title}</h3>
+        <p style="margin: 0 0 10px 0; color: #666;">${n.body || 'No additional details.'}</p>
+        ${n.deepLink ? `<a href="${this.appUrl}${n.deepLink}" style="color: #0066cc; text-decoration: none; font-weight: bold;">View Details →</a>` : ''}
+      </div>
+    `,
+      )
+      .join('');
+
+    return `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+            .digest-count { font-size: 14px; opacity: 0.9; }
+            .footer { padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Your Daily Digest</h1>
+              <p class="digest-count">${payload.notifications.length} notification${payload.notifications.length > 1 ? 's' : ''}</p>
+            </div>
+            <div style="padding: 20px;">
+              ${notifItems}
+              <div class="footer">
+                <p>This digest was sent on ${payload.sentAt.toLocaleString()}.</p>
+                <p><a href="${this.appUrl}/notifications" style="color: #0066cc;">View all notifications →</a></p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
   }
 
   /**
