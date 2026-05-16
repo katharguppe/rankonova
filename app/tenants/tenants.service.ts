@@ -86,6 +86,16 @@ export class TenantsService {
       website_url: dto.websiteUrl,
       description: dto.description,
       models: (dto.models ?? {}) as Prisma.InputJsonValue,
+      digital_handles: dto.digital_handles
+        ? (dto.digital_handles as unknown as Prisma.InputJsonValue)
+        : undefined,
+      brand_description: dto.brand_description,
+      brand_keywords: dto.brand_keywords
+        ? (dto.brand_keywords as unknown as Prisma.InputJsonValue)
+        : undefined,
+      competitors_known: dto.competitors_known
+        ? (dto.competitors_known as unknown as Prisma.InputJsonValue)
+        : undefined,
     });
   }
 
