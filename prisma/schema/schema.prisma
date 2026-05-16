@@ -153,7 +153,7 @@ model Tenant {
   prompt_quota_daily       Int       @default(500)
   trial_ends_at            DateTime?
   razorpay_subscription_id String?
-  billing_cycle_start      Int?      // day-of-month (1-28)
+  billing_cycle_start      Int? // day-of-month (1-28)
   created_at               DateTime  @default(now())
   updated_at               DateTime  @updatedAt
 
@@ -178,7 +178,7 @@ model User {
   password_hash      String
   role               UserRole  @default(client_viewer)
   is_active          Boolean   @default(true)
-  mfa_secret         String?   // AES-256 encrypted at application layer
+  mfa_secret         String? // AES-256 encrypted at application layer
   mfa_enabled        Boolean   @default(false)
   last_login_at      DateTime?
   failed_login_count Int       @default(0)
@@ -186,7 +186,7 @@ model User {
   created_at         DateTime  @default(now())
   updated_at         DateTime  @updatedAt
 
-  tenant          Tenant         @relation(fields: [tenant_id], references: [id])
+  tenant          Tenant          @relation(fields: [tenant_id], references: [id])
   refresh_tokens  RefreshToken[]
   auth_events     AuthEvent[]
   content_outputs ContentOutput[] @relation("ApprovedBy")
@@ -198,13 +198,13 @@ model User {
 
 // Stores hashed refresh tokens for rotation (F-01)
 model RefreshToken {
-  id           String    @id @default(cuid())
-  user_id      String
-  token_hash   String    @unique
-  expires_at   DateTime
-  is_revoked   Boolean   @default(false)
-  replaced_by  String?   // token_hash of the replacement token
-  created_at   DateTime  @default(now())
+  id          String   @id @default(cuid())
+  user_id     String
+  token_hash  String   @unique
+  expires_at  DateTime
+  is_revoked  Boolean  @default(false)
+  replaced_by String? // token_hash of the replacement token
+  created_at  DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id])
 
@@ -238,15 +238,15 @@ model Vertical {
   name                 String
   slug                 String   @unique
   description          String?
-  prompt_templates     Json     // string[] with {city},{brand},{model} tokens
-  intent_categories    Json     // string[] e.g. ["dealer","price_comparison"]
-  trusted_domains      Json     // string[]
-  aggregator_platforms Json     // { name, url_pattern, css_selectors, crawl_frequency }[]
-  schema_types         Json     // string[] of schema.org types
-  community_platforms  Json     // { platform, identifiers, keywords }[]
+  prompt_templates     Json // string[] with {city},{brand},{model} tokens
+  intent_categories    Json // string[] e.g. ["dealer","price_comparison"]
+  trusted_domains      Json // string[]
+  aggregator_platforms Json // { name, url_pattern, css_selectors, crawl_frequency }[]
+  schema_types         Json // string[] of schema.org types
+  community_platforms  Json // { platform, identifiers, keywords }[]
   wikidata_entity_type String?
-  news_rss_feeds       Json?    // { url, name }[]
-  review_platforms     Json     // { name, type: "api"|"scrape", config }[]
+  news_rss_feeds       Json? // { url, name }[]
+  review_platforms     Json // { name, type: "api"|"scrape", config }[]
   is_active            Boolean  @default(true)
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
@@ -279,41 +279,41 @@ model VerticalConfigAudit {
 // ─────────────────────────────────────────────
 
 model Client {
-  id          String    @id @default(cuid())
-  tenant_id   String
-  vertical_id String
-  name        String
-  brand_name  String
-  aliases     Json      // string[] -- e.g. ["Tata Nexon", "Nexon"]
-  city        String
-  state       String
-  website_url String
-  description String?
-  models              Json      // AI engine model config overrides per engine
-  digital_handles     Json?     // NEW: { linkedin?, twitter?, instagram?, youtube?, website_secondary? }
-  brand_description   String?   // NEW: what the brand does, USP, target audience (max 500 chars)
-  brand_keywords      Json?     // NEW: string[] of keywords client wants to rank for
-  competitors_known   Json?     // NEW: string[] of manually entered competitor names
-  is_active   Boolean   @default(true)
-  deleted_at  DateTime? // soft delete; purge after 90 days
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  tenant_id         String
+  vertical_id       String
+  name              String
+  brand_name        String
+  aliases           Json // string[] -- e.g. ["Tata Nexon", "Nexon"]
+  city              String
+  state             String
+  website_url       String
+  description       String?
+  models            Json // AI engine model config overrides per engine
+  digital_handles   Json? // NEW: { linkedin?, twitter?, instagram?, youtube?, website_secondary? }
+  brand_description String? // NEW: what the brand does, USP, target audience (max 500 chars)
+  brand_keywords    Json? // NEW: string[] of keywords client wants to rank for
+  competitors_known Json? // NEW: string[] of manually entered competitor names
+  is_active         Boolean   @default(true)
+  deleted_at        DateTime? // soft delete; purge after 90 days
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
 
-  tenant            Tenant            @relation(fields: [tenant_id], references: [id])
-  vertical          Vertical          @relation(fields: [vertical_id], references: [id])
-  prompt_runs       PromptRun[]
-  brand_mentions    BrandMention[]
-  gap_reports       GapReport[]
-  content_outputs   ContentOutput[]
-  review_audits          ReviewAudit[]
-  review_snapshots       ReviewSnapshot[]
-  review_request_kit     ReviewRequestKit?
-  community_threads      CommunityThread[]
-  aggregator_snapshots   AggregatorSnapshot[]
-  entity_checks          EntityCheck[]
-  pr_signals             PrSignal[]
-  weekly_briefs          WeeklyBrief[]
-  notifications          Notification[]
+  tenant               Tenant               @relation(fields: [tenant_id], references: [id])
+  vertical             Vertical             @relation(fields: [vertical_id], references: [id])
+  prompt_runs          PromptRun[]
+  brand_mentions       BrandMention[]
+  gap_reports          GapReport[]
+  content_outputs      ContentOutput[]
+  review_audits        ReviewAudit[]
+  review_snapshots     ReviewSnapshot[]
+  review_request_kit   ReviewRequestKit?
+  community_threads    CommunityThread[]
+  aggregator_snapshots AggregatorSnapshot[]
+  entity_checks        EntityCheck[]
+  pr_signals           PrSignal[]
+  weekly_briefs        WeeklyBrief[]
+  notifications        Notification[]
 
   @@index([tenant_id])
   @@index([vertical_id])
@@ -330,7 +330,7 @@ model Competitor {
   tenant_id   String
   vertical_id String
   name        String
-  aliases     Json     // string[]
+  aliases     Json // string[]
   website_url String?
   is_active   Boolean  @default(true)
   created_at  DateTime @default(now())
@@ -420,10 +420,10 @@ model BrandMention {
   client_id       String
   competitor_id   String?
   brand_name      String
-  position        Int       // 1-based rank in AI response
+  position        Int // 1-based rank in AI response
   sentiment       Sentiment
   cited_url       String?
-  context_snippet String?   // max 150 chars
+  context_snippet String? // max 150 chars
   is_client_brand Boolean
   created_at      DateTime  @default(now())
 
@@ -449,7 +449,7 @@ model CitationSource {
   url                    String    @unique
   domain                 String
   domain_authority_score Int?
-  schema_types_found     Json      // string[] of schema.org types found
+  schema_types_found     Json // string[] of schema.org types found
   has_faq_schema         Boolean   @default(false)
   word_count             Int?
   last_crawled_at        DateTime?
@@ -469,12 +469,12 @@ model GapReport {
   client_id               String
   version                 Int
   generated_at            DateTime
-  on_site_gaps            Json     // { missing_schema_types, faq_coverage_score, freshness_gap, entity_density_gap, internal_link_gap }
-  off_site_gaps           Json     // { aggregator_presence, review_volume_gap, community_presence, entity_recognition, pr_coverage }
+  on_site_gaps            Json // { missing_schema_types, faq_coverage_score, freshness_gap, entity_density_gap, internal_link_gap }
+  off_site_gaps           Json // { aggregator_presence, review_volume_gap, community_presence, entity_recognition, pr_coverage }
   top_cited_competitor_id String?
   top_cited_domain        String?
   plain_english_summary   String   @db.Text
-  recommended_actions     Json     // { action, estimated_impact, priority }[] ordered by citation impact
+  recommended_actions     Json // { action, estimated_impact, priority }[] ordered by citation impact
   previous_report_id      String?  @unique
   created_at              DateTime @default(now())
   updated_at              DateTime @updatedAt
@@ -501,17 +501,17 @@ model ContentOutput {
   type                   ContentType
   title                  String
   html_content           String        @db.Text
-  schema_json            Json          // validated JSON-LD object
+  schema_json            Json // validated JSON-LD object
   generation_prompt      String        @db.Text // stored for auditability
   status                 ContentStatus @default(draft)
   review_notes           String?
   approved_by            String?
   approved_at            DateTime?
   published_at           DateTime?
-  follow_up_scheduled_at DateTime?     // 60-day citation_rate_after capture
+  follow_up_scheduled_at DateTime? // 60-day citation_rate_after capture
   previous_version_id    String?       @unique
   citation_rate_before   Float?
-  citation_rate_after    Float?        // captured 60 days post-publish
+  citation_rate_after    Float? // captured 60 days post-publish
   created_at             DateTime      @default(now())
   updated_at             DateTime      @updatedAt
 
@@ -533,15 +533,15 @@ model ContentOutput {
 model ReviewAudit {
   id                    String    @id @default(cuid())
   client_id             String
-  platform              String    // "google" | "cardekho" | "justdial" | etc.
+  platform              String // "google" | "cardekho" | "justdial" | etc.
   rating                Float?
   review_count          Int?
   response_rate         Float?
   recency               DateTime? // date of most recent review scraped
-  keyword_frequency     Json?     // { word: count }[] top-10 review keywords
-  review_velocity       Float?    // reviews per 30-day window
+  keyword_frequency     Json? // { word: count }[] top-10 review keywords
+  review_velocity       Float? // reviews per 30-day window
   last_checked_at       DateTime
-  gap_vs_top_competitor Json?     // { rating_gap, review_count_gap, response_rate_gap }
+  gap_vs_top_competitor Json? // { rating_gap, review_count_gap, response_rate_gap }
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 
@@ -607,14 +607,14 @@ model ReviewRequestKit {
 model CommunityThread {
   id                         String         @id @default(cuid())
   client_id                  String
-  platform                   String         // "reddit" | forum identifier
+  platform                   String // "reddit" | forum identifier
   url                        String
   thread_title               String
   question_text              String?        @db.Text
   thread_score               Int            @default(0)
   is_client_mentioned        Boolean        @default(false)
   is_competitor_recommended  Boolean        @default(false)
-  competitor_names_mentioned Json?          // string[] -- competitor names found in thread
+  competitor_names_mentioned Json? // string[] -- competitor names found in thread
   ai_citation_count          Int            @default(0)
   response_draft             String?        @db.Text
   response_status            ResponseStatus @default(pending)
@@ -640,15 +640,15 @@ model CommunityThread {
 model AggregatorSnapshot {
   id                 String   @id @default(cuid())
   client_id          String
-  platform           String   // "CarDekho" | "JustDial" | "ZigWheels" | etc.
+  platform           String // "CarDekho" | "JustDial" | "ZigWheels" | etc.
   profile_url        String
-  completeness_score Float    // 0.0 – 100.0
-  fields_present     Json     // string[]
-  fields_missing     Json     // string[]
-  competitor_scores  Json     // { competitor_id, name, score, url }[]
-  content_hash       String   // SHA-256 of extracted field values
-  raw_extract        Json     // { field: string | null }
-  update_pack        Json     // { field, suggestion }[] — generated for missing fields
+  completeness_score Float // 0.0 – 100.0
+  fields_present     Json // string[]
+  fields_missing     Json // string[]
+  competitor_scores  Json // { competitor_id, name, score, url }[]
+  content_hash       String // SHA-256 of extracted field values
+  raw_extract        Json // { field: string | null }
+  update_pack        Json // { field, suggestion }[] — generated for missing fields
   crawled_at         DateTime
   created_at         DateTime @default(now())
 
@@ -665,30 +665,30 @@ model AggregatorSnapshot {
 // ─────────────────────────────────────────────
 
 model EntityCheck {
-  id                        String    @id @default(cuid())
-  client_id                 String
+  id        String @id @default(cuid())
+  client_id String
 
   // Wikidata
-  wikidata_found            Boolean   @default(false)
-  wikidata_qid              String?   // e.g. "Q12345678"
-  wikidata_submission_draft Json?     // structured draft when not found
+  wikidata_found            Boolean @default(false)
+  wikidata_qid              String? // e.g. "Q12345678"
+  wikidata_submission_draft Json? // structured draft when not found
 
   // Google Knowledge Panel
-  gkp_detected              Boolean   @default(false)
-  gkp_snapshot              Json?     // { title, description, image_url, source_url }
+  gkp_detected Boolean @default(false)
+  gkp_snapshot Json? // { title, description, image_url, source_url }
 
   // Wikipedia
-  wikipedia_notable         Boolean   @default(false)
-  wikipedia_url             String?
-  wikipedia_flag            String?   // "threshold_met" | "borderline" | "not_notable"
+  wikipedia_notable Boolean @default(false)
+  wikipedia_url     String?
+  wikipedia_flag    String? // "threshold_met" | "borderline" | "not_notable"
 
   // Change tracking
-  status_changed            Boolean   @default(false)
-  previous_check_id         String?
+  status_changed    Boolean @default(false)
+  previous_check_id String?
 
-  checked_at                DateTime  @default(now())
-  created_at                DateTime  @default(now())
-  updated_at                DateTime  @updatedAt
+  checked_at DateTime @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   client Client @relation(fields: [client_id], references: [id])
 
@@ -703,13 +703,13 @@ model EntityCheck {
 model WeeklyBrief {
   id                   String    @id @default(cuid())
   client_id            String
-  week_of              DateTime  // Monday 00:00 IST
+  week_of              DateTime // Monday 00:00 IST
   citation_score       Float
-  citation_delta       Float     // vs previous week
-  action_items         Json      // max 3: { type, priority, estimated_impact, draft_id, deep_link, time_estimate }[]
-  platform_actions_log Json      // automated actions taken this week
-  brief_html           String?   // generated HTML brief
-  brief_markdown       String?   // generated markdown brief
+  citation_delta       Float // vs previous week
+  action_items         Json // max 3: { type, priority, estimated_impact, draft_id, deep_link, time_estimate }[]
+  platform_actions_log Json // automated actions taken this week
+  brief_html           String? // generated HTML brief
+  brief_markdown       String? // generated markdown brief
   email_sent_at        DateTime?
   actions_completed    Int       @default(0)
   generated_at         DateTime
@@ -731,7 +731,7 @@ model Notification {
   id         String               @id @default(cuid())
   tenant_id  String
   client_id  String?
-  type       String               // e.g. "citation_drop", "competitor_spike", "payment_failed"
+  type       String // e.g. "citation_drop", "competitor_spike", "payment_failed"
   severity   NotificationSeverity
   title      String
   body       String
@@ -763,7 +763,7 @@ model BillingEvent {
   razorpay_payment_id String?
   plan_from           PlanTier?
   plan_to             PlanTier?
-  metadata            Json?            // raw Razorpay webhook payload excerpt
+  metadata            Json? // raw Razorpay webhook payload excerpt
   created_at          DateTime         @default(now())
 
   tenant Tenant @relation(fields: [tenant_id], references: [id])
@@ -788,7 +788,7 @@ model PrSignal {
   relevance_score        Float
   pr_angle               String         @db.Text
   press_release_draft    String         @db.Text
-  distribution_checklist Json           // { outlet, journalist, contact, wire_service }[]
+  distribution_checklist Json // { outlet, journalist, contact, wire_service }[]
   status                 PrSignalStatus @default(draft)
   approved_at            DateTime?
   created_at             DateTime       @default(now())
@@ -803,12 +803,12 @@ model PrSignal {
 }
 
 model PrPickup {
-  id           String   @id @default(cuid())
-  pr_signal_id String
-  domain       String
-  indexed_url  String?
-  is_ai_trusted Boolean @default(false)
-  detected_at  DateTime @default(now())
+  id            String   @id @default(cuid())
+  pr_signal_id  String
+  domain        String
+  indexed_url   String?
+  is_ai_trusted Boolean  @default(false)
+  detected_at   DateTime @default(now())
 
   pr_signal PrSignal @relation(fields: [pr_signal_id], references: [id])
 
