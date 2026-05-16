@@ -40,15 +40,16 @@ export class IterationService {
   }
 
   async complete(iterationId: string, clientId: string): Promise<void> {
+    const deleted = await this.redis.del(
+      `iteration:${clientId}:current`,
+      `iteration:${clientId}:remaining`,
+    );
+    if (deleted === 0) return; // concurrent tick already completed this iteration
+
     await this.prisma.promptIteration.update({
       where: { id: iterationId },
       data: { status: 'completed', completed_at: new Date() },
     });
-
-    await this.redis.del(
-      `iteration:${clientId}:current`,
-      `iteration:${clientId}:remaining`,
-    );
 
     const port = process.env['PORT'] ?? 3000;
     fetch(`http://localhost:${port}/agent-reco/${iterationId}`, { method: 'POST' })

@@ -143,6 +143,14 @@ describe('IterationService', () => {
       );
     });
 
+    it('does not call DB update when Redis keys already deleted (idempotency guard)', async () => {
+      mockRedis.del.mockResolvedValue(0);
+
+      await service.complete('iter1', 'c1');
+
+      expect(mockPrisma.promptIteration.update).not.toHaveBeenCalled();
+    });
+
     it('fires agent-reco POST fire-and-forget (does not throw if POST fails)', async () => {
       mockPrisma.promptIteration.update.mockResolvedValue({});
       mockRedis.del.mockResolvedValue(2);
