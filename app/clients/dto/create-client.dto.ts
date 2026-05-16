@@ -15,32 +15,32 @@ export class CreateClientDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  brandName: string;
+  brandName!: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  city: string;
+  city!: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  state: string;
+  state!: string;
 
   @IsString()
-  websiteUrl: string;
+  websiteUrl!: string;
 
   @IsArray()
   @IsString({ each: true })
-  aliases: string[];
+  aliases!: string[];
 
   @IsString()
-  verticalId: string;
+  verticalId!: string;
 
   // OPTIONAL: Brand profile fields
   @IsOptional()
