@@ -79,20 +79,20 @@ export default function NewClientPage() {
           websiteUrl,
           aliases: aliasArray,
           verticalId,
-          // NEW FIELDS
-          digitalHandles: {
+          // NEW FIELDS (snake_case to match backend DTO)
+          digital_handles: {
             linkedin: digitalHandles.linkedin || undefined,
             twitter: digitalHandles.twitter || undefined,
             instagram: digitalHandles.instagram || undefined,
             youtube: digitalHandles.youtube || undefined,
             website_secondary: digitalHandles.website_secondary || undefined,
           },
-          brandDescription: brandDescription || undefined,
-          brandKeywords: brandKeywords
+          brand_description: brandDescription || undefined,
+          brand_keywords: brandKeywords
             .split(',')
             .map(k => k.trim())
             .filter(Boolean),
-          competitorsKnown: competitorsKnown
+          competitors_known: competitorsKnown
             .split(',')
             .map(c => c.trim())
             .filter(Boolean),
