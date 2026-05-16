@@ -302,6 +302,7 @@ model Client {
   tenant               Tenant               @relation(fields: [tenant_id], references: [id])
   vertical             Vertical             @relation(fields: [vertical_id], references: [id])
   prompt_runs          PromptRun[]
+  agent_prompts        Prompt[]
   brand_mentions       BrandMention[]
   gap_reports          GapReport[]
   content_outputs      ContentOutput[]
@@ -357,23 +358,27 @@ model Prompt {
   id          String     @id @default(cuid())
   vertical_id String?
   tenant_id   String?
+  client_id   String?
   text        String
   category    String
   intent_type IntentType
   buyer_stage BuyerStage
   is_active   Boolean    @default(true)
   is_custom   Boolean    @default(false)
+  source      String     @default("platform")
   priority    Int        @default(0)
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 
   vertical        Vertical?       @relation(fields: [vertical_id], references: [id])
   tenant          Tenant?         @relation(fields: [tenant_id], references: [id])
+  client          Client?         @relation(fields: [client_id], references: [id])
   prompt_runs     PromptRun[]
   content_outputs ContentOutput[]
 
   @@index([vertical_id])
   @@index([tenant_id])
+  @@index([client_id])
   @@index([vertical_id, is_active])
   @@map("prompts")
 }
