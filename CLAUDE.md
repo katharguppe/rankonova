@@ -10,7 +10,28 @@ NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Rou
     - extraction-haiku.service.ts → claude-haiku-4-5-20251001
     - faq-page, comparison-page, entity-authority-page, segment-article generators → claude-sonnet-4-20250514
     - perplexity.adapter.ts → NotImplementedException stub (fix-perplexity session next)
-  Next session: fix-perplexity (order 2 of 17)
+    - cerebras.adapter.ts: intentionally untouched (valid AiEngine adapter)
+
+## SESSION fix-prisma-types COMPLETE ✅ (2026-05-16)
+  Commit: fca65ac
+  Pre-flight cleanup — fixed pre-existing issues uncovered during fix-models:
+    - prisma generate restored: 727 tsc errors → 0
+    - postinstall hook added to package.json (auto-generates on npm install)
+    - ioredis-mock added (devDep): rate-limiter.service.spec.ts uses mock Redis (5 timeout failures fixed)
+    - EventEmitter2 mock provider added to 5 specs missing it:
+        content-agent.service.spec.ts, prompt-engine.service.spec.ts,
+        community.service.spec.ts, webhook.service.spec.ts, billing.e2e.spec.ts
+    - PrismaService mock added to mail.service.spec.ts
+    - promptRun.count mock added to prompt-engine.service.spec.ts mockPrisma
+  Result: 32/32 suites, 295/295 tests passing. tsc: 0 errors.
+  Checkpoint: docs/checkpoints/ck01.md
+
+## Current Status (2026-05-16)
+  Last Completed : fix-prisma-types (pre-flight cleanup)
+  Next Task      : fix-perplexity (session order 2 of 17)
+  tsc errors     : 0
+  Jest           : 32/32 suites, 295/295 tests passing
+  HEAD           : fca65ac
 
 ## Current Phase: 12 Complete ✅ (2026-05-16)
 
