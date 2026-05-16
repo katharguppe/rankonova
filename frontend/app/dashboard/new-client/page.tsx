@@ -21,6 +21,16 @@ export default function NewClientPage() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [aliases, setAliases] = useState('');
   const [verticalId, setVerticalId] = useState('');
+  const [digitalHandles, setDigitalHandles] = useState({
+    linkedin: '',
+    twitter: '',
+    instagram: '',
+    youtube: '',
+    website_secondary: '',
+  });
+  const [brandDescription, setBrandDescription] = useState('');
+  const [brandKeywords, setBrandKeywords] = useState('');
+  const [competitorsKnown, setCompetitorsKnown] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -69,6 +79,23 @@ export default function NewClientPage() {
           websiteUrl,
           aliases: aliasArray,
           verticalId,
+          // NEW FIELDS
+          digitalHandles: {
+            linkedin: digitalHandles.linkedin || undefined,
+            twitter: digitalHandles.twitter || undefined,
+            instagram: digitalHandles.instagram || undefined,
+            youtube: digitalHandles.youtube || undefined,
+            website_secondary: digitalHandles.website_secondary || undefined,
+          },
+          brandDescription: brandDescription || undefined,
+          brandKeywords: brandKeywords
+            .split(',')
+            .map(k => k.trim())
+            .filter(Boolean),
+          competitorsKnown: competitorsKnown
+            .split(',')
+            .map(c => c.trim())
+            .filter(Boolean),
         }),
       });
 
@@ -207,6 +234,129 @@ export default function NewClientPage() {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-slate-400 mt-1">Comma-separated. Leave blank if none.</p>
+          </div>
+
+          {/* Brand Profile Section (Optional) */}
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4">Brand Profile (Optional)</h2>
+
+            {/* Digital Handles */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label htmlFor="linkedin" className="block text-xs font-medium text-slate-600 mb-1">
+                  LinkedIn
+                </label>
+                <input
+                  id="linkedin"
+                  type="text"
+                  value={digitalHandles.linkedin}
+                  onChange={e => setDigitalHandles({ ...digitalHandles, linkedin: e.target.value })}
+                  placeholder="Profile URL or handle"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="twitter" className="block text-xs font-medium text-slate-600 mb-1">
+                  Twitter
+                </label>
+                <input
+                  id="twitter"
+                  type="text"
+                  value={digitalHandles.twitter}
+                  onChange={e => setDigitalHandles({ ...digitalHandles, twitter: e.target.value })}
+                  placeholder="@handle"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="instagram" className="block text-xs font-medium text-slate-600 mb-1">
+                  Instagram
+                </label>
+                <input
+                  id="instagram"
+                  type="text"
+                  value={digitalHandles.instagram}
+                  onChange={e => setDigitalHandles({ ...digitalHandles, instagram: e.target.value })}
+                  placeholder="Handle"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="youtube" className="block text-xs font-medium text-slate-600 mb-1">
+                  YouTube
+                </label>
+                <input
+                  id="youtube"
+                  type="text"
+                  value={digitalHandles.youtube}
+                  onChange={e => setDigitalHandles({ ...digitalHandles, youtube: e.target.value })}
+                  placeholder="Channel URL"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="col-span-2">
+                <label htmlFor="website_secondary" className="block text-xs font-medium text-slate-600 mb-1">
+                  Secondary Website
+                </label>
+                <input
+                  id="website_secondary"
+                  type="text"
+                  value={digitalHandles.website_secondary}
+                  onChange={e => setDigitalHandles({ ...digitalHandles, website_secondary: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Brand Description */}
+            <div className="mb-4">
+              <label htmlFor="brandDescription" className="block text-xs font-medium text-slate-600 mb-1">
+                Brand Description
+              </label>
+              <textarea
+                id="brandDescription"
+                value={brandDescription}
+                onChange={e => setBrandDescription(e.target.value.slice(0, 500))}
+                maxLength={500}
+                placeholder="What does your brand do? USP, target audience..."
+                rows={3}
+                className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                {brandDescription.length}/500
+              </p>
+            </div>
+
+            {/* Brand Keywords */}
+            <div className="mb-4">
+              <label htmlFor="brandKeywords" className="block text-xs font-medium text-slate-600 mb-1">
+                Keywords (comma-separated, max 20)
+              </label>
+              <input
+                id="brandKeywords"
+                type="text"
+                value={brandKeywords}
+                onChange={e => setBrandKeywords(e.target.value)}
+                placeholder="e.g. Automotive, Luxury, SUV, Bangalore"
+                className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Competitors Known */}
+            <div>
+              <label htmlFor="competitorsKnown" className="block text-xs font-medium text-slate-600 mb-1">
+                Known Competitors (comma-separated, max 20)
+              </label>
+              <input
+                id="competitorsKnown"
+                type="text"
+                value={competitorsKnown}
+                onChange={e => setCompetitorsKnown(e.target.value)}
+                placeholder="e.g. BMW, Mercedes, Audi"
+                className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           {/* Vertical */}
