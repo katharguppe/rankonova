@@ -97,6 +97,10 @@ export class PromptEngineService {
     return this.queue.getQueueStats();
   }
 
+  async flushWaiting(user: RequestUser) {
+    return this.queue.flushWaiting();
+  }
+
   async getDailyCost(user: RequestUser, date?: string) {
     const tenantId = user.role === 'super_admin' ? user.tenantId : user.tenantId;
     return { costUsd: await this.costTracker.getDailyCostUsd(tenantId, date) };

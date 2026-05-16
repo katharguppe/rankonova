@@ -56,6 +56,12 @@ export class PromptRunQueueService {
     return runIds;
   }
 
+  async flushWaiting(): Promise<{ removed: number }> {
+    const jobs = await this.queue.getWaiting();
+    await Promise.all(jobs.map(j => j.remove()));
+    return { removed: jobs.length };
+  }
+
   async getQueueStats() {
     const [waiting, active, completed, failed, delayed] = await Promise.all([
       this.queue.getWaitingCount(),
