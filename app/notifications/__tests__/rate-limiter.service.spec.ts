@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Redis } from 'ioredis';
+import RedisMock from 'ioredis-mock';
 import { RateLimiterService } from '../rate-limiter.service';
 import { NotificationSeverity, NotificationType } from '../notifications.types';
 
 describe('RateLimiterService', () => {
   let service: RateLimiterService;
-  let redis: Redis;
+  let redis: InstanceType<typeof RedisMock>;
 
   beforeEach(async () => {
-    redis = new Redis();
+    redis = new RedisMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import * as nodemailer from 'nodemailer';
 
 import { MailService } from './mail.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 jest.mock('nodemailer');
 
@@ -20,7 +21,12 @@ describe('MailService', () => {
     process.env['SMTP_FROM'] = 'noreply@example.com';
     process.env['APP_URL'] = 'http://localhost:3000';
 
-    const module = await Test.createTestingModule({ providers: [MailService] }).compile();
+    const module = await Test.createTestingModule({
+      providers: [
+        MailService,
+        { provide: PrismaService, useValue: {} },
+      ],
+    }).compile();
     service = module.get<MailService>(MailService);
   });
 

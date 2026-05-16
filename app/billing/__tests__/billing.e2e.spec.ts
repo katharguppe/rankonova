@@ -12,6 +12,7 @@ import * as request from 'supertest';
 import * as express from 'express';
 import { getQueueToken } from '@nestjs/bull';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BillingController } from '../billing.controller';
 import { BillingService } from '../billing.service';
 import { SubscriptionService } from '../subscription.service';
@@ -138,6 +139,7 @@ async function buildApp(overrides: {
       { provide: getQueueToken(BILLING_TRIAL_QUEUE), useValue: trialQueueStub },
       { provide: getQueueToken(BILLING_RETRY_QUEUE), useValue: retryQueueStub },
       { provide: getQueueToken(BILLING_PURGE_QUEUE), useValue: purgeQueueStub },
+      { provide: EventEmitter2, useValue: { emit: jest.fn() } },
     ],
   }).compile();
 

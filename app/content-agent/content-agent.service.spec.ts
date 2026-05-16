@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ContentOutput, ContentStatus, ContentType } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContentAgentService } from './content-agent.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { FaqPageGeneratorService } from './generators/faq-page.generator';
@@ -67,6 +68,7 @@ describe('ContentAgentService — state machine', () => {
         { provide: EntityAuthorityPageGeneratorService, useValue: {} },
         { provide: SegmentArticleGeneratorService, useValue: {} },
         { provide: QualityValidatorService, useValue: {} },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

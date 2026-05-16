@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { HttpException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebhookService } from '../webhook.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { InvoiceService } from '../invoice.service';
@@ -31,6 +32,7 @@ describe('WebhookService', () => {
         { provide: InvoiceService, useValue: mockInvoice },
         { provide: PlanEnforcementService, useValue: mockEnforcement },
         { provide: getQueueToken(BILLING_RETRY_QUEUE), useValue: mockRetryQueue },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
     service = module.get(WebhookService);

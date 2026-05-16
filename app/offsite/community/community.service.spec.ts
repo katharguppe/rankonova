@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CommunityService } from './community.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -118,6 +119,7 @@ describe('CommunityService — Reddit Playwright fallback', () => {
       providers: [
         CommunityService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AiEngine } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CostTrackerService } from './cost/cost-tracker.service';
@@ -10,6 +11,7 @@ import { PromptRunQueueService } from './queue/prompt-run.queue';
 const mockPrisma = {
   client: { findFirst: jest.fn() },
   prompt: { findMany: jest.fn() },
+  promptRun: { count: jest.fn().mockResolvedValue(0) },
 };
 
 const mockQueue = { enqueue: jest.fn() };
@@ -28,6 +30,7 @@ describe('PromptEngineService.triggerClientRun', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: PromptRunQueueService, useValue: mockQueue },
         { provide: CostTrackerService, useValue: mockCostTracker },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
