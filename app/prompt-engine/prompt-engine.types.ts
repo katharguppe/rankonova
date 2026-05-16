@@ -6,4 +6,5 @@ export interface PromptRunJobPayload {
   clientId: string;
   tenantId: string;
   engine: AiEngine;
+  iterationId?: string;
 }
