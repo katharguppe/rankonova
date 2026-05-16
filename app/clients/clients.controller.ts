@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,6 +7,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { RequestUser } from '../auth/jwt.strategy';
 import { ClientsService } from './clients.service';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
+import { CreateClientDto } from './dto/create-client.dto';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,6 +25,12 @@ export class ClientsController {
   findOne(@Param('id') id: string, @Req() req: Request) {
     const user = req.user as RequestUser;
     return this.clientsService.findOne(id, user.tenantId);
+  }
+
+  @Post()
+  async create(@Body() dto: CreateClientDto, @Req() req: Request) {
+    const user = req.user as RequestUser;
+    return this.clientsService.createClient(user.tenantId, dto);
   }
 
   @Patch(':id/profile')

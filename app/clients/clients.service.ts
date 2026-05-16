@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
+import { CreateClientDto } from './dto/create-client.dto';
 
 @Injectable()
 export class ClientsService {
@@ -71,6 +72,48 @@ export class ClientsService {
         competitors_known: true,
         created_at: true,
         updated_at: true,
+      },
+    });
+  }
+
+  async createClient(tenantId: string, dto: CreateClientDto) {
+    return this.prisma.client.create({
+      data: {
+        tenant_id: tenantId,
+        vertical_id: dto.verticalId,
+        name: dto.name,
+        brand_name: dto.brandName,
+        city: dto.city,
+        state: dto.state,
+        website_url: dto.websiteUrl,
+        aliases: dto.aliases,
+        models: {},
+        digital_handles: dto.digital_handles
+          ? (dto.digital_handles as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+        brand_description: dto.brand_description || null,
+        brand_keywords: dto.brand_keywords
+          ? (dto.brand_keywords as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+        competitors_known: dto.competitors_known
+          ? (dto.competitors_known as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+      },
+      select: {
+        id: true,
+        tenant_id: true,
+        vertical_id: true,
+        name: true,
+        brand_name: true,
+        city: true,
+        state: true,
+        website_url: true,
+        aliases: true,
+        digital_handles: true,
+        brand_description: true,
+        brand_keywords: true,
+        competitors_known: true,
+        created_at: true,
       },
     });
   }
