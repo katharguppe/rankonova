@@ -49,6 +49,10 @@ export class TenantContext {
     website_url: string;
     description?: string;
     models: Prisma.InputJsonValue;
+    digital_handles?: Prisma.InputJsonValue;
+    brand_description?: string;
+    brand_keywords?: Prisma.InputJsonValue;
+    competitors_known?: Prisma.InputJsonValue;
   }) {
     return this.db.client.create({ data: { ...data, tenant_id: this.tenantId } });
   }
