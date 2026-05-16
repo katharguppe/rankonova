@@ -11,6 +11,7 @@ import { CostTrackerService } from '../cost/cost-tracker.service';
 import { PROMPT_RUNS_QUEUE } from '../prompt-engine.constants';
 import { PromptRunJobPayload } from '../prompt-engine.types';
 import { ExtractionService } from '../../extraction/extraction.service';
+import { IterationService } from '../iteration/iteration.service';
 
 function substituteTokens(text: string, city: string, brand: string, model: string): string {
   return text
@@ -30,6 +31,7 @@ export class PromptRunWorker {
     private readonly costTracker: CostTrackerService,
     private readonly quotaService: QuotaService,
     private readonly extractionService: ExtractionService,
+    private readonly iterationService: IterationService,
   ) {}
 
   @Process({ name: 'run-prompt', concurrency: 1 })
@@ -58,6 +60,11 @@ export class PromptRunWorker {
         where: { id: promptRunId },
         data: { status: PromptRunStatus.failed, error_message: 'Prompt, client, or tenant not found' },
       });
+      if (job.data.iterationId) {
+        await this.iterationService.tick(clientId, job.data.iterationId).catch((err: Error) =>
+          this.logger.error(`Iteration tick failed for ${job.data.iterationId}: ${err.message}`),
+        );
+      }
       return; // Non-retriable — entity deleted; return without throw
     }
 
@@ -67,6 +74,11 @@ export class PromptRunWorker {
         where: { id: promptRunId },
         data: { status: PromptRunStatus.failed, error_message: 'Daily prompt quota exceeded' },
       });
+      if (job.data.iterationId) {
+        await this.iterationService.tick(clientId, job.data.iterationId).catch((err: Error) =>
+          this.logger.error(`Iteration tick failed for ${job.data.iterationId}: ${err.message}`),
+        );
+      }
       return; // Non-retriable — quota enforced at daily boundary
     }
 
@@ -103,6 +115,12 @@ export class PromptRunWorker {
         this.costTracker.incrementCost(tenantId, result.costUsd),
       ]);
 
+      if (job.data.iterationId) {
+        await this.iterationService.tick(clientId, job.data.iterationId).catch((err: Error) =>
+          this.logger.error(`Iteration tick failed for ${job.data.iterationId}: ${err.message}`),
+        );
+      }
+
       this.extractionService.runForPromptRun(promptRunId).catch((err: Error) =>
         this.logger.error(`Extraction failed for run ${promptRunId}: ${err.message}`),
       );
@@ -117,6 +135,11 @@ export class PromptRunWorker {
             duration_ms: Date.now() - start,
           },
         });
+        if (job.data.iterationId) {
+          await this.iterationService.tick(clientId, job.data.iterationId).catch((err: Error) =>
+            this.logger.error(`Iteration tick failed for ${job.data.iterationId}: ${err.message}`),
+          );
+        }
         return;
       }
       // Retriable error (rate limit, API timeout, etc.) — update for audit, then rethrow

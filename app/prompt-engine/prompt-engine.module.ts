@@ -21,6 +21,7 @@ import { EngineRateLimiterService } from './rate-limiter/engine-rate-limiter.ser
 import { PromptEngineScheduler } from './scheduler/prompt-engine.scheduler';
 import { PromptRunWorker } from './workers/prompt-run.worker';
 import { AgentPromptGeneratorService } from './agent-prompt-generator.service';
+import { IterationService } from './iteration/iteration.service';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AgentPromptGeneratorService } from './agent-prompt-generator.service';
     EngineRateLimiterService,
     CostTrackerService,
     AgentPromptGeneratorService,
+    IterationService,
     {
       provide: PE_REDIS,
       useFactory: () => new Redis(process.env['REDIS_URL'] ?? 'redis://localhost:6379'),
