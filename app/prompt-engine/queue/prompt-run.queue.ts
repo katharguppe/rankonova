@@ -62,6 +62,45 @@ export class PromptRunQueueService {
     return { removed: jobs.length };
   }
 
+  async enqueueAgentBatch(
+    clientId: string,
+    tenantId: string,
+    promptIds: string[],
+    engines: AiEngine[],
+    iterationId: string,
+  ): Promise<string[]> {
+    const runIds: string[] = [];
+
+    for (const promptId of promptIds) {
+      for (const engine of engines) {
+        const run = await this.prisma.promptRun.create({
+          data: {
+            prompt_id: promptId,
+            client_id: clientId,
+            engine,
+            ran_at: new Date(),
+            status: PromptRunStatus.pending,
+            iteration_id: iterationId,
+          },
+        });
+
+        const payload: PromptRunJobPayload = {
+          promptRunId: run.id,
+          promptId,
+          clientId,
+          tenantId,
+          engine,
+          iterationId,
+        };
+
+        await this.queue.add(JOB_NAME, payload, RETRY_OPTIONS);
+        runIds.push(run.id);
+      }
+    }
+
+    return runIds;
+  }
+
   async getQueueStats() {
     const [waiting, active, completed, failed, delayed] = await Promise.all([
       this.queue.getWaitingCount(),
