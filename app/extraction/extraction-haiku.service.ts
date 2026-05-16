@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { Sentiment } from '@prisma/client';
 
 export interface RawMention {
@@ -22,28 +22,26 @@ const USER_TEMPLATE = (raw: string) =>
 @Injectable()
 export class ExtractionHaikuService {
   private readonly logger = new Logger(ExtractionHaikuService.name);
-  private readonly client: OpenAI;
+  private readonly client: Anthropic;
 
   constructor() {
-    // Cerebras llama3.1-8b: fast, free tier, OpenAI-compatible — used in place of Haiku
-    this.client = new OpenAI({
-      apiKey: process.env['CEREBRAS_API_KEY'],
-      baseURL: 'https://api.cerebras.ai/v1',
+    // Claude Haiku: fast, cost-effective — used for brand mention extraction
+    this.client = new Anthropic({
+      apiKey: process.env['ANTHROPIC_API_KEY'],
     });
   }
 
   async extract(rawResponse: string): Promise<RawMention[]> {
     let text: string;
     try {
-      const response = await this.client.chat.completions.create({
-        model: 'llama3.1-8b',
+      const response = await this.client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: USER_TEMPLATE(rawResponse) },
-        ],
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: USER_TEMPLATE(rawResponse) }],
       });
-      text = response.choices[0]?.message.content ?? '';
+      const firstBlock = response.content[0];
+      text = firstBlock?.type === 'text' ? firstBlock.text : '';
     } catch (err) {
       this.logger.error(`Extraction LLM error: ${(err as Error).message}`);
       return [];

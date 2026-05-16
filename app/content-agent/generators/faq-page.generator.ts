@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { GeneratedContent } from '../content-agent.types';
 
 export interface FaqGeneratorInput {
@@ -56,12 +56,12 @@ The page must follow this structure exactly:
 @Injectable()
 export class FaqPageGeneratorService {
   private readonly logger = new Logger(FaqPageGeneratorService.name);
-  private readonly openai: OpenAI;
+  private readonly client: Anthropic;
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env['CEREBRAS_API_KEY'],
-      baseURL: 'https://api.cerebras.ai/v1',
+    // Claude Sonnet: content generation for FAQ pages
+    this.client = new Anthropic({
+      apiKey: process.env['ANTHROPIC_API_KEY'],
     });
   }
 
@@ -70,21 +70,20 @@ export class FaqPageGeneratorService {
 
     let html: string;
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'llama3.1-8b',
+      const response = await this.client.messages.create({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMessage }],
       });
-      html = response.choices[0]?.message.content?.trim() ?? '';
+      const firstBlock = response.content[0];
+      html = (firstBlock?.type === 'text' ? firstBlock.text : '').trim();
     } catch (err) {
       throw new Error(`FAQ generation API call failed: ${(err as Error).message}`);
     }
 
     if (!html.includes('<html') && !html.includes('<!DOCTYPE')) {
-      this.logger.warn(`llama3.1-8b returned markdown — wrapping in HTML shell (${html.length} chars)`);
+      this.logger.warn(`Claude Sonnet returned non-HTML — wrapping in HTML shell (${html.length} chars)`);
       html = `<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="UTF-8"><title>${input.brandName} | AEO FAQ</title></head>\n<body>\n${html}\n</body>\n</html>`;
     }
 

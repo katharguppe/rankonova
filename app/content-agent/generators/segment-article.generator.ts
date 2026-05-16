@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { GeneratedContent } from '../content-agent.types';
 
 export interface SegmentArticleInput {
@@ -35,12 +35,12 @@ OUTPUT FORMAT: complete HTML5 only. No markdown. No code fences.`;
 @Injectable()
 export class SegmentArticleGeneratorService {
   private readonly logger = new Logger(SegmentArticleGeneratorService.name);
-  private readonly openai: OpenAI;
+  private readonly client: Anthropic;
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env['CEREBRAS_API_KEY'],
-      baseURL: 'https://api.cerebras.ai/v1',
+    // Claude Sonnet: content generation for segment articles
+    this.client = new Anthropic({
+      apiKey: process.env['ANTHROPIC_API_KEY'],
     });
   }
 
@@ -49,21 +49,20 @@ export class SegmentArticleGeneratorService {
 
     let html: string;
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'llama3.1-8b',
+      const response = await this.client.messages.create({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 6000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMessage }],
       });
-      html = response.choices[0]?.message.content?.trim() ?? '';
+      const firstBlock = response.content[0];
+      html = (firstBlock?.type === 'text' ? firstBlock.text : '').trim();
     } catch (err) {
       throw new Error(`Segment article generation failed: ${(err as Error).message}`);
     }
 
     if (!html.includes('<html') && !html.includes('<!DOCTYPE')) {
-      this.logger.warn(`llama3.1-8b returned markdown — wrapping in HTML shell (${html.length} chars)`);
+      this.logger.warn(`Claude Sonnet returned non-HTML — wrapping in HTML shell (${html.length} chars)`);
       html = `<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="UTF-8"><title>${input.brandName} | AEO Article</title></head>\n<body>\n${html}\n</body>\n</html>`;
     }
 
