@@ -289,7 +289,11 @@ model Client {
   state       String
   website_url String
   description String?
-  models      Json      // AI engine model config overrides per engine
+  models              Json      // AI engine model config overrides per engine
+  digital_handles     Json?     // NEW: { linkedin?, twitter?, instagram?, youtube?, website_secondary? }
+  brand_description   String?   // NEW: what the brand does, USP, target audience (max 500 chars)
+  brand_keywords      Json?     // NEW: string[] of keywords client wants to rank for
+  competitors_known   Json?     // NEW: string[] of manually entered competitor names
   is_active   Boolean   @default(true)
   deleted_at  DateTime? // soft delete; purge after 90 days
   created_at  DateTime  @default(now())
