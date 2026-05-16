@@ -302,6 +302,7 @@ model Client {
   tenant               Tenant               @relation(fields: [tenant_id], references: [id])
   vertical             Vertical             @relation(fields: [vertical_id], references: [id])
   prompt_runs          PromptRun[]
+  prompt_iterations    PromptIteration[]
   agent_prompts        Prompt[]
   brand_mentions       BrandMention[]
   gap_reports          GapReport[]
@@ -400,19 +401,38 @@ model PromptRun {
   retry_count   Int             @default(0)
   error_message String?
   cost_usd      Decimal?        @db.Decimal(10, 6)
+  iteration_id  String?
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
 
-  prompt         Prompt         @relation(fields: [prompt_id], references: [id])
-  client         Client         @relation(fields: [client_id], references: [id])
+  prompt         Prompt           @relation(fields: [prompt_id], references: [id])
+  client         Client           @relation(fields: [client_id], references: [id])
   brand_mentions BrandMention[]
+  iteration      PromptIteration? @relation(fields: [iteration_id], references: [id])
 
   @@index([client_id])
   @@index([prompt_id])
   @@index([client_id, ran_at])
   @@index([status])
   @@index([engine, ran_at])
+  @@index([iteration_id])
   @@map("prompt_runs")
+}
+
+model PromptIteration {
+  id               String    @id @default(cuid())
+  client_id        String
+  iteration_number Int
+  started_at       DateTime  @default(now())
+  completed_at     DateTime?
+  status           String    @default("running")
+
+  client      Client      @relation(fields: [client_id], references: [id])
+  prompt_runs PromptRun[]
+
+  @@index([client_id])
+  @@index([client_id, iteration_number])
+  @@map("prompt_iterations")
 }
 
 // ─────────────────────────────────────────────
