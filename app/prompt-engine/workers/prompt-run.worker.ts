@@ -156,7 +156,7 @@ export class PromptRunWorker {
     const attemptsConfig = job.opts.attempts ?? 3;
     if (job.attemptsMade < attemptsConfig) return; // More retries coming
 
-    const { promptRunId, engine } = job.data;
+    const { promptRunId, engine, clientId } = job.data;
     this.logger.error(`[DLQ] ${promptRunId} on ${engine} after ${job.attemptsMade} attempts: ${error.message}`);
 
     await this.prisma.promptRun.update({
@@ -167,6 +167,12 @@ export class PromptRunWorker {
         retry_count: job.attemptsMade,
       },
     });
+
+    if (job.data.iterationId) {
+      await this.iterationService.tick(clientId, job.data.iterationId).catch((err: Error) =>
+        this.logger.error(`Iteration tick failed for ${job.data.iterationId}: ${err.message}`),
+      );
+    }
     // TODO: trigger super_admin notification when NotificationsModule ships
   }
 }
