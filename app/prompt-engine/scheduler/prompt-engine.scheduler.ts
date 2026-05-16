@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { AiEngine } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PromptRunQueueService } from '../queue/prompt-run.queue';
+import { IterationService } from '../iteration/iteration.service';
 
 // Engines available for scheduled runs (stubs excluded)
 const SCHEDULED_ENGINES: AiEngine[] = [
@@ -20,6 +21,7 @@ export class PromptEngineScheduler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queue: PromptRunQueueService,
+    private readonly iterationService: IterationService,
   ) {}
 
   // 2AM IST = UTC 20:30 previous calendar day
@@ -34,6 +36,7 @@ export class PromptEngineScheduler {
 
     let enqueued = 0;
 
+    // ── Platform prompts (unchanged) ──────────────────────────────────────
     for (const client of clients) {
       const prompts = await this.prisma.prompt.findMany({
         where: {
@@ -51,5 +54,41 @@ export class PromptEngineScheduler {
     }
 
     this.logger.log(`[Scheduler] Enqueued ${enqueued} prompt runs across ${clients.length} clients`);
+
+    // ── Agent prompts (iteration tracking) ───────────────────────────────
+    let iterationsCreated = 0;
+
+    for (const client of clients) {
+      const agentPrompts = await this.prisma.prompt.findMany({
+        where: {
+          client_id: client.id,
+          source: 'agent',
+          is_active: true,
+        },
+        select: { id: true },
+      });
+
+      if (agentPrompts.length === 0) continue;
+
+      const iteration = await this.iterationService.create(client.id);
+      const promptIds = agentPrompts.map(p => p.id);
+      const total = promptIds.length * SCHEDULED_ENGINES.length;
+
+      await this.iterationService.setCounter(client.id, iteration.id, total);
+      await this.queue.enqueueAgentBatch(
+        client.id,
+        client.tenant_id,
+        promptIds,
+        SCHEDULED_ENGINES,
+        iteration.id,
+      );
+
+      iterationsCreated++;
+      this.logger.log(
+        `[Scheduler] Iteration ${iteration.iteration_number} created for client ${client.id} (${total} runs)`,
+      );
+    }
+
+    this.logger.log(`[Scheduler] Created ${iterationsCreated} iterations`);
   }
 }
