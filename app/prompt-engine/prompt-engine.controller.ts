@@ -7,11 +7,21 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { TriggerRunDto } from './dto/trigger-run.dto';
 import { PromptEngineService } from './prompt-engine.service';
+import { AgentPromptGeneratorService } from './agent-prompt-generator.service';
 
 @Controller('prompt-engine')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PromptEngineController {
-  constructor(private readonly service: PromptEngineService) {}
+  constructor(
+    private readonly service: PromptEngineService,
+    private readonly agentPromptGenerator: AgentPromptGeneratorService,
+  ) {}
+
+  @Post('clients/:clientId/generate-prompts')
+  @Roles(UserRole.super_admin, UserRole.tenant_admin)
+  generateAgentPrompts(@Param('clientId') clientId: string, @Req() req: Request) {
+    return this.agentPromptGenerator.generateForClient(clientId, req.user as RequestUser);
+  }
 
   @Post('clients/:clientId/run-all')
   @Roles(UserRole.super_admin, UserRole.tenant_admin)
@@ -35,6 +45,12 @@ export class PromptEngineController {
   @Roles(UserRole.super_admin)
   getQueueStats(@Req() req: Request) {
     return this.service.getQueueStats(req.user as RequestUser);
+  }
+
+  @Post('queue/flush')
+  @Roles(UserRole.super_admin, UserRole.tenant_admin)
+  flushQueue(@Req() req: Request) {
+    return this.service.flushWaiting(req.user as RequestUser);
   }
 
   @Get('cost')

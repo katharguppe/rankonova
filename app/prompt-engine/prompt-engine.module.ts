@@ -20,6 +20,7 @@ import { PromptRunQueueService } from './queue/prompt-run.queue';
 import { EngineRateLimiterService } from './rate-limiter/engine-rate-limiter.service';
 import { PromptEngineScheduler } from './scheduler/prompt-engine.scheduler';
 import { PromptRunWorker } from './workers/prompt-run.worker';
+import { AgentPromptGeneratorService } from './agent-prompt-generator.service';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PromptRunWorker } from './workers/prompt-run.worker';
     GoogleAioAdapter,
     EngineRateLimiterService,
     CostTrackerService,
+    AgentPromptGeneratorService,
     {
       provide: PE_REDIS,
       useFactory: () => new Redis(process.env['REDIS_URL'] ?? 'redis://localhost:6379'),
