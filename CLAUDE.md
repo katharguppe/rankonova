@@ -4,6 +4,27 @@
 ## Stack
 NestJS, TypeScript 5.x, Prisma, PostgreSQL 15, Redis 7, Bull, Next.js 14 App Router, shadcn/ui, Tailwind, Docker
 
+## Current Phase: 12 Complete ✅ (2026-05-16)
+
+## TASK-012 Enhanced Client Onboarding ✅ (2026-05-16)
+  4 new optional fields added to Client entity + frontend form extended
+
+  Final commit     : 022a3229 (main)
+  Completion date  : 2026-05-16
+
+  New fields       : digital_handles (Json), brand_description (String), brand_keywords (Json), competitors_known (Json)
+  Migration        : 20260516065553_add_client_brand_profile (additive, no breaking changes)
+  API              : PATCH /clients/:id/profile — update profile fields after creation
+  DTO              : UpdateClientProfileDto + CreateClientDto extended (tenants module)
+  Frontend         : new-client form extended with "Brand Profile (Optional)" section
+  Tests            : 9/9 passing (7 unit + 2 E2E)
+  Build status     : ✅ 0 tsc errors, production build succeeds
+
+  Key fixes during implementation:
+    - POST endpoint was in /tenants/me/clients (not /clients)
+    - TenantScopedPrismaService.createClient() type extended with new fields
+    - Frontend field names corrected to snake_case
+
 ## Current Phase: 10 Complete ✅ (2026-05-13, pending live Razorpay API keys from Sir)
   Final commit: e3114ba3 — trial auto-start wired to AuthService.register (Phase 10 exit criterion met)
 
