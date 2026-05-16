@@ -59,34 +59,40 @@ export class PromptEngineScheduler {
     let iterationsCreated = 0;
 
     for (const client of clients) {
-      const agentPrompts = await this.prisma.prompt.findMany({
-        where: {
-          client_id: client.id,
-          source: 'agent',
-          is_active: true,
-        },
-        select: { id: true },
-      });
+      try {
+        const agentPrompts = await this.prisma.prompt.findMany({
+          where: {
+            client_id: client.id,
+            source: 'agent',
+            is_active: true,
+          },
+          select: { id: true },
+        });
 
-      if (agentPrompts.length === 0) continue;
+        if (agentPrompts.length === 0) continue;
 
-      const iteration = await this.iterationService.create(client.id);
-      const promptIds = agentPrompts.map(p => p.id);
-      const total = promptIds.length * SCHEDULED_ENGINES.length;
+        const iteration = await this.iterationService.create(client.id);
+        const promptIds = agentPrompts.map(p => p.id);
+        const total = promptIds.length * SCHEDULED_ENGINES.length;
 
-      await this.iterationService.setCounter(client.id, iteration.id, total);
-      await this.queue.enqueueAgentBatch(
-        client.id,
-        client.tenant_id,
-        promptIds,
-        SCHEDULED_ENGINES,
-        iteration.id,
-      );
+        await this.iterationService.setCounter(client.id, iteration.id, total);
+        await this.queue.enqueueAgentBatch(
+          client.id,
+          client.tenant_id,
+          promptIds,
+          SCHEDULED_ENGINES,
+          iteration.id,
+        );
 
-      iterationsCreated++;
-      this.logger.log(
-        `[Scheduler] Iteration ${iteration.iteration_number} created for client ${client.id} (${total} runs)`,
-      );
+        iterationsCreated++;
+        this.logger.log(
+          `[Scheduler] Iteration ${iteration.iteration_number} created for client ${client.id} (${total} runs)`,
+        );
+      } catch (err: unknown) {
+        this.logger.error(
+          `[Scheduler] Agent iteration failed for client ${client.id}: ${(err as Error).message}`,
+        );
+      }
     }
 
     this.logger.log(`[Scheduler] Created ${iterationsCreated} iterations`);
